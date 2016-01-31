@@ -139,7 +139,7 @@ module.exports = function(passport) {
         });
 
     }));
-  
+
     // =========================================================================
     // LOCAL STUDENT SIGNUP ============================================================
     // =========================================================================
@@ -181,7 +181,7 @@ module.exports = function(passport) {
 
                 // save the user
                 newUser.save(function(err, u) {
-         
+
                     var newStudent = new Student();
                     newStudent.user = u.id;
                     newStudent.schoolId = schoolId;
@@ -197,7 +197,7 @@ module.exports = function(passport) {
 
         });
 
-    }));  
+    }));
 
 
   // =========================================================================
@@ -234,8 +234,8 @@ module.exports = function(passport) {
         });
 
     }));
-  
-    passport.use('local-id-login', new LocalStrategy({
+
+    passport.use('local-student-login', new LocalStrategy({
         // by default, local strategy uses username and password, we will override with email
         usernameField : 'schoolid',
         passwordField : 'password',

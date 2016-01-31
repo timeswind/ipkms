@@ -14,7 +14,13 @@ var groupSchema = mongoose.Schema({
     _id:false,
     id: { type: ObjectId, ref: 'Student' }
   }],
-  teachers : [{ type: ObjectId, ref: 'Teacher' }]
+  teachers : [{ type: ObjectId, ref: 'Teacher' }],
+  logs : [{
+    _id:false,
+    writeBy : String, //user name
+    type: String,
+    text: String
+  }]
 
 });
 

@@ -6,12 +6,13 @@ var studentSchema = mongoose.Schema({
 
   user : { type: ObjectId, ref: 'User' },
   name : String,
+  class : String,
   schoolId : String,
   pic: String,
-  shomeworks : { type: ObjectId, ref: 'Shomework' },
-  Groups : [{
-    id : { type: ObjectId, ref: 'Group' }
-  }]
+  shomeworks : { type: ObjectId, ref: 'Shomework' }
+//   Groups : [{
+//     id : { type: ObjectId, ref: 'Group' }
+//   }]
 
 });
 

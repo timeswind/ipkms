@@ -26,6 +26,11 @@ router.post('/login', passport.authenticate('local-login', {
   failureRedirect : '/login', // redirect back to the signup page if there is an error
 }));
 
+router.post('/login/student', passport.authenticate('local-student-login', {
+  successRedirect : '/home', // redirect to the secure profile section
+  failureRedirect : '/login', // redirect back to the signup page if there is an error
+}));
+
 router.post('/signup/teacher', passport.authenticate('local-teacher-signup', { //isAdmin production need
    successRedirect : '/admin', // redirect to the secure profile section
    failureRedirect : '/error', // redirect back to the signup page if there is an error

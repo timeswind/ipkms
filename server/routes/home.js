@@ -37,6 +37,12 @@ router.get('/teacher/managegroups', isTeacher, function(req, res, next) {
 
 });
 
+router.get('/student/mygroups', isStudent, function(req, res, next) {
+  var user = req.user;
+  res.render('my-groups');
+
+});
+
 module.exports = router;
 
 // route middleware to make sure a user is logged in
@@ -64,6 +70,15 @@ function isTeacher(req, res, next) {
   // if user is authenticated in the session, carry on
   if (req.isAuthenticated())
     if (req.user.local.role == "teacher")
+      return next();
+  // if they aren't redirect them to the home page
+  res.redirect('/home');
+}
+
+function isStudent(req, res, next) {
+  // if user is authenticated in the session, carry on
+  if (req.isAuthenticated())
+    if (req.user.local.role == "student")
       return next();
   // if they aren't redirect them to the home page
   res.redirect('/home');

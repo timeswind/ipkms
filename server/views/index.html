@@ -4,30 +4,46 @@
 
 
 {% block content %}
+<script type="text/javascript" src="/js/ng-app-login.js"></script>
+<div class="container" ng-app="login" ng-controller="loginController">
 
-  <div class="container">
+  <h1 style="text-align:center">iPkms<br>
 
-    <h1>{{ title }}</h1>
-    <p>Welcome! Please Login.</p>
-    <p>{{ user }}</p>
-<a href="/logout" class="btn btn-default btn-sm">Logout</a>
-    <hr><br>
-<!--     <a href="/auth/linkedin" class="btn btn-default">LinkedIn</a>
-    <a href="/auth/github" class="btn btn-default">Github</a>
-    <a href="/auth/twitter" class="btn btn-default">Twitter</a> -->
+    <a href="/logout" class="btn btn-default btn-sm">Logout</a>
+    <a ng-click="switchLogin()" class="btn btn-default btn-sm">SwitchLogin</a></h1>
 
-<form action="/login" method="post" style="max-width:300px;">
-	<div>
 
-	<input type="email" name="email" class="form-control" placeholder="Email"/>
-	</div>
-	<div style="margin-top:20px">
-	<input type="password" name="password" class="form-control" placeholder="Password"/>
-	</div>
-	<div style="margin-top:20px">
-	<input type="submit" value="Login" class="btn btn-primary"/>
-	</div>
-</form>
-  </div>
+
+  <hr><br>
+  <!--     <a href="/auth/linkedin" class="btn btn-default">LinkedIn</a>
+<a href="/auth/github" class="btn btn-default">Github</a>
+<a href="/auth/twitter" class="btn btn-default">Twitter</a> -->
+
+  <form action="/login" method="post" style="max-width:300px;margin:0 auto;" ng-if="!studentLogin">
+    <div>
+
+      <input type="email" name="email" class="form-control" placeholder="Email"/>
+    </div>
+    <div style="margin-top:20px">
+      <input type="password" name="password" class="form-control" placeholder="Password"/>
+    </div>
+    <div style="margin-top:20px">
+      <input type="submit" value="Login" class="btn btn-primary form-control"/>
+    </div>
+  </form>
+
+  <form action="/login/student" method="post" style="max-width:300px;margin:0 auto;" ng-if="studentLogin">
+    <div>
+
+      <input type="text" name="schoolid" class="form-control" placeholder="schoolid"/>
+    </div>
+    <div style="margin-top:20px">
+      <input type="password" name="password" class="form-control" placeholder="Password"/>
+    </div>
+    <div style="margin-top:20px">
+      <input type="submit" value="Login" class="btn btn-primary form-control"/>
+    </div>
+  </form>
+</div>
 
 {% endblock %}

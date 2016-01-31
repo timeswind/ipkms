@@ -7,7 +7,6 @@
 <script type="text/javascript" src="/js/ng-app-home.js"></script>
 <script src="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.min.js"></script>
 <link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.indigo-pink.min.css" />
-<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
 <div>
   <div ng-app="home" ng-controller="groupsManageController">
@@ -55,7 +54,7 @@ even in small screens. -->
                   <a style="float:left;margin-left:5px;color:#fff">
 
                     {[{group.group.students}]}</a>
-                  <i class="material-icons" ng-hide="group.public.boolean" style="font-size:12px">lock</i>
+                  <i class="material-icons" ng-hide="group.group.public.boolean" style="font-size:12px">lock</i>
                   {[{bTt(group.group.public.boolean)}]}</h6>
 
               </div>

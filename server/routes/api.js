@@ -11,6 +11,16 @@ var Thomework = require('../models/thomework');
 var Shomework = require('../models/shomework');
 
 
+router.route('/check/student')  //not production！！需要添加权限检查
+//get all teacher
+  .get(function(req, res) {
+  Student.findById(req.user.local.student, function(err, student) {
+    if (err)
+      res.send(err);
+
+    res.json(student);
+  });
+});
 
 router.route('/teachers')  //not production！！需要添加权限检查
 //get all teacher
@@ -159,6 +169,7 @@ router.route('/student/:student_id')  //not production！！需要添加权限�
   Student.findById(req.params.student_id, function(err, student) {
     if (err)
       res.send(err);
+
     res.json(student);
   });
 })
@@ -192,15 +203,10 @@ router.route('/student/:student_id')  //not production！！需要添加权限�
       });
     });
 
-
   });
-
-
-
 });
 
-router.route('/students')  //not production！！需要添加权限检查
-//get all students
+router.route('/students')  //get all students
   .get(isAdmin, function(req, res) {
   Student.find(function(err, students) {
     if (err)
@@ -211,8 +217,7 @@ router.route('/students')  //not production！！需要添加权限检查
 });
 
 
-router.route('/students/multi')  //not production！！需要添加权限检查
-// create a bear (accessed at POST http://localhost:8080/api/bears)
+router.route('/students/multi')  //create multiple students account
   .post(isAdmin, function(req, res) {
   if(req.body){
     var idArray = req.body['data[]'];
@@ -253,14 +258,10 @@ router.route('/students/multi')  //not production！！需要添加权限检查
 
   }else{
     res.json({ message: 'student create failed!' });
-
   }
-
-
-
 });
 
-router.route('/students/query/:query')  //not production！！需要添加权限检查
+router.route('/students/query/:query')  //query students with their name
   .get(isLoggedIn, function(req, res) {
   Student.find(
     { "name": { "$regex": req.params.query, "$options": "i" } },
@@ -301,19 +302,22 @@ router.route('/group')
   });
 
 });
-router.route('/student/groups/:student_id') //get student's groups //NOT FOR PRODUCTION USE
-  .get(function(req, res){
+router.route('/studentgroups') //get student's groups //NOT FOR PRODUCTION USE
+  .get(isStudent, function(req, res){
 
-  var studentid = req.params.student_id;
-  Group.find({'students': {$elemMatch: {id: studentid}}},
+  var studentid = req.user.local.student;
+  Group.find({'students.id': studentid},
              {public : 0,
               tags : 0,
+              logs: 0,
               students : 0},
              function(err, groups){
+
     res.json(groups)
   })
 
 })
+
 router.route('/teacher/groups/:option') //get teacher's groups
   .get(isTeacher, function(req, res){
   var option = req.params.option;
@@ -397,6 +401,15 @@ function isTeacher(req, res, next) {
   // if user is authenticated in the session, carry on
   if (req.isAuthenticated())
     if (req.user.local.role == "teacher")
+      return next();
+  // if they aren't redirect them to the home page
+  res.json("hello");
+}
+
+function isStudent(req, res, next) {
+  // if user is authenticated in the session, carry on
+  if (req.isAuthenticated())
+    if (req.user.local.role == "student")
       return next();
   // if they aren't redirect them to the home page
   res.json("hello");
