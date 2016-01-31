@@ -1,0 +1,113 @@
+a {
+  color: #00B7FF;
+}
+
+td {
+  vertical-align: middle !important;
+}
+
+.chipsdemoContactChips md-content.autocomplete {
+  min-height: 250px; }
+.chipsdemoContactChips md-content.autocomplete input {
+  min-width: 400px; }
+
+.chipsdemoContactChips .md-item-text.compact {
+  padding-top: 8px;
+  padding-bottom: 8px; }
+
+.chipsdemoContactChips .contact-item {
+  box-sizing: border-box; }
+.chipsdemoContactChips .contact-item.selected {
+  opacity: 0.5; }
+.chipsdemoContactChips .contact-item.selected h3 {
+  opacity: 0.5; }
+.chipsdemoContactChips .contact-item .md-list-item-text {
+  padding: 14px 0;
+  max-width: 190px; }
+.chipsdemoContactChips .contact-item .md-list-item-text h3 {
+  margin: 0 !important;
+  padding: 0;
+  line-height: 1.2em !important; }
+.chipsdemoContactChips .contact-item .md-list-item-text h3, .chipsdemoContactChips .contact-item .md-list-item-text p {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden; }
+@media screen and (min-width: 960px) {
+  .chipsdemoContactChips .contact-item {
+    float: left;
+    width: 33%; } }
+
+.chipsdemoContactChips md-contact-chips {
+  margin-bottom: 10px; }
+
+.chipsdemoContactChips .md-chips {
+  padding: 5px 0 8px; }
+
+.chipsdemoContactChips .fixedRows {
+  height: 250px;
+  overflow: hidden; }
+
+.chipsdemoCustomInputs md-content.autocomplete {
+  min-height: 200px; }
+
+.chipsdemoCustomInputs input[type=number] {
+  width: 110px; }
+
+
+.chipsdemoCustomInputs .veggie-option .md-item-text {
+  padding: 10px 0 4px 10px;
+  background: #EC407A;
+  border-radius: 3px; }
+
+.chipsdemoCustomInputs .veggie-option .md-item-text a {
+  font-size: 18px;
+  color: #fff;
+}
+
+.chipsdemoCustomInputs .veggie-option .md-item-text p {
+  color: #fff;
+  padding: 0;
+  margin: 0; }
+
+.demo-card-event.mdl-card {
+  width: 100%;
+  background: #fff;
+}
+
+.demo-card-event > .mdl-card__actions {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.demo-card-event > .mdl-card__title {
+  align-items: flex-start;
+}
+.demo-card-event > .mdl-card__title > h4 {
+  margin-top: 0;
+}
+.demo-card-event > .mdl-card__actions {
+  display: flex;
+  box-sizing:border-box;
+  align-items: center;
+}
+
+.g-student-card .md-item-text{
+  background:#EC407A;
+
+}
+.g-student-card p{
+  color:#fff;
+}
+.g-student-card .s-name{
+  margin:10px 0 0 15px;
+  font-size:18px;
+}
+
+.g-student-card .s-id{
+  margin:0 0 10px 15px;
+  font-size:14px;
+}
+/*
+Copyright 2016 Google Inc. All Rights Reserved.
+Use of this source code is governed by an MIT-style license that can be in foundin the LICENSE file at http://material.angularjs.org/license.
+*/
+
+

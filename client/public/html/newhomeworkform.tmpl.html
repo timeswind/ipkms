@@ -1,0 +1,51 @@
+<md-dialog aria-label="建立新功課" ng-cloak>
+  <form>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>建立新功課</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <i class="material-icons">close</i>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+
+      <div class="md-dialog-content" style="padding-top:10px;">
+        <md-input-container class="md-block">
+          <label>功課標題</label>
+          <input ng-model="newhomework.title">
+        </md-input-container>
+        <md-input-container class="md-block">
+          <label>功課要求</label>
+          <textarea ng-model="newhomework.qtext" columns="1" rows="3"></textarea>
+        </md-input-container>
+        <md-input-container class="md-block" flex-gt-sm>
+          <label>所屬科目</label>
+          <md-select ng-model="newhomework.subject">
+            <md-option ng-repeat="subject in subjects" value="{[{subject}]}">
+              {[{subject}]}
+            </md-option>
+          </md-select>
+        </md-input-container>
+
+        <md-radio-group ng-model="newhomework.delivery">
+          <md-radio-button value="false" class="md-primary">先將該功課保存，在將來分發給小組或同學</md-radio-button>
+          <md-radio-button value="true">現在就將功課分發給指定小組或同學</md-radio-button>
+        </md-radio-group>
+        <md-input-container class="md-block" ng-show="newhomework.delivery == 'true'" style="margin-top:30px;">
+          <label>目標小組</label>
+          <input ng-model="newhomework.targetGroup">
+        </md-input-container>
+
+
+        <md-datepicker ng-model="newhomework.deadline" md-placeholder="選擇上交日期" style="float:right;">
+        </md-datepicker>
+
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <md-button class="md-raised md-primary" style="margin-right:20px;">建立</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

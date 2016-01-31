@@ -1,0 +1,38 @@
+<md-dialog aria-label="{[{group.name}]}"  layout="column" style="margin:0 auto;width:800px;">
+
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 style="width:100%">{[{group.name}]}
+
+        <a style="float:right;margin-left:5px;color:#fff">
+          <i class="material-icons"  style="font-size:24px;float:left;margin-left:20px;margin-top:11px;margin-right:5px">
+            people</i>
+          {[{group.students}]}
+        </a>
+
+      </h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <i class="material-icons">close</i>
+      </md-button>
+    </div>
+  </md-toolbar>
+  <md-dialog-content class="md-padding">
+<!--     <h2 class="md-title">學生列表</h2> -->
+    <md-grid-list class="g-student-card" md-cols-gt-md="5" md-cols="3" md-cols-md="6"
+                  md-row-height-gt-md="16:9" md-row-height="16:9"
+                  md-gutter-gt-md="16px" md-gutter-md="8px" md-gutter="4px">
+      <md-grid-tile ng-repeat="student in gDetails.students">
+        <div class="md-item-text md-whiteframe-z1" flex="">
+          <p class="s-name">{[{student.name}]}</p>
+          <p class="s-id">{[{student.schoolid}]}</p>
+        </div>
+      </md-grid-tile>
+    </md-grid-list>
+
+  </md-dialog-content>
+  <!--     <md-dialog-actions layout="row">
+<md-button class="md-raised md-primary" style="margin-right:20px;" ng-click="createGroup()">建立</md-button>
+</md-dialog-actions> -->
+
+</md-dialog>

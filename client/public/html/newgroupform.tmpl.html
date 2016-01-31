@@ -1,0 +1,62 @@
+<md-dialog aria-label="建立新小組" class="autocomplete" layout="column" style="margin:0 auto;width:800px;">
+  <form>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>建立新小組</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <i class="material-icons">close</i>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+
+      <div class="md-dialog-content chipsdemoCustomInputs" style="padding-top:10px;">
+        <md-input-container class="md-block">
+          <label>小組命名</label>
+          <input ng-model="newgroup.name">
+        </md-input-container>
+
+        <md-radio-group ng-model="newgroup.public.boolean">
+          <label>是否公開</label>
+          <md-radio-button value="true" class="md-primary">公開小組（所有教師都可見）</md-radio-button>
+          <md-radio-button value="false">非公開小組（僅創建者有權限操作）</md-radio-button>
+        </md-radio-group>
+
+
+        <md-chips ng-model="ctrl.selectedVegetables" md-autocomplete-snap="" md-transform-chip="ctrl.transformChip($chip)" md-require-match="ctrl.autocompleteDemoRequireMatch">
+
+
+          <md-autocomplete md-selected-item="ctrl.selectedItem" md-search-text="ctrl.searchText" md-items="item in ctrl.querySearch(ctrl.searchText)" md-item-text="item.name" placeholder="查找學生" ng-keydown="keydown($event)" ng-keyup="keyup()">
+            <span md-highlight-text="ctrl.searchText">{[{item.name}]} : {[{item.schoolid}]}</span>
+          </md-autocomplete>
+          <md-chip-template>
+            <span>
+              <strong>{[{$chip.name}]}</strong>
+              <em>({[{$chip.schoolid}]})</em>
+            </span>
+          </md-chip-template>
+        </md-chips>
+
+        <br>
+        <h2 class="md-title" style="margin-top:0">搜索結果
+          <md-progress-circular ng-hide="searchDone" md-mode="indeterminate" md-diameter="40" style="float:left"></md-progress-circular></h2>
+        <md-grid-list class="veggie-option"
+                      md-cols-gt-md="5" md-cols="3" md-cols-md="6"
+                      md-row-height-gt-md="16:9" md-row-height="4:3"
+                      md-gutter-gt-md="16px" md-gutter-md="8px" md-gutter="4px">
+          <md-grid-tile ng-repeat="veg in ctrl.vegetables">
+            <div class="md-item-text md-whiteframe-z1" flex="">
+              <a>{[{veg.name}]}</a>
+              <p>{[{veg.schoolid}]}</p>
+            </div>
+          </md-grid-tile>
+        </md-grid-list>
+
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row">
+      <md-button class="md-raised md-primary" style="margin-right:20px;" ng-click="createGroup()">建立</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>
