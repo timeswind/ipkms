@@ -1,29 +1,14 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
-// var passportLinkedIn = require('../auth/linkedin');
 var Teacher = require('../models/teacher');
 var Student = require('../models/student');
 var User = require('../models/localuser');
 var Group = require('../models/group')
-
 var Thomework = require('../models/thomework');
 var Shomework = require('../models/shomework');
 
-
-router.route('/check/student')  //not production！！需要添加权限检查
-//get all teacher
-  .get(function(req, res) {
-  Student.findById(req.user.local.student, function(err, student) {
-    if (err)
-      res.send(err);
-
-    res.json(student);
-  });
-});
-
-router.route('/teachers')  //not production！！需要添加权限检查
-//get all teacher
+router.route('/teachers')  //get all teacher //admin api
   .get(isAdmin, function(req, res) {
   Teacher.find(function(err, teachers) {
     if (err)
@@ -33,8 +18,7 @@ router.route('/teachers')  //not production！！需要添加权限检查
   });
 });
 
-router.route('/teachers/includeuser')  //not production！！需要添加权限检查
-//get all teacher with user populated
+router.route('/teachers/includeuser')  //get all teacher with user populated //admin api
   .get(isAdmin, function(req, res) {
   Teacher.find({})
     .populate('user')
@@ -46,12 +30,11 @@ router.route('/teachers/includeuser')  //not production！！需要添加权限�
   })
 });
 
-router.route('/teacher/:user_id') //create a teacher from exist user
-
+router.route('/teacher/:user_id') //create a teacher from exist user //admin api
   .post(isAdmin, function(req, res) {
   User.findById(req.params.user_id, function(err, user) {
     if(user){
-      user.local.role = "teacher";  // update the bears info
+      user.local.role = "teacher";
       user.save(function(err) {
         if (err)
           res.send(err);
@@ -71,23 +54,21 @@ router.route('/teacher/:user_id') //create a teacher from exist user
           });
         });
       });
-
-    }
-
+    }else{
+      res.send("user not exist!");
+    };
   });
 
 })
 
-router.route('/teacher/:user_id/:teacher_id') //DELETE single teacher using its user_id and teacher_id
+router.route('/teacher/:user_id/:teacher_id') //DELETE single teacher using its user_id and teacher_id //admin api
 
-  .delete(isAdmin, function(req, res) { //need isAdmin
-
+  .delete(isAdmin, function(req, res) {
   Teacher.remove({_id: req.params.teacher_id}, function(err, user) {
     if (err)
       res.send(err);
 
     User.findById(req.params.user_id, function(err, user) {
-
       if (err)
         res.send(err);
 
@@ -105,28 +86,7 @@ router.route('/teacher/:user_id/:teacher_id') //DELETE single teacher using its 
 
 });
 
-//     .get(function(req, res) {
-//         Teacher.findById(req.params.teacher_id, function(err, teacher) {
-//             if (err)
-//                 res.send(err);
-//             res.json(teacher);
-//         });
-//     })
-
-//     .delete(function(req, res) { //need isAdmin
-//         Teacher.remove({
-//             _id: req.params.user_id
-//         }, function(err, user) {
-//             if (err)
-//                 res.send(err);
-
-//             res.json({ message: 'Successfully deleted teacher role of user' });
-//         });
-//     });
-
-router.route('/users')  //not production！！需要添加权限检查
-
-// get all the users
+router.route('/users')  // get all the users //admin api
   .get(isAdmin, function(req, res) {
   User.find(function(err, users) {
     if (err)
@@ -136,8 +96,8 @@ router.route('/users')  //not production！！需要添加权限检查
   });
 });
 
-router.route('/users/:user_id') //single user query
-  .get(isLoggedIn, function(req, res) {
+router.route('/users/:user_id')
+  .get(isLoggedIn, function(req, res) {  //get a user's info //user api
   User.findById(req.params.user_id, function(err, user) {
     if (err)
       res.send(err);
@@ -145,7 +105,7 @@ router.route('/users/:user_id') //single user query
   });
 })
 
-  .delete(isAdmin, function(req, res) { //need isAdmin   //delete a user
+  .delete(isAdmin, function(req, res) { //delete a user //admin api
   User.findById(req.params.user_id, function(err, user) {
     switch(user.local.role){
       case "admin":
@@ -164,7 +124,7 @@ router.route('/users/:user_id') //single user query
 });
 
 
-router.route('/student/:student_id')  //not production！！需要添加权限检查
+router.route('/student/:student_id')  //get a student's info //user api
   .get(isLoggedIn, function(req, res) {
   Student.findById(req.params.student_id, function(err, student) {
     if (err)
@@ -173,7 +133,7 @@ router.route('/student/:student_id')  //not production！！需要添加权限�
     res.json(student);
   });
 })
-  .delete(isAdmin, function(req, res) { //need isAdmin
+  .delete(isAdmin, function(req, res) { //delete a student role from a user //admin api
 
   Student.findById(req.params.student_id, function(err, student) {
     if (err)
@@ -206,7 +166,7 @@ router.route('/student/:student_id')  //not production！！需要添加权限�
   });
 });
 
-router.route('/students')  //get all students
+router.route('/students')  //get all students //admin api
   .get(isAdmin, function(req, res) {
   Student.find(function(err, students) {
     if (err)
@@ -216,8 +176,7 @@ router.route('/students')  //get all students
   });
 });
 
-
-router.route('/students/multi')  //create multiple students account
+router.route('/students/multi')  //create multiple students account //admin api //not complete
   .post(isAdmin, function(req, res) {
   if(req.body){
     var idArray = req.body['data[]'];
@@ -261,7 +220,7 @@ router.route('/students/multi')  //create multiple students account
   }
 });
 
-router.route('/students/query/:query')  //query students with their name
+router.route('/students/query/:query')  //query students with their name //user api
   .get(isLoggedIn, function(req, res) {
   Student.find(
     { "name": { "$regex": req.params.query, "$options": "i" } },
@@ -272,7 +231,7 @@ router.route('/students/query/:query')  //query students with their name
 });
 
 router.route('/group')
-  .post(isTeacher, function(req, res) {  //teacher create a student group
+  .post(isTeacher, function(req, res) {  //teacher create a student group  //teacher api
 
   var data = Object.keys(req.body)[0];
   var jsonData = JSON.parse(data);
@@ -302,7 +261,7 @@ router.route('/group')
   });
 
 });
-router.route('/studentgroups') //get student's groups //NOT FOR PRODUCTION USE
+router.route('/studentgroups') //get student's groups //student api
   .get(isStudent, function(req, res){
 
   var studentid = req.user.local.student;
@@ -318,7 +277,7 @@ router.route('/studentgroups') //get student's groups //NOT FOR PRODUCTION USE
 
 })
 
-router.route('/teacher/groups/:option') //get teacher's groups
+router.route('/teacher/groups/:option') //get teacher's groups //teacher api
   .get(isTeacher, function(req, res){
   var option = req.params.option;
   var teacher_id = req.user.local.teacher;
@@ -353,7 +312,6 @@ router.route('/teacher/groups/:option') //get teacher's groups
       for(i=0;i<arrayToModify["teachGroups"].length;i++){
         arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
       }
-
       res.json(arrayToModify);
     })
 
@@ -362,15 +320,13 @@ router.route('/teacher/groups/:option') //get teacher's groups
   }
 })
 
-router.route('/teacher/group/:group_id')
+router.route('/teacher/group/:group_id') //get teacher's group info //teacher api
   .get(isTeacher, function(req, res){
   var group_id = req.params.group_id;
 
   Group.findById(group_id, { name: 0 }).populate('students.id', 'name schoolId')
     .exec(function (err, group) {
-
     res.json(group)
-
   })
 
 
