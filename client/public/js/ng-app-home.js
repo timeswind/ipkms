@@ -114,6 +114,24 @@ angular.module('home', ['ngMaterial','ngMessages'])
 })
 
   .controller('NewGDialogController', function($scope, $http, $mdDialog, $mdMedia, $timeout, $interval) {
+  var self = this;
+
+  self.readonly = false;
+  self.selectedItem = null;
+  self.searchText = null;
+  self.querySearch = querySearch;
+  self.selectedVegetables = [];
+  self.selectedSchoolids = [];
+  self.numberChips = [];
+  self.numberChips2 = [];
+  self.numberBuffer = '';
+  self.autocompleteDemoRequireMatch = true;
+  self.transformChip = transformChip;
+
+  var cs = [];
+  var searchedText = [];
+  var typingTimer;                //timer identifier
+  var doneTypingInterval = 1000;
 
   $scope.newgroup = {
     public: {
@@ -131,10 +149,17 @@ angular.module('home', ['ngMaterial','ngMessages'])
     $mdDialog.cancel();
   };
 
-  var cs = [];
-  var searchedText = [];
-  var typingTimer;                //timer identifier
-  var doneTypingInterval = 1000;
+  $scope.clickStudentTile = function(stu){
+
+    if(!arrayContains(stu.schoolid, self.selectedSchoolids)){
+      console.log(stu);
+      self.selectedVegetables.push(stu);
+      self.selectedSchoolids.push(stu.schoolid);
+    }
+
+  };
+
+
   //on keyup, start the countdown
   $scope.keyup = function(){
     clearTimeout(typingTimer);
@@ -142,19 +167,21 @@ angular.module('home', ['ngMaterial','ngMessages'])
   }
   //on keydown, clear the countdown
   $scope.keydown = function(){
-    if (event.keyCode !== 8) {
+    if (event.keyCode == 8) {
+      $scope.searchDone = true;
+    }else{
       $scope.searchDone = false;
     }
     clearTimeout(typingTimer);
   }
 
-  //user is "finished typing," do query
+  //user is "finished typing," do student query
   function doneTyping () {
     if((self.searchText !== '') && !(arrayContains(self.searchText, searchedText))){
       queryStudents(self.searchText);
     }
   }
-
+  //student query function
   function queryStudents(query){
     $http({
       method: 'GET',
@@ -208,18 +235,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
     return (arrhaystack.indexOf(needle) > -1);
   }
 
-  var self = this;
 
-  self.readonly = false;
-  self.selectedItem = null;
-  self.searchText = null;
-  self.querySearch = querySearch;
-  self.selectedVegetables = [];
-  self.numberChips = [];
-  self.numberChips2 = [];
-  self.numberBuffer = '';
-  self.autocompleteDemoRequireMatch = true;
-  self.transformChip = transformChip;
 
   /**
            * Return the proper object when the append is called.
@@ -237,8 +253,8 @@ angular.module('home', ['ngMaterial','ngMessages'])
   }
 
   /**
-           * Search for vegetables.
-           */
+  * Search for students.
+  */
   function querySearch(query) {
     if(cs.length !== 0){
       var results = query ? self.vegetables.filter(createFilterFor(query)) : [];
@@ -247,12 +263,11 @@ angular.module('home', ['ngMaterial','ngMessages'])
   }
 
   /**
-           * Create filter function for a query string
-           */
+  * Create filter function for a query string
+  */
   function createFilterFor(query) {
-
     console.log(query);
-    //     var lowercaseQuery = angular.lowercase(query);
+    //     var lowercaseQuery = angular.lowercase(query); //for english only
     return function filterFn(vegetable) {
       return (vegetable.name.indexOf(query) != -1) ||
         (vegetable.schoolid.indexOf(query) != -1);

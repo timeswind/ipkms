@@ -39,16 +39,15 @@
         </md-chips>
 
         <br>
-        <h2 class="md-title" style="margin-top:0">搜索結果
-          <md-progress-circular ng-hide="searchDone" md-mode="indeterminate" md-diameter="40" style="float:left"></md-progress-circular></h2>
+        <h2 class="md-title" style="margin:0">搜索結果<md-progress-circular ng-hide="searchDone" md-mode="indeterminate" md-diameter="40" style="float:left"></md-progress-circular></h2>
         <md-grid-list class="veggie-option"
                       md-cols-gt-md="5" md-cols="3" md-cols-md="6"
                       md-row-height-gt-md="16:9" md-row-height="4:3"
                       md-gutter-gt-md="16px" md-gutter-md="8px" md-gutter="4px">
-          <md-grid-tile ng-repeat="veg in ctrl.vegetables">
+          <md-grid-tile ng-repeat="stu in ctrl.vegetables" ng-click="clickStudentTile(stu)">
             <div class="md-item-text md-whiteframe-z1" flex="">
-              <a>{[{veg.name}]}</a>
-              <p>{[{veg.schoolid}]}</p>
+              <a>{[{stu.name}]}</a>
+              <p>{[{stu.schoolid}]}</p>
             </div>
           </md-grid-tile>
         </md-grid-list>
