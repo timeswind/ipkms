@@ -1,0 +1,125 @@
+{% extends 'layout.html' %}
+
+{% block title %}{% endblock %}
+
+
+{% block content %}
+<script type="text/javascript" src="/js/ng-app-home.js"></script>
+<script src="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.min.js"></script>
+<link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.indigo-pink.min.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<style>
+  .welcome-card-wide.mdl-card {
+    width:100%;
+    margin:0 auto;
+  }
+  .welcome-card-wide > .mdl-card__title {
+    color: #fff;
+    height: 176px;
+    background: url('http://www.getmdl.io/assets/demos/welcome_card.jpg') center / cover;
+  }
+  .welcome-card-wide > .mdl-card__menu {
+    color: #fff;
+  }
+  .start-homework-card-wide.mdl-card {
+    width:100%;
+    margin:0 auto;
+  }
+  .start-homework-card-wide > .mdl-card__title {
+    color: #fff;
+    height: 176px;
+    background: #FF5722;
+  }
+  .start-homework-card-wide > .mdl-card__menu {
+    color: #fff;
+  }
+
+</style>
+<div>
+  <div ng-app="home" ng-controller="homeController">
+    <!-- The drawer is always open in large screens. The header is always shown,
+even in small screens. -->
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
+                mdl-layout--fixed-header">
+      <header class="mdl-layout__header">
+        <div class="mdl-layout__header-row">
+          <span class="mdl-layout-title">Home</span>
+          <div class="mdl-layout-spacer"></div>
+          <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
+                      mdl-textfield--floating-label mdl-textfield--align-right">
+            <label class="mdl-button mdl-js-button mdl-button--icon"
+                   for="fixed-header-drawer-exp">
+              <i class="material-icons">search</i>
+            </label>
+            <div class="mdl-textfield__expandable-holder">
+              <input class="mdl-textfield__input" type="text" name="sample"
+                     id="fixed-header-drawer-exp">
+            </div>
+          </div>
+        </div>
+      </header>
+      <div class="mdl-layout__drawer">
+        <span class="mdl-layout-title">教師主頁</span>
+        <nav class="mdl-navigation">
+          <a class="mdl-navigation__link" href="">小組管理</a>
+          <a class="mdl-navigation__link" href="">我的學生</a>
+          <a class="mdl-navigation__link" href="">作業管理</a>
+        </nav>
+      </div>
+      <main class="mdl-layout__content">
+        <div class="page-content">
+          <div class="mdl-grid">
+            <div class="mdl-cell mdl-cell--8-col">
+              <div class="welcome-card-wide mdl-card mdl-shadow--2dp">
+                <div class="mdl-card__title">
+                  <h2 class="mdl-card__title-text">歡迎</h2>
+                </div>
+                <div class="mdl-card__supporting-text">
+                  在這裡，你可以進行功課創建與分發，題庫輸入與修改，檢查學生的功課進度等方便的功能。
+                </div>
+                <div class="mdl-card__actions mdl-card--border">
+                  <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                    查看使用教程
+                  </a>
+                </div>
+                <div class="mdl-card__menu">
+                  <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+                    <i class="material-icons">help</i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+            <div class="mdl-cell mdl-cell--4-col">
+              <div class="start-homework-card-wide mdl-card mdl-shadow--2dp">
+                <div class="mdl-card__title">
+                  <h2 class="mdl-card__title-text">預先創建功課</h2>
+                </div>
+                <div class="mdl-card__supporting-text">
+                  提前建立功課的模板，以便之後一鍵佈置給指定的班級或同學。
+                </div>
+                <div class="mdl-card__actions mdl-card--border">
+                  <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+                    開始編寫
+                  </a>
+                </div>
+                <div class="mdl-card__menu">
+                  <button class="mdl-button mdl-button--icon mdl-js-button mdl-js-ripple-effect">
+                    <i class="material-icons">help</i>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+
+
+        </div>
+      </main>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
