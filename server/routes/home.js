@@ -5,7 +5,7 @@ var passport = require('passport');
 // var Teacher = require('../models/teacher');
 // var User = require('../models/localuser');
 
-router.get('/', function(req, res, next) {
+router.get('/', isLoggedIn, function(req, res, next) {
   var user;
   if (req.user) {
     user = req.user;
@@ -19,38 +19,23 @@ router.get('/', function(req, res, next) {
   }
 });
 
-router.get('/teacher', function(req, res, next) {
+router.get('/teacher', isTeacher, function(req, res, next) {
   var user;
-// uncommon after release
-//   if(req.user){
-//     if(req.user.local.role == "teacher"){
-//       user = req.user;
-//       res.render('home-teacher', { title: 'Home', user: user});
-//     }else{
-//       res.redirect('/home');
-//     }
-//   }else{
-//     res.redirect('/');
-//   }
-
-res.render('home-teacher', { title: 'Home', user: user});
-
+  res.render('home-teacher', { title: 'Home', user: user});
 
 });
 
-router.get('/teacher/managehomework', function(req, res, next) {
-var user = req.user;
-res.render('manage-homework', { title: 'Home', user: user});
+router.get('/teacher/managehomework', isTeacher, function(req, res, next) {
+  var user = req.user;
+  res.render('manage-homework', { title: 'Home', user: user});
 
 });
 
-router.get('/teacher/managegroups', function(req, res, next) {
-var user = req.user;
-res.render('manage-groups', { title: 'Home', user: user});
+router.get('/teacher/managegroups', isTeacher, function(req, res, next) {
+  var user = req.user;
+  res.render('manage-groups', { title: 'Home', user: user});
 
 });
-
-
 
 module.exports = router;
 
@@ -72,5 +57,14 @@ function isAdmin(req, res, next) {
     if (req.user.local.role == "admin")
       return next();
   // if they aren't redirect them to the home page
-  res.redirect('/profile');
+  res.redirect('/');
+}
+
+function isTeacher(req, res, next) {
+  // if user is authenticated in the session, carry on
+  if (req.isAuthenticated())
+    if (req.user.local.role == "teacher")
+      return next();
+  // if they aren't redirect them to the home page
+  res.redirect('/home');
 }
