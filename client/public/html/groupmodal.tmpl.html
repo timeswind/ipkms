@@ -24,8 +24,8 @@
                   md-gutter-gt-md="16px" md-gutter-md="8px" md-gutter="4px">
       <md-grid-tile ng-repeat="student in gDetails.students">
         <div class="md-item-text md-whiteframe-z1" flex="">
-          <p class="s-name">{[{student.name}]}</p>
-          <p class="s-id">{[{student.schoolid}]}</p>
+          <p class="s-name">{[{student.id.name}]}</p>
+          <p class="s-id">{[{student.id.schoolId}]}</p>
         </div>
       </md-grid-tile>
     </md-grid-list>

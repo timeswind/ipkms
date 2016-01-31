@@ -276,11 +276,17 @@ router.route('/group')
   var data = Object.keys(req.body)[0];
   var jsonData = JSON.parse(data);
 
+  var reformattedStudents = jsonData["students"].map(function(obj){
+    var rObj = {};
+    rObj["id"] = obj.id;
+    return rObj;
+  });
+
   var newGroup = new Group();
   newGroup.name = jsonData["name"];
   newGroup.public.boolean = jsonData["public"];
   newGroup.public.owner = req.user.local.teacher;
-  newGroup.students = jsonData["students"]
+  newGroup.students = reformattedStudents;
   newGroup.save(function(err, g) {
     if (err)
       res.send(err);
@@ -295,7 +301,19 @@ router.route('/group')
   });
 
 });
+router.route('/student/groups/:student_id') //get student's groups //NOT FOR PRODUCTION USE
+  .get(function(req, res){
 
+  var studentid = req.params.student_id;
+  Group.find({'students': {$elemMatch: {id: studentid}}},
+             {public : 0,
+              tags : 0,
+              students : 0},
+             function(err, groups){
+    res.json(groups)
+  })
+
+})
 router.route('/teacher/groups/:option') //get teacher's groups
   .get(isTeacher, function(req, res){
   var option = req.params.option;
@@ -344,10 +362,11 @@ router.route('/teacher/group/:group_id')
   .get(isTeacher, function(req, res){
   var group_id = req.params.group_id;
 
-  Group.findById(group_id,
-                 { name: 0 },
-                 function(err,group) {
-    res.json(group);
+  Group.findById(group_id, { name: 0 }).populate('students.id', 'name schoolId')
+    .exec(function (err, group) {
+
+    res.json(group)
+
   })
 
 

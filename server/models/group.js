@@ -12,11 +12,9 @@ var groupSchema = mongoose.Schema({
   },
   students : [{
     _id:false,
-    schoolid : String,
-    name : String,
     id: { type: ObjectId, ref: 'Student' }
   }],
-  teacherIds : [{ type: ObjectId, ref: 'Teacher' }]
+  teachers : [{ type: ObjectId, ref: 'Teacher' }]
 
 });
 
