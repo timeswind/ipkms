@@ -153,7 +153,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
   self.selectedItem = null;
   self.searchText = null;
   self.querySearch = querySearch;
-  self.selectedVegetables = [];
+  self.selectedStudents = [];
   self.numberChips = [];
   self.numberChips2 = [];
   self.numberBuffer = '';
@@ -183,9 +183,8 @@ angular.module('home', ['ngMaterial','ngMessages'])
 
   $scope.clickStudentTile = function(stu){
 
-    if(!containsObject(stu, self.selectedVegetables)){
-      console.log(stu);
-      self.selectedVegetables.push(stu);
+    if(!containsObject(stu, self.selectedStudents)){
+      self.selectedStudents.push(stu);
     }
 
   };
@@ -245,7 +244,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
         }
       }
       $scope.searchDone = true;
-      self.vegetables = loadVegetables();
+      self.students = loadStudents();
     }, function errorCallback(response) {
       console.log(response);
     })
@@ -288,7 +287,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
   */
   function querySearch(query) {
     if(cs.length !== 0){
-      var results = query ? self.vegetables.filter(createFilterFor(query)) : [];
+      var results = query ? self.students.filter(createFilterFor(query)) : [];
       return results;
     }
   }
@@ -297,16 +296,16 @@ angular.module('home', ['ngMaterial','ngMessages'])
   * Create filter function for a query string
   */
   function createFilterFor(query) {
-    console.log(query);
+
     //     var lowercaseQuery = angular.lowercase(query); //for english only
-    return function filterFn(vegetable) {
-      return (vegetable.name.indexOf(query) != -1) ||
-        (vegetable.schoolid.indexOf(query) != -1);
+    return function filterFn(student) {
+      return (student.name.indexOf(query) != -1) ||
+        (student.schoolid.indexOf(query) != -1);
     };
 
   }
 
-  function loadVegetables() {
+  function loadStudents() {
     var veggies = cs;
     //     return veggies.map(function(veg) {
     //       veg._lowername = veg.name.toLowerCase();
@@ -320,7 +319,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
     var data = {
       "name" : $scope.newgroup.name,
       "public" : $scope.newgroup.public.boolean,
-      "students" : self.selectedVegetables
+      "students" : self.selectedStudents
     };
 
     console.log(data);

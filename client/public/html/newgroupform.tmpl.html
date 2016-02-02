@@ -24,7 +24,7 @@
         </md-radio-group>
 
 
-        <md-chips ng-model="ctrl.selectedVegetables" md-autocomplete-snap="" md-transform-chip="ctrl.transformChip($chip)" md-require-match="ctrl.autocompleteDemoRequireMatch">
+        <md-chips ng-model="ctrl.selectedStudents" md-autocomplete-snap="" md-transform-chip="ctrl.transformChip($chip)" md-require-match="ctrl.autocompleteDemoRequireMatch">
 
 
           <md-autocomplete md-selected-item="ctrl.selectedItem" md-search-text="ctrl.searchText" md-items="item in ctrl.querySearch(ctrl.searchText)" md-item-text="item.name" placeholder="查找學生" ng-keydown="keydown($event)" ng-keyup="keyup()">
@@ -44,7 +44,7 @@
                       md-cols-gt-md="5" md-cols="3" md-cols-md="6"
                       md-row-height-gt-md="16:9" md-row-height="4:3"
                       md-gutter-gt-md="16px" md-gutter-md="8px" md-gutter="4px">
-          <md-grid-tile ng-repeat="stu in ctrl.vegetables" ng-click="clickStudentTile(stu)">
+          <md-grid-tile ng-repeat="stu in ctrl.students" ng-click="clickStudentTile(stu)">
             <div class="md-item-text md-whiteframe-z1" flex="">
               <a>{[{stu.name}]}</a>
               <p>{[{stu.schoolid}]}</p>

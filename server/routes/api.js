@@ -222,12 +222,22 @@ router.route('/students/multi')  //create multiple students account //admin api 
 
 router.route('/students/query/:query')  //query students with their name //user api
   .get(isLoggedIn, function(req, res) {
-  Student.find(
-    { "name": { "$regex": req.params.query, "$options": "i" } },
-    function(err,students) {
-      res.json(students);
-    }
-  );
+  var query = req.params.query;
+  if(query == "all"){
+    Student.find(
+      {}, "_id name schoolId", 
+      function(err,students) {
+        res.json(students);
+      }
+    );
+  }else{
+    Student.find(
+      { "name": { "$regex": req.params.query, "$options": "i" } },
+      function(err,students) {
+        res.json(students);
+      }
+    );
+  }
 });
 
 router.route('/group')
@@ -337,14 +347,14 @@ router.route('/teacher/group/:group_id') //get teacher's group info //teacher ap
   .get(isTeacher, function(req, res){
   var group_id = req.params.group_id;
 
-  Group.findById(group_id).populate('students.id', 'name schoolId')
+  Group.findById(group_id, "students notice").populate('students.id', 'name schoolId')
     .exec(function (err, group) {
     res.json(group)
   })
 
 
 })
-router.route('/teacher/delete/group/:group_id')
+router.route('/teacher/delete/group/:group_id') //教師刪除小組api //teacher pi
   .delete(isTeacher, function(req, res){
   var group_id = req.params.group_id;
   var teacher_id = req.user.local.teacher;
@@ -362,7 +372,7 @@ router.route('/teacher/delete/group/:group_id')
   })
 })
 
-router.route('/teacher/update/group/:group_id/:option')
+router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信息api //teacher api
   .post(isTeacher, function(req, res){
   var newNotice = Object.keys(req.body)[0];
   var group_id = req.params.group_id;

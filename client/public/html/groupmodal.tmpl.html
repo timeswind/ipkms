@@ -21,21 +21,21 @@
 
     <md-subheader class="md-no-sticky" ng-hide="editNotice">公告
 
-      <md-button class="md-primary" ng-click="editNotice = true ; updatedNotice = gDetails.notice.text" style="float:right;margin:-10px">更新公告</md-button></md-subheader>
+      <md-button class="md-primary md-raised" ng-click="editNotice = true ; updatedNotice = gDetails.notice.text" style="float:right;margin:-10px;margin-right:0">更新公告</md-button></md-subheader>
     <md-content flex layout-padding style="padding-top:0">
       <md-input-container class="md-block" ng-show="editNotice" style="margin-bottom:0">
         <label>更新公告</label>
-        <textarea ng-model="updatedNotice" columns="1">{[{gDetails.notice.text}]}</textarea>
-        <md-button class="md-warn" ng-show="editNotice" ng-click="editNotice = false" style="float:right">取消</md-button>
-        <md-button class="md-primary" ng-show="editNotice" ng-click="updateNotice(updatedNotice)" style="float:right">更新</md-button>
+        <textarea ng-model="updatedNotice" columns="1" style="margin-bottom:10px">{[{gDetails.notice.text}]}</textarea>
+        <md-button class="md-warn md-raised" ng-show="editNotice" ng-click="editNotice = false" style="float:right;margin-right:0">取消</md-button>
+        <md-button class="md-primary md-raised" ng-show="editNotice" ng-click="updateNotice(updatedNotice)" style="float:right">更新</md-button>
       </md-input-container>
 
-      <p ng-hide="editNotice">{[{gDetails.notice.text}]}</p>
+      <p ng-hide="editNotice" style="font-size:18px;margin:10px 8px 0 8px;border: 2px #9E9E9E dashed">{[{gDetails.notice.text}]}</p>
     </md-content>
     <md-subheader class="md-no-sticky">成員</md-subheader>
     <md-grid-list class="g-student-card" md-cols-gt-md="5" md-cols="3" md-cols-md="6"
                   md-row-height="40px"
-                  md-gutter="10px">
+                  md-gutter="10px" style="margin-left:15px;margin-right:15px;margin-bottom:10px">
       <md-grid-tile ng-repeat="student in gDetails.students">
         <div class="md-item-text md-whiteframe-z1" flex="">
           <p class="s-name">{[{student.id.name}]}</p>
