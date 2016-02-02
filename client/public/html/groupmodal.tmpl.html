@@ -18,6 +18,20 @@
     </div>
   </md-toolbar>
   <md-dialog-content class="md-padding">
+
+    <md-subheader class="md-no-sticky" ng-hide="editNotice">公告
+
+      <md-button class="md-primary" ng-click="editNotice = true ; updatedNotice = gDetails.notice.text" style="float:right;margin:-10px">更新公告</md-button></md-subheader>
+    <md-content flex layout-padding style="padding-top:0">
+      <md-input-container class="md-block" ng-show="editNotice" style="margin-bottom:0">
+        <label>更新公告</label>
+        <textarea ng-model="updatedNotice" columns="1">{[{gDetails.notice.text}]}</textarea>
+        <md-button class="md-warn" ng-show="editNotice" ng-click="editNotice = false" style="float:right">取消</md-button>
+        <md-button class="md-primary" ng-show="editNotice" ng-click="updateNotice(updatedNotice)" style="float:right">更新</md-button>
+      </md-input-container>
+
+      <p ng-hide="editNotice">{[{gDetails.notice.text}]}</p>
+    </md-content>
     <md-subheader class="md-no-sticky">成員</md-subheader>
     <md-grid-list class="g-student-card" md-cols-gt-md="5" md-cols="3" md-cols-md="6"
                   md-row-height="40px"

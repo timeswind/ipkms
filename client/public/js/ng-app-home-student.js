@@ -11,6 +11,14 @@ angular.module('student', ['ngMaterial','ngMessages'])
 
   .controller('groupController', function($scope, $http) {
   getMyGroups();
+  $scope.checkNotice = function(notice){
+    if(notice !== undefined){
+      if(notice !== " "){
+        return "公告：" + notice;
+      }
+    }
+
+  }
   function getMyGroups(){ //get groups that student involved
     $http({
       url: '/api/studentgroups',

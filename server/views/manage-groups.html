@@ -5,8 +5,7 @@
 
 {% block content %}
 <script type="text/javascript" src="/js/ng-app-home.js"></script>
-<script src="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.min.js"></script>
-<link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.6/material.indigo-pink.min.css" />
+<link rel="stylesheet" href="https://code.getmdl.io/1.1.0/material.indigo-pink.min.css" />
 
 <div>
   <div ng-app="home" ng-controller="groupsManageController">
@@ -67,7 +66,21 @@ even in small screens. -->
                 <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" ng-click="showGroupDialog($event, group.group)">查看小組
                 </a>
                 <div class="mdl-layout-spacer"></div>
-                <i class="material-icons" style="color:#3F51B5">edit</i>
+                <!-- Right aligned menu on top of button  -->
+                <md-menu md-position-mode="target-right target" style="padding:0">
+                  <md-button aria-label="Open demo menu" class="md-icon-button" ng-click="$mdOpenMenu($event)">
+                    <i class="material-icons">more_vert</i>
+                  </md-button>
+                  <md-menu-content width="4" >
+                    <md-menu-item>
+                      <md-button ng-click="deleteGroup(group.group._id)">
+                        <div layout="row">
+                          <p flex>關閉小組</p>
+                        </div>
+                      </md-button>
+                    </md-menu-item>
+                  </md-menu-content>
+                </md-menu>
               </div>
             </div>
           </div>

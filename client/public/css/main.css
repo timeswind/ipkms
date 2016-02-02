@@ -5,6 +5,22 @@ a {
 td {
   vertical-align: middle !important;
 }
+.ellipsis {
+  text-overflow: ellipsis;
+
+  /* Required for text-overflow to do anything */
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.overflow {
+  width: 90%;
+  /**
+  * Required properties to achieve text-overflow
+  */
+  white-space: nowrap;
+  overflow: hidden;
+}
 
 .chipsdemoContactChips md-content.autocomplete {
   min-height: 250px; }
@@ -57,7 +73,8 @@ td {
 .chipsdemoCustomInputs .veggie-option .md-item-text {
   padding: 10px 0 4px 10px;
   background: #EC407A;
-  border-radius: 3px; }
+  border-radius: 3px;
+  cursor:pointer;}
 
 .chipsdemoCustomInputs .veggie-option .md-item-text a {
   font-size: 18px;

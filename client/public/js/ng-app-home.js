@@ -85,6 +85,27 @@ angular.module('home', ['ngMaterial','ngMessages'])
 
   };
 
+  var originatorEv;
+  $scope.openMenu = function($mdOpenMenu, ev) {
+    originatorEv = ev;
+    $mdOpenMenu(ev);
+  };
+  $scope.deleteGroup = function(group_id) {
+
+    $mdDialog.show(
+      $mdDialog.confirm()
+      .title('你確定要刪除這個小組嗎？')
+      .textContent('這個操作不可以撤銷')
+      .ok('我確定')
+      .cancel('取消')
+      .targetEvent(originatorEv)
+    ).then(function() {
+      deleteGroup(group_id);
+    });
+    originatorEv = null;
+
+  };
+
   function getMyGroups(){
     $http({
       url: '/api/teacher/groups/fromtc',
@@ -96,6 +117,18 @@ angular.module('home', ['ngMaterial','ngMessages'])
     },
             function(response) { // optional
       console.log("fail to get teacher's groups")
+    });
+  }
+  function deleteGroup(group_id){
+    $http({
+      url: '/api/teacher/delete/group/' + group_id,
+      method: "DELETE",
+    })
+      .then(function(response) {
+      getMyGroups();
+    },
+            function(response) { // optional
+      console.log("fail to delete this group")
     });
   }
 
@@ -121,7 +154,6 @@ angular.module('home', ['ngMaterial','ngMessages'])
   self.searchText = null;
   self.querySearch = querySearch;
   self.selectedVegetables = [];
-  self.selectedSchoolids = [];
   self.numberChips = [];
   self.numberChips2 = [];
   self.numberBuffer = '';
@@ -151,10 +183,9 @@ angular.module('home', ['ngMaterial','ngMessages'])
 
   $scope.clickStudentTile = function(stu){
 
-    if(!arrayContains(stu.schoolid, self.selectedSchoolids)){
+    if(!containsObject(stu, self.selectedVegetables)){
       console.log(stu);
       self.selectedVegetables.push(stu);
-      self.selectedSchoolids.push(stu.schoolid);
     }
 
   };
@@ -322,6 +353,50 @@ angular.module('home', ['ngMaterial','ngMessages'])
     $mdDialog.cancel();
   };
 
+  $scope.updateNotice = function(updatedNotice){
+
+    var text = $scope.gDetails.notice;
+
+    if(text !== undefined){
+      if($scope.gDetails.notice.text !== updatedNotice){
+        $http({
+          url: '/api/teacher/update/group/' + $scope.gDetails._id + '/notice',
+          method: "POST",
+          data: updatedNotice,
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+
+        })
+          .then(function(response) {
+          // success
+          $scope.gDetails.notice.text = updatedNotice;
+          $scope.editNotice = false;
+        },
+                function(response) { // optional
+          // failed
+        });
+      }else{
+        $scope.editNotice = false;
+      }
+    }else{
+      if(updatedNotice){
+        $http({
+          url: '/api/teacher/update/group/' + $scope.gDetails._id + '/notice',
+          method: "POST",
+          data: updatedNotice,
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+
+        })
+          .then(function(response) {
+          // success
+          getGroupDetails();
+          $scope.editNotice = false;
+        },
+                function(response) { // optional
+          // failed
+        });
+      }
+    }
+  }
   function getGroupDetails(){
     $http({
       url: '/api/teacher/group/' + group._id,

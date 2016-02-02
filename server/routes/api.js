@@ -64,7 +64,7 @@ router.route('/teacher/:user_id') //create a teacher from exist user //admin api
 router.route('/teacher/:user_id/:teacher_id') //DELETE single teacher using its user_id and teacher_id //admin api
 
   .delete(isAdmin, function(req, res) {
-  Teacher.remove({_id: req.params.teacher_id}, function(err, user) {
+  Teacher.remove({_id: req.params.teacher_id}, function(err) {
     if (err)
       res.send(err);
 
@@ -241,23 +241,41 @@ router.route('/group')
     rObj["id"] = obj.id;
     return rObj;
   });
+  var newLog = {
+    writeBy : req.user.id,
+    date : Date.now(),
+    event : "new group",
+    text : "創建新小組﹣" + jsonData["name"]
+  }
+
 
   var newGroup = new Group();
   newGroup.name = jsonData["name"];
+  newGroup.notice.text = jsonData["name"]+ "﹣新小組成立啦，快過來看看吧";
   newGroup.public.boolean = jsonData["public"];
   newGroup.public.owner = req.user.local.teacher;
   newGroup.students = reformattedStudents;
-  newGroup.save(function(err, g) {
-    if (err)
-      res.send(err);
+  newGroup.logs = newLog;
 
-    Teacher.findById(req.user.local.teacher, function(err, t){
-      t.teachGroups.push({
-        group: g.id,
+  newGroup.save(function(err, group) {
+    if(err){
+      res.send(err);
+    }else{
+      Teacher.findById(req.user.local.teacher, function(err, t){
+        t.teachGroups.push({
+          group: group.id,
+        });
+        t.save(function(err) {
+          if(err){
+            res.send(err);
+          }else{
+            res.json("create group success");
+          }
+
+        })
+
       });
-      t.save();
-      res.json("create group success");
-    });
+    }
   });
 
 });
@@ -265,14 +283,10 @@ router.route('/studentgroups') //get student's groups //student api
   .get(isStudent, function(req, res){
 
   var studentid = req.user.local.student;
-  Group.find({'students.id': studentid},
-             {public : 0,
-              tags : 0,
-              logs: 0,
-              students : 0},
-             function(err, groups){
+  Group.find({'students.id': studentid},'_id name notice').lean().exec(function (err, groups) {
+    if(err) res.send(err);
 
-    res.json(groups)
+    res.json(groups);
   })
 
 })
@@ -282,29 +296,28 @@ router.route('/teacher/groups/:option') //get teacher's groups //teacher api
   var option = req.params.option;
   var teacher_id = req.user.local.teacher;
 
-  if(option == "simple"){
-    Group.aggregate([{$match:{"public.owner" : teacher_id}},
-                     {$project: {students: {$size: '$students'},
-                                 name: '$name',
-                                 public:{
-                                   boolean:'$public.boolean'
-                                 }}}],
-                    function(err,groups) {
-      res.json(groups);
-    })
-  }else if(option == "students"){
-    Group.aggregate([{$match:{"public.owner" : teacher_id}},
-                     {$project: {students: '$students'}}],
-                    function(err,groups) {
-      res.json(groups);
-    })
-  }else if(option == "fromtc"){
+  // Deprecated APIs 未来用法有待测试
+
+  //   if(option == "simple"){
+  //     Group.aggregate([{$match:{"public.owner" : teacher_id}},
+  //                      {$project: {students: {$size: '$students'},
+  //                                  name: '$name',
+  //                                  public:{
+  //                                    boolean:'$public.boolean'
+  //                                  }}}],
+  //                     function(err,groups) {
+  //       res.json(groups);
+  //     })
+  //   }else if(option == "students"){
+  //     Group.aggregate([{$match:{"public.owner" : teacher_id}},
+  //                      {$project: {students: '$students'}}],
+  //                     function(err,groups) {
+  //       res.json(groups);
+  //     })
+  //   }else
+  if(option == "fromtc"){
     Teacher.findById(req.user.local.teacher,
-                     {__v:0,
-                      _id:0,
-                      name:0,
-                      user:0,
-                      thomeworks:0}).populate('teachGroups.group', 'name students public.boolean').lean() // only return the Persons name
+                     'teachGroups').populate('teachGroups.group', 'name students public.boolean').lean()
       .exec(function (err, teachGroups) {
       if (err) res.json(err);
 
@@ -324,14 +337,61 @@ router.route('/teacher/group/:group_id') //get teacher's group info //teacher ap
   .get(isTeacher, function(req, res){
   var group_id = req.params.group_id;
 
-  Group.findById(group_id, { name: 0 }).populate('students.id', 'name schoolId')
+  Group.findById(group_id).populate('students.id', 'name schoolId')
     .exec(function (err, group) {
     res.json(group)
   })
 
 
 })
+router.route('/teacher/delete/group/:group_id')
+  .delete(isTeacher, function(req, res){
+  var group_id = req.params.group_id;
+  var teacher_id = req.user.local.teacher;
+  Group.remove({_id: group_id}, function(err) {
+    if(err) res.send(err);
 
+    Teacher.findById(teacher_id, function(err, teacher){
+      teacher.teachGroups.pull({group: group_id});
+      teacher.save(function(err){
+        if(err) res.send(err);
+
+        res.json("success delete a group")
+      })
+    })
+  })
+})
+
+router.route('/teacher/update/group/:group_id/:option')
+  .post(isTeacher, function(req, res){
+  var newNotice = Object.keys(req.body)[0];
+  var group_id = req.params.group_id;
+  var option = req.params.option;
+
+  if(option == "notice"){
+    Group.findById(group_id, function(err, group){
+      if(newNotice){
+        group.notice.text = newNotice;
+        group.save(function(err) {
+          if (err)
+            res.send(err);
+
+          res.json("update notice success");
+        });
+      }else{
+        group.notice.text = " ";
+        group.save(function(err) {
+          if (err)
+            res.send(err);
+
+          res.json("update notice success");
+        });
+      }
+    })
+  }else{
+    res.send("unknow")
+  }
+})
 module.exports = router;
 
 // route middleware to make sure a user is logged in

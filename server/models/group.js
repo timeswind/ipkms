@@ -15,10 +15,15 @@ var groupSchema = mongoose.Schema({
     id: { type: ObjectId, ref: 'Student' }
   }],
   teachers : [{ type: ObjectId, ref: 'Teacher' }],
+  notice : {
+    text : String,  //公告内容
+    updated_at: { type: Date }  //公告发布、更新时间
+  },
   logs : [{
     _id:false,
-    writeBy : String, //user name
-    type: String,
+    writeBy: { type: ObjectId, ref: 'User' },
+    date: {type: Date},
+    event: String,
     text: String
   }]
 
