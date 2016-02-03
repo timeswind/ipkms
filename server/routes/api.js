@@ -9,35 +9,35 @@ var Thomework = require('../models/thomework');
 var Shomework = require('../models/shomework');
 
 router.route('/teachers')  //get all teacher //admin api
-  .get(isAdmin, function(req, res) {
+.get(isAdmin, function(req, res) {
   Teacher.find(function(err, teachers) {
     if (err)
-      res.send(err);
+    res.send(err);
 
     res.json(teachers);
   });
 });
 
 router.route('/teachers/includeuser')  //get all teacher with user populated //admin api
-  .get(isAdmin, function(req, res) {
+.get(isAdmin, function(req, res) {
   Teacher.find({})
-    .populate('user')
-    .exec(function (err, teachers) {
+  .populate('user')
+  .exec(function (err, teachers) {
     if (err)
-      res.send(err);
+    res.send(err);
 
     res.json(teachers);
   })
 });
 
 router.route('/teacher/:user_id') //create a teacher from exist user //admin api
-  .post(isAdmin, function(req, res) {
+.post(isAdmin, function(req, res) {
   User.findById(req.params.user_id, function(err, user) {
     if(user){
       user.local.role = "teacher";
       user.save(function(err) {
         if (err)
-          res.send(err);
+        res.send(err);
 
         var teacher = new Teacher();
         teacher.name = user.local.name;
@@ -45,7 +45,7 @@ router.route('/teacher/:user_id') //create a teacher from exist user //admin api
         teacher.userId = user.id;
         teacher.save(function(err, t) {
           if (err)
-            res.send(err);
+          res.send(err);
 
           User.findById(user.id, function(err, u) {
             u.local.teacher = t.id;
@@ -63,20 +63,20 @@ router.route('/teacher/:user_id') //create a teacher from exist user //admin api
 
 router.route('/teacher/:user_id/:teacher_id') //DELETE single teacher using its user_id and teacher_id //admin api
 
-  .delete(isAdmin, function(req, res) {
+.delete(isAdmin, function(req, res) {
   Teacher.remove({_id: req.params.teacher_id}, function(err) {
     if (err)
-      res.send(err);
+    res.send(err);
 
     User.findById(req.params.user_id, function(err, user) {
       if (err)
-        res.send(err);
+      res.send(err);
 
       user.local.role = "user";
       user.local.teacher = undefined;// update the bears info
       user.save(function(err) {
         if (err)
-          res.send(err);
+        res.send(err);
 
         res.json("Delete teacher and change to user role");
       });
@@ -87,37 +87,37 @@ router.route('/teacher/:user_id/:teacher_id') //DELETE single teacher using its 
 });
 
 router.route('/users')  // get all the users //admin api
-  .get(isAdmin, function(req, res) {
+.get(isAdmin, function(req, res) {
   User.find(function(err, users) {
     if (err)
-      res.send(err);
+    res.send(err);
 
     res.json(users);
   });
 });
 
 router.route('/users/:user_id')
-  .get(isLoggedIn, function(req, res) {  //get a user's info //user api
-  User.findById(req.params.user_id, function(err, user) {
-    if (err)
-      res.send(err);
-    res.json(user);
-  });
+.get(isLoggedIn, function(req, res) {  //get a user's info //user api
+User.findById(req.params.user_id, function(err, user) {
+  if (err)
+  res.send(err);
+  res.json(user);
+});
 })
 
-  .delete(isAdmin, function(req, res) { //delete a user //admin api
+.delete(isAdmin, function(req, res) { //delete a user //admin api
   User.findById(req.params.user_id, function(err, user) {
     switch(user.local.role){
       case "admin":
-        res.send("Admin cannot be deleted");
-        break;
+      res.send("Admin cannot be deleted");
+      break;
       default:
-        User.remove({_id: req.params.user_id}, function(err, user) {
-          if (err)
-            res.send(err);
+      User.remove({_id: req.params.user_id}, function(err, user) {
+        if (err)
+        res.send(err);
 
-          res.json({ message: 'Successfully deleted user' });
-        });
+        res.json({ message: 'Successfully deleted user' });
+      });
     }
 
   });
@@ -125,37 +125,37 @@ router.route('/users/:user_id')
 
 
 router.route('/student/:student_id')  //get a student's info //user api
-  .get(isLoggedIn, function(req, res) {
+.get(isLoggedIn, function(req, res) {
   Student.findById(req.params.student_id, function(err, student) {
     if (err)
-      res.send(err);
+    res.send(err);
 
     res.json(student);
   });
 })
-  .delete(isAdmin, function(req, res) { //delete a student role from a user //admin api
+.delete(isAdmin, function(req, res) { //delete a student role from a user //admin api
 
   Student.findById(req.params.student_id, function(err, student) {
     if (err)
-      res.send(err);
+    res.send(err);
 
     var userid = student.user;
 
     Student.remove({_id: req.params.student_id}, function(err) {
       if (err)
-        res.send(err);
+      res.send(err);
 
       User.findById(userid, function(err, user) {
 
         if (err)
-          res.send(err);
+        res.send(err);
 
         user.local.role = "user";
         user.local.schoolId = undefined;
         user.local.student = undefined;
         user.save(function(err) {
           if (err)
-            res.send(err);
+          res.send(err);
 
           res.json("Delete student and change to user role");
         });
@@ -167,17 +167,17 @@ router.route('/student/:student_id')  //get a student's info //user api
 });
 
 router.route('/students')  //get all students //admin api
-  .get(isAdmin, function(req, res) {
+.get(isAdmin, function(req, res) {
   Student.find(function(err, students) {
     if (err)
-      res.send(err);
+    res.send(err);
 
     res.json(students);
   });
 });
 
 router.route('/students/multi')  //create multiple students account //admin api //not complete
-  .post(isAdmin, function(req, res) {
+.post(isAdmin, function(req, res) {
   if(req.body){
     var idArray = req.body['data[]'];
     var arrayLength = idArray.length;
@@ -210,7 +210,7 @@ router.route('/students/multi')  //create multiple students account //admin api 
 
     Student.find(function(err, students) {
       if (err)
-        res.send(err);
+      res.send(err);
 
       res.json(students);
     });
@@ -221,11 +221,11 @@ router.route('/students/multi')  //create multiple students account //admin api 
 });
 
 router.route('/students/query/:query')  //query students with their name //user api
-  .get(isLoggedIn, function(req, res) {
+.get(isLoggedIn, function(req, res) {
   var query = req.params.query;
   if(query == "all"){
     Student.find(
-      {}, "_id name schoolId", 
+      {}, "_id name schoolId",
       function(err,students) {
         res.json(students);
       }
@@ -241,7 +241,7 @@ router.route('/students/query/:query')  //query students with their name //user 
 });
 
 router.route('/group')
-  .post(isTeacher, function(req, res) {  //teacher create a student group  //teacher api
+.post(isTeacher, function(req, res) {  //teacher create a student group  //teacher api
 
   var data = Object.keys(req.body)[0];
   var jsonData = JSON.parse(data);
@@ -290,7 +290,7 @@ router.route('/group')
 
 });
 router.route('/studentgroups') //get student's groups //student api
-  .get(isStudent, function(req, res){
+.get(isStudent, function(req, res){
 
   var studentid = req.user.local.student;
   Group.find({'students.id': studentid},'_id name notice').lean().exec(function (err, groups) {
@@ -302,7 +302,7 @@ router.route('/studentgroups') //get student's groups //student api
 })
 
 router.route('/teacher/groups/:option') //get teacher's groups //teacher api
-  .get(isTeacher, function(req, res){
+.get(isTeacher, function(req, res){
   var option = req.params.option;
   var teacher_id = req.user.local.teacher;
 
@@ -327,116 +327,134 @@ router.route('/teacher/groups/:option') //get teacher's groups //teacher api
   //   }else
   if(option == "fromtc"){
     Teacher.findById(req.user.local.teacher,
-                     'teachGroups').populate('teachGroups.group', 'name students public.boolean').lean()
+      'teachGroups').populate('teachGroups.group', 'name students public.boolean').lean()
       .exec(function (err, teachGroups) {
-      if (err) res.json(err);
+        if (err) res.json(err);
 
-      var arrayToModify = teachGroups;
-      for(i=0;i<arrayToModify["teachGroups"].length;i++){
-        arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
-      }
-      res.json(arrayToModify);
-    })
+        var arrayToModify = teachGroups;
+        for(i=0;i<arrayToModify["teachGroups"].length;i++){
+          arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
+        }
+        res.json(arrayToModify);
+      })
 
-  }else{
-    res.json("hello");
-  }
-})
-
-router.route('/teacher/group/:group_id') //get teacher's group info //teacher api
-  .get(isTeacher, function(req, res){
-  var group_id = req.params.group_id;
-
-  Group.findById(group_id, "students notice").populate('students.id', 'name schoolId')
-    .exec(function (err, group) {
-    res.json(group)
+    }else{
+      res.json("hello");
+    }
   })
 
+  router.route('/teacher/group/:group_id') //get teacher's group info //teacher api
+  .get(isTeacher, function(req, res){
+    var group_id = req.params.group_id;
 
-})
-router.route('/teacher/delete/group/:group_id') //教師刪除小組api //teacher pi
+    Group.findById(group_id, "students notice").populate('students.id', 'name schoolId')
+    .exec(function (err, group) {
+      res.json(group)
+    })
+
+
+  })
+  router.route('/teacher/delete/group/:group_id') //教師刪除小組api //teacher pi
   .delete(isTeacher, function(req, res){
-  var group_id = req.params.group_id;
-  var teacher_id = req.user.local.teacher;
-  Group.remove({_id: group_id}, function(err) {
-    if(err) res.send(err);
+    var group_id = req.params.group_id;
+    var teacher_id = req.user.local.teacher;
+    Group.remove({_id: group_id}, function(err) {
+      if(err) res.send(err);
 
-    Teacher.findById(teacher_id, function(err, teacher){
-      teacher.teachGroups.pull({group: group_id});
-      teacher.save(function(err){
-        if(err) res.send(err);
+      Teacher.findById(teacher_id, function(err, teacher){
+        teacher.teachGroups.pull({group: group_id});
+        teacher.save(function(err){
+          if(err) res.send(err);
 
-        res.json("success delete a group")
+          res.json("success delete a group")
+        })
       })
     })
   })
-})
 
-router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信息api //teacher api
+  router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信息api //teacher api
   .post(isTeacher, function(req, res){
-  var newNotice = Object.keys(req.body)[0];
-  var group_id = req.params.group_id;
-  var option = req.params.option;
+    var group_id = req.params.group_id;
+    var option = req.params.option;
 
-  if(option == "notice"){
-    Group.findById(group_id, function(err, group){
-      if(newNotice){
-        group.notice.text = newNotice;
-        group.save(function(err) {
-          if (err)
+    if(option == "notice"){
+      var newNotice = Object.keys(req.body)[0];
+
+      Group.findById(group_id, function(err, group){
+        if(newNotice){
+          group.notice.text = newNotice;
+          group.save(function(err) {
+            if (err)
             res.send(err);
 
-          res.json("update notice success");
-        });
-      }else{
-        group.notice.text = " ";
-        group.save(function(err) {
-          if (err)
+            res.json("update notice success");
+          });
+        }else{
+          group.notice.text = " ";
+          group.save(function(err) {
+            if (err)
             res.send(err);
 
-          res.json("update notice success");
-        });
-      }
-    })
-  }else{
-    res.send("unknow")
-  }
-})
-module.exports = router;
+            res.json("update notice success");
+          });
+        }
+      })
+    }else if (option == "name") {
+      var newName = Object.keys(req.body)[0];
 
-// route middleware to make sure a user is logged in
-function isLoggedIn(req, res, next) {
-  // if user is authenticated in the session, carry on
-  if (req.isAuthenticated())
+      Group.findById(group_id, function(err, group){
+        if(newName){
+          group.name = newName;
+          group.save(function(err) {
+            if (err)
+            res.send(err);
+
+            res.json("update group name success");
+          });
+        }else{
+          res.status(500).send({ error: 'The name you entered is empty' });
+        }
+      })
+
+    }else{
+      res.send("unknow")
+    }
+  })
+  module.exports = router;
+
+  // route middleware to make sure a user is logged in
+  function isLoggedIn(req, res, next) {
+    // if user is authenticated in the session, carry on
+    if (req.isAuthenticated())
     return next();
 
-  // if they aren't redirect them to the home page
-  res.redirect('/');
-}
+    // if they aren't redirect them to the home page
+    res.redirect('/');
+  }
 
-function isAdmin(req, res, next) {
-  // if user is authenticated in the session, carry on
-  if (req.isAuthenticated())
+  function isAdmin(req, res, next) {
+    // if user is authenticated in the session, carry on
+    if (req.isAuthenticated())
     if (req.user.local.role == "admin")
-      return next();
-  // if they aren't redirect them to the home page
-  res.json("hello");
-}
+    return next();
+    // if they aren't redirect them to the home page
+    res.json("hello");
+  }
 
-function isTeacher(req, res, next) {
-  // if user is authenticated in the session, carry on
-  if (req.isAuthenticated())
+  function isTeacher(req, res, next) {
+    // if user is authenticated in the session, carry on
+    if (req.isAuthenticated())
     if (req.user.local.role == "teacher")
-      return next();
-  // if they aren't redirect them to the home page
-  res.json("hello");
-}
+    return next();
+    // if they aren't redirect them to the home page
+    res.json("hello");
+  }
 
-function isStudent(req, res, next) {
-  // if user is authenticated in the session, carry on
-  if (req.isAuthenticated())
+  function isStudent(req, res, next) {
+    // if user is authenticated in the session, carry on
+    if (req.isAuthenticated())
     if (req.user.local.role == "student")
-      return next();
-  // if they aren't redirect them to the home page
-  res.json("hello");
-}
+    return next();
+    // if they aren't redirect them to the home page
+    res.json("hello");
+  }

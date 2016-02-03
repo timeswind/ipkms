@@ -1,5 +1,5 @@
 angular.module('home', ['ngMaterial','ngMessages'])
-  .config(function($interpolateProvider, $httpProvider){
+.config(function($interpolateProvider, $httpProvider, $mdThemingProvider){
   $interpolateProvider.startSymbol('{[{');
   $interpolateProvider.endSymbol('}]}');
   //Reset headers to avoid OPTIONS request (aka preflight)
@@ -7,14 +7,18 @@ angular.module('home', ['ngMaterial','ngMessages'])
   $httpProvider.defaults.headers.post = {};
   $httpProvider.defaults.headers.put = {};
   $httpProvider.defaults.headers.patch = {};
+
+  $mdThemingProvider.theme('docs-dark', 'default')
+  .primaryPalette('yellow')
+  .dark();
 })
 
-  .controller('homeController', function($rootScope, $scope, $http) {
+.controller('homeController', function($rootScope, $scope, $http) {
 
   console.log("hello home!")
 
 })
-  .controller('homeworkManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
+.controller('homeworkManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
 
   $scope.showNewHomeworkForm = function(ev) {
     var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'));
@@ -26,7 +30,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
       clickOutsideToClose:false,
       fullscreen: useFullScreen
     })
-      .then(function(answer) {
+    .then(function(answer) {
       $scope.status = 'You said the information was "' + answer + '".';
     }, function() {
       $scope.status = 'You cancelled the dialog.';
@@ -38,7 +42,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
 
 })
 
-  .controller('groupsManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
+.controller('groupsManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
   getMyGroups();
   $scope.myGroups = [];
 
@@ -111,11 +115,11 @@ angular.module('home', ['ngMaterial','ngMessages'])
       url: '/api/teacher/groups/fromtc',
       method: "GET",
     })
-      .then(function(response) {
+    .then(function(response) {
       $scope.myGroups = response.data.teachGroups;
       //       console.log("GET TEACHER'S GROUP SUCCESS");
     },
-            function(response) { // optional
+    function(response) { // optional
       console.log("fail to get teacher's groups")
     });
   }
@@ -124,17 +128,17 @@ angular.module('home', ['ngMaterial','ngMessages'])
       url: '/api/teacher/delete/group/' + group_id,
       method: "DELETE",
     })
-      .then(function(response) {
+    .then(function(response) {
       getMyGroups();
     },
-            function(response) { // optional
+    function(response) { // optional
       console.log("fail to delete this group")
     });
   }
 
 })
 
-  .controller('NewHWDialogController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
+.controller('NewHWDialogController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
   $scope.subjects = ["數學","中文","英文","通識"]
 
   $scope.hide = function() {
@@ -146,7 +150,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
 
 })
 
-  .controller('NewGDialogController', function($scope, $http, $mdDialog, $mdMedia, $timeout, $interval) {
+.controller('NewGDialogController', function($scope, $http, $mdDialog, $mdMedia, $timeout, $interval) {
   var self = this;
 
   self.readonly = false;
@@ -219,11 +223,11 @@ angular.module('home', ['ngMaterial','ngMessages'])
     }).then(function successCallback(response) {
       for (var i = 0; i < response.data.length; i++) {
         var chipObject =
-            {
-              "schoolid": response.data[i]["schoolId"],
-              "name": response.data[i]["name"],
-              "id": response.data[i]["_id"]
-            };
+        {
+          "schoolid": response.data[i]["schoolId"],
+          "name": response.data[i]["name"],
+          "id": response.data[i]["_id"]
+        };
 
         if(!containsObject(chipObject, cs)){
           cs.unshift(chipObject);
@@ -268,8 +272,8 @@ angular.module('home', ['ngMaterial','ngMessages'])
 
 
   /**
-           * Return the proper object when the append is called.
-           */
+  * Return the proper object when the append is called.
+  */
   function transformChip(chip) {
     // If it is an object, it's already a known chip
     if (angular.isObject(chip)) {
@@ -300,7 +304,7 @@ angular.module('home', ['ngMaterial','ngMessages'])
     //     var lowercaseQuery = angular.lowercase(query); //for english only
     return function filterFn(student) {
       return (student.name.indexOf(query) != -1) ||
-        (student.schoolid.indexOf(query) != -1);
+      (student.schoolid.indexOf(query) != -1);
     };
 
   }
@@ -330,17 +334,17 @@ angular.module('home', ['ngMaterial','ngMessages'])
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 
     })
-      .then(function(response) {
+    .then(function(response) {
       // success
       $mdDialog.hide("success");
     },
-            function(response) { // optional
+    function(response) { // optional
       // failed
     });
   }
 })
 
-  .controller('GroupModalController', function($scope, $http, $mdDialog, $mdMedia, group) {
+.controller('GroupModalController', function($scope, $http, $mdDialog, $mdMedia, group) {
   getGroupDetails();
   $scope.group = group;
 
@@ -350,6 +354,33 @@ angular.module('home', ['ngMaterial','ngMessages'])
 
   $scope.cancel = function() {
     $mdDialog.cancel();
+  };
+
+  $scope.updateName = function(updatedName){
+
+    if(updatedName){
+      if($scope.gDetails.name !== updatedName){
+        $http({
+          url: '/api/teacher/update/group/' + $scope.gDetails._id + '/name',
+          method: "POST",
+          data: updatedName,
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+
+        })
+        .then(function(response) {
+          // success
+          $scope.group.name = updatedName;
+          $scope.editName = false;
+        },
+        function(response) { // optional
+          // failed
+        });
+      }else{
+        $scope.editName = false;
+      }
+    }else{
+      console.log("updated name field is empty~!")
+    }
   };
 
   $scope.updateNotice = function(updatedNotice){
@@ -365,12 +396,12 @@ angular.module('home', ['ngMaterial','ngMessages'])
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 
         })
-          .then(function(response) {
+        .then(function(response) {
           // success
           $scope.gDetails.notice.text = updatedNotice;
           $scope.editNotice = false;
         },
-                function(response) { // optional
+        function(response) { // optional
           // failed
         });
       }else{
@@ -385,35 +416,30 @@ angular.module('home', ['ngMaterial','ngMessages'])
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 
         })
-          .then(function(response) {
+        .then(function(response) {
           // success
           getGroupDetails();
           $scope.editNotice = false;
         },
-                function(response) { // optional
+        function(response) { // optional
           // failed
         });
       }
     }
-  }
+  };
+
   function getGroupDetails(){
     $http({
       url: '/api/teacher/group/' + group._id,
       method: "GET",
     })
-      .then(function(response) {
+    .then(function(response) {
       $scope.gDetails = response.data;
       //       console.log("get group's details success");
     },
-            function(response) { // optional
+    function(response) { // optional
       console.log("fail to get group's details")
     });
-  }
+  };
+
 })
-
-
-
-
-
-
-
