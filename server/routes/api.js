@@ -346,8 +346,8 @@ router.route('/teacher/groups/:option') //get teacher's groups //teacher api
   router.route('/teacher/group/:group_id') //get teacher's group info //teacher api
   .get(isTeacher, function(req, res){
     var group_id = req.params.group_id;
-
-    Group.findById(group_id, "students notice").populate('students.id', 'name schoolId')
+    var poputaleQuery = [{path:"students.id", select:"name schoolId"},{path:"logs.writeBy", select:"local.name"}]
+    Group.findById(group_id, "students notice logs").populate(poputaleQuery)
     .exec(function (err, group) {
       res.json(group)
     })

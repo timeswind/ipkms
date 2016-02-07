@@ -1,49 +1,71 @@
-{% extends 'layout-bootstrap.html' %}
+{% extends 'layout-mdl.html' %}
 
 {% block title %}{% endblock %}
 
-
 {% block content %}
+<style>
+html{
+  background-color: #fafafa !important;
+}
+</style>
 <script type="text/javascript" src="/js/ng-app-login.js"></script>
-<div class="container" ng-app="login" ng-controller="loginController">
+<div>
+  <div ng-app="login" ng-controller="loginController" ng-cloak>
+    <h1 style="text-align:center;margin:0;padding-top:20px;padding-bottom:20px">iPkms<br>
 
-  <h1 style="text-align:center">iPkms<br>
+      <button href="/logout" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored">
+        登出
+      </button>
+      <button ng-click="switchLogin()" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+        {[{loginOption}]}
+      </button>
+    </h1>
 
-    <a href="/logout" class="btn btn-default btn-sm">Logout</a>
-    <a ng-click="switchLogin()" class="btn btn-default btn-sm">SwitchLogin</a></h1>
+    <form class="mdl-shadow--2dp" action="/login" method="post" style="margin:0 auto;max-width:280px;background-color:#fff;padding-top:10px" ng-show="!studentLogin">
+      <p style="padding:10px 0px 10px 20px;margin:0;font-size:18px;border-left:5px solid #3F51B5">教師登入</p>
+      <div style="padding:5px 25px 15px 25px;">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          <input class="mdl-textfield__input" type="email" name="email" id="teacher_email">
+          <label class="mdl-textfield__label" for="teacher_email">教師郵箱</label>
+        </div>
 
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+          <input class="mdl-textfield__input" type="password" name="password" id="teacher_password">
+          <label class="mdl-textfield__label" for="teacher_password">密碼</label>
+        </div>
 
+        <div>
+          <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" style="width:100%;margin-top:10px">
+            登入
+          </button>
+        </div>
+      </div>
 
-  <hr><br>
-  <!--     <a href="/auth/linkedin" class="btn btn-default">LinkedIn</a>
-<a href="/auth/github" class="btn btn-default">Github</a>
-<a href="/auth/twitter" class="btn btn-default">Twitter</a> -->
+    </form>
 
-  <form action="/login" method="post" style="max-width:300px;margin:0 auto;" ng-if="!studentLogin">
-    <div>
+    <form class="mdl-shadow--2dp" action="/login/student" method="post" style="margin:0 auto;max-width:280px;background-color:#fff;padding-top:10px" ng-show="studentLogin">
+      <p style="padding:10px 0px 10px 20px;margin:0;font-size:18px;border-left:5px solid #3F51B5">學生登入</p>
 
-      <input type="email" name="email" class="form-control" placeholder="Email"/>
-    </div>
-    <div style="margin-top:20px">
-      <input type="password" name="password" class="form-control" placeholder="Password"/>
-    </div>
-    <div style="margin-top:20px">
-      <input type="submit" value="Login" class="btn btn-primary form-control"/>
-    </div>
-  </form>
+<div style="padding:5px 25px 15px 25px;">
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input class="mdl-textfield__input" type="text" name="schoolid" pattern="-?[0-9]*(\.[0-9]+)?" id="schoolid">
+        <label class="mdl-textfield__label" for="schoolid">學生ID</label>
+        <span class="mdl-textfield__error">學生ID由數字組成！</span>
+      </div>
 
-  <form action="/login/student" method="post" style="max-width:300px;margin:0 auto;" ng-if="studentLogin">
-    <div>
+      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
+        <input class="mdl-textfield__input" type="password" name="password" id="student_password">
+        <label class="mdl-textfield__label" for="student_password">密碼</label>
+      </div>
 
-      <input type="text" name="schoolid" class="form-control" placeholder="schoolid"/>
-    </div>
-    <div style="margin-top:20px">
-      <input type="password" name="password" class="form-control" placeholder="Password"/>
-    </div>
-    <div style="margin-top:20px">
-      <input type="submit" value="Login" class="btn btn-primary form-control"/>
-    </div>
-  </form>
+      <div>
+        <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" style="width:100%;margin-top:10px">
+          登入
+        </button>
+      </div>
+</div>
+    </form>
+  </div>
 </div>
 
 {% endblock %}
