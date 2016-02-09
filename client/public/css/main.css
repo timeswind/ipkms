@@ -122,9 +122,28 @@ td {
   margin:0 0 10px 15px;
   font-size:14px;
 }
+
+.user-avatar{
+  width:48px;
+  height: 48px;
+  border-radius: 24px;
+}
+
+.user-drawer-header{
+  box-sizing: border-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-justify-content: flex-end;
+  -ms-flex-pack: end;
+  justify-content: flex-end;
+  padding: 16px;
+  height: 151px;
+}
 /*
 Copyright 2016 Google Inc. All Rights Reserved.
 Use of this source code is governed by an MIT-style license that can be in foundin the LICENSE file at http://material.angularjs.org/license.
 */
-
-

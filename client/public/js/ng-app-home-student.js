@@ -26,7 +26,6 @@ angular.module('student', ['ngMaterial','ngMessages'])
     })
       .then(function(response) {
       $scope.myGroups = response.data;
-      console.log($scope.myGroups);
       console.log("GET STUDNET'S GROUP SUCCESS");
     },
             function(response) { // optional

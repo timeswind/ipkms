@@ -420,6 +420,19 @@ router.route('/teacher/groups/:option') //get teacher's groups //teacher api
       res.send("unknow")
     }
   })
+
+  router.route('/user/info') //get teacher's group info //teacher api
+  .get(function(req, res){
+
+      User.findById(req.user.id, {"local.password": 0}, function(err, user){
+        if(err){
+          res.send(err);
+        }else{
+          res.json(user)
+        }
+      });
+
+  });
   module.exports = router;
 
   // route middleware to make sure a user is logged in

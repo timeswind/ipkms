@@ -26,19 +26,32 @@ router.post('/login', passport.authenticate('local-login', {
   failureRedirect : '/login', // redirect back to the signup page if there is an error
 }));
 
+router.post('/ios/login', passport.authenticate('local-login', {
+  successRedirect : '/ios/login/success', // redirect to the secure profile section
+  failureRedirect : '/ios/login/fail', // redirect back to the signup page if there is an error
+}));
+
+router.get('/ios/login/success', isLoggedIn, function(req, res, next) {
+  res.json(1);
+});
+
+router.get('/ios/login/fail', function(req, res, next) {
+  res.json(0);
+});
+
 router.post('/login/student', passport.authenticate('local-student-login', {
   successRedirect : '/home', // redirect to the secure profile section
   failureRedirect : '/login', // redirect back to the signup page if there is an error
 }));
 
 router.post('/signup/teacher', passport.authenticate('local-teacher-signup', { //isAdmin production need
-   successRedirect : '/admin', // redirect to the secure profile section
-   failureRedirect : '/error', // redirect back to the signup page if there is an error
+  successRedirect : '/admin', // redirect to the secure profile section
+  failureRedirect : '/error', // redirect back to the signup page if there is an error
 }));
 
 router.post('/signup/user', passport.authenticate('local-signup', { //isAdmin production need
-   successRedirect : '/admin', // redirect to the secure profile section
-   failureRedirect : '/error', // redirect back to the signup page if there is an error
+  successRedirect : '/admin', // redirect to the secure profile section
+  failureRedirect : '/error', // redirect back to the signup page if there is an error
 }));
 
 router.get('/profile', isLoggedIn, function(req, res) {
@@ -63,7 +76,7 @@ router.get('/logout', function(req, res) {
 
 router.get('/admin', isAdmin, function(req, res) {  //not production！！需要添加权限检查 isAdmin
 
-    res.render('admin', { message: 'Welcome back, Chuck!'});
+  res.render('admin', { message: 'Welcome back, Chuck!'});
 
 });
 
@@ -72,20 +85,20 @@ module.exports = router;
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
 
-    // if user is authenticated in the session, carry on
-    if (req.isAuthenticated())
-        return next();
+  // if user is authenticated in the session, carry on
+  if (req.isAuthenticated())
+  return next();
 
-    // if they aren't redirect them to the home page
-    res.redirect('/');
+  // if they aren't redirect them to the home page
+  res.redirect('/');
 }
 
 function isAdmin(req, res, next) {
 
-    // if user is authenticated in the session, carry on
-    if (req.isAuthenticated())
-        if (req.user.local.role == "admin")
-           return next();
-    // if they aren't redirect them to the home page
-    res.redirect('/home');
+  // if user is authenticated in the session, carry on
+  if (req.isAuthenticated())
+  if (req.user.local.role == "admin")
+  return next();
+  // if they aren't redirect them to the home page
+  res.redirect('/home');
 }

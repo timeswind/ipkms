@@ -14,14 +14,7 @@ var userSchema = mongoose.Schema({
         role         : String,
         teacher      : { type: ObjectId, ref: 'Teacher' },  //
         student      : { type: ObjectId, ref: 'Student' }
-    },
-    facebook         : {
-        id           : String,
-        token        : String,
-        email        : String,
-        name         : String
     }
-
 
 });
 
