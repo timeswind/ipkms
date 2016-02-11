@@ -21,16 +21,16 @@ html{
       </button>
     </h1>
 
-    <form class="mdl-shadow--2dp" action="/login" method="post" style="margin:0 auto;max-width:280px;background-color:#fff;padding-top:10px" ng-show="!studentLogin">
+    <form class="mdl-shadow--2dp" ng-submit="submitTeacher()" style="margin:0 auto;max-width:280px;background-color:#fff;padding-top:10px" ng-show="!studentLogin">
       <p style="padding:10px 0px 10px 20px;margin:0;font-size:18px;border-left:5px solid #3F51B5">教師登入</p>
       <div style="padding:5px 25px 15px 25px;">
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          <input class="mdl-textfield__input" type="email" name="email" id="teacher_email">
+          <input class="mdl-textfield__input" type="email" name="email" id="teacher_email" ng-model="teacher.email">
           <label class="mdl-textfield__label" for="teacher_email">教師郵箱</label>
         </div>
 
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          <input class="mdl-textfield__input" type="password" name="password" id="teacher_password">
+          <input class="mdl-textfield__input" type="password" name="password" id="teacher_password" ng-model="teacher.password">
           <label class="mdl-textfield__label" for="teacher_password">密碼</label>
         </div>
 
