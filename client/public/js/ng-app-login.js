@@ -2,7 +2,8 @@ angular.module('ipkms')
 .controller('loginController', function($scope,$http, $window) {
   $scope.teacher = {
     email: '',
-    password: ''};
+    password: ''
+  }
 
   $scope.loginOption = "學生登錄"
   $scope.studentLogin = false;
@@ -20,16 +21,19 @@ angular.module('ipkms')
 
   $scope.submitTeacher = function () {
     $http
-      .post('/login', $scope.teacher)
-      .success(function (data, status, headers, config) {
-        $window.sessionStorage.token = data.token;
-        window.location = "/home"
-      })
-      .error(function (data, status, headers, config) {
-        // Erase the token if the user fails to log in
-        delete $window.sessionStorage.token;
-        // Handle login errors here
-      });
+    .post('/login', $scope.teacher)
+    .success(function (data, status, headers, config) {
+      $window.sessionStorage.token = data.token;
+      window.location = "/home"
+    })
+    .error(function (data, status, headers, config) {
+      // Erase the token if the user fails to log in
+      if (data == "fail") {
+        $scope.teacherLoginError = "郵箱或密碼錯誤"
+      }
+      delete $window.sessionStorage.token;
+      // Handle login errors here
+    });
   };
 
 })

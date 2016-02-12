@@ -13,8 +13,8 @@ html{
   <div ng-app="ipkms" ng-controller="loginController" ng-cloak>
     <h1 style="text-align:center;margin:0;padding-top:20px;padding-bottom:20px">iPkms<br>
 
-      <button href="/logout" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored">
-        登出
+      <button onClick="window.location='logout';" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored">
+        登出(dev use)
       </button>
       <button ng-click="switchLogin()" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
         {[{loginOption}]}
@@ -23,6 +23,7 @@ html{
 
     <form class="mdl-shadow--2dp" ng-submit="submitTeacher()" style="margin:0 auto;max-width:280px;background-color:#fff;padding-top:10px" ng-show="!studentLogin">
       <p style="padding:10px 0px 10px 20px;margin:0;font-size:18px;border-left:5px solid #3F51B5">教師登入</p>
+      <p style="margin:0;padding-left:25px;color:#F44336">{[{teacherLoginError}]}</p>
       <div style="padding:5px 25px 15px 25px;">
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
           <input class="mdl-textfield__input" type="email" name="email" id="teacher_email" ng-model="teacher.email">
