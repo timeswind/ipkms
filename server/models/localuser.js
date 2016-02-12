@@ -12,7 +12,7 @@ var userSchema = mongoose.Schema({
         password     : String,
         name         : String,
         role         : String,
-        teacher      : { type: ObjectId, ref: 'Teacher' },  //
+        teacher      : { type: ObjectId, ref: 'Teacher' },
         student      : { type: ObjectId, ref: 'Student' }
     }
 

@@ -1,13 +1,4 @@
-angular.module('student', ['ngMaterial','ngMessages'])
-  .config(function($interpolateProvider, $httpProvider){
-  $interpolateProvider.startSymbol('{[{');
-  $interpolateProvider.endSymbol('}]}');
-  //Reset headers to avoid OPTIONS request (aka preflight)
-  $httpProvider.defaults.headers.common = {};
-  $httpProvider.defaults.headers.post = {};
-  $httpProvider.defaults.headers.put = {};
-  $httpProvider.defaults.headers.patch = {};
-})
+angular.module('ipkms')
 
   .controller('groupController', function($scope, $http) {
   getMyGroups();

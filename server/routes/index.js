@@ -1,9 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
+var jwt = require('jsonwebtoken');
 // var passportLinkedIn = require('../auth/linkedin');
 var Teacher = require('../models/teacher');
 var User = require('../models/localuser');
+
 
 router.get('/', function(req, res, next) {
   var user;
@@ -21,11 +23,49 @@ router.get('/error', function(req, res, next) {
   res.send('errors');
 });
 
-router.post('/login', passport.authenticate('local-login', {
-  successRedirect : '/home', // redirect to the secure profile section
-  failureRedirect : '/login', // redirect back to the signup page if there is an error
-}));
+router.post('/login', function(req, res, next) {
+  passport.authenticate('local-login', function(err, user, info) {
+    if (err) { return next(err) }
+    if (!user) {
+      return res.json(401, { error: '驗證失敗'});
+    }
 
+    var payload;
+    var userRole = user.local.role;
+
+    if (userRole == "teacher") {
+      payload = {
+        id : user._id,
+        name : user.local.name,
+        email : user.local.email,
+        teacher : user.local.teacher,
+        role : "teacher"
+      }
+    } else if (userRole == "student") {
+      payload = {
+        id : user._id,
+        name : user.local.name,
+        schoolid : user.local.schoolId,
+        student : user.local.student,
+        role : "student"
+      }
+    } else {
+      payload = {
+        id : user._id,
+        name : user.local.name,
+        email : user.local.email,
+        role : user.local.role
+      }
+    }
+
+    //user has authenticated correctly thus we create a JWT token
+    var token = jwt.sign(payload, user.local.password, {
+      expiresIn: 60*60*24 // expires in 24 hours
+    });
+    res.json({ token : token });
+
+  })(req, res, next);
+});
 router.post('/ios/login', passport.authenticate('local-login', {
   successRedirect : '/ios/login/success', // redirect to the secure profile section
   failureRedirect : '/ios/login/fail', // redirect back to the signup page if there is an error

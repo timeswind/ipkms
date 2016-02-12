@@ -1,13 +1,4 @@
-angular.module('admin', [])
-  .config(function($interpolateProvider, $httpProvider){
-  $interpolateProvider.startSymbol('{[{');
-  $interpolateProvider.endSymbol('}]}');
-  //Reset headers to avoid OPTIONS request (aka preflight)
-  $httpProvider.defaults.headers.common = {};
-  $httpProvider.defaults.headers.post = {};
-  $httpProvider.defaults.headers.put = {};
-  $httpProvider.defaults.headers.patch = {};
-})
+angular.module('ipkms')
   .controller('manageTeachers', function($rootScope, $scope, $http) {
   getTeachers();
 
