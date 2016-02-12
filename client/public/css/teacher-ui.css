@@ -1,0 +1,28 @@
+.group-groupNotice {
+  font-size:18px;
+  margin:10px 8px 0 8px;
+  border: 1px #3F51B5 dashed
+}
+
+.group-dialog {
+  margin:0 auto;
+  width:800px
+}
+
+.group-header h2{
+  width:100%
+}
+
+.group-header a.group-headerPeopleCount {
+  float:right;
+  margin-left:5px;
+  color:#fff
+}
+
+.group-header a.group-headerPeopleCount i{
+  font-size:24px;
+  float:left;
+  margin-left:20px;
+  margin-top:11px;
+  margin-right:5px
+}

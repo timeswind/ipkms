@@ -1,4 +1,4 @@
-<md-dialog aria-label="{[{group.name}]}"  layout="column" style="margin:0 auto;width:800px;">
+<md-dialog aria-label="{[{group.name}]}" layout="column" class="group-dialog">
 
   <md-toolbar>
     <md-content md-theme="docs-dark" layout-gt-sm="row" layout-padding ng-show="editName">
@@ -12,11 +12,11 @@
     <div class="md-toolbar-tools">
       <md-button ng-show="editName" ng-click="updateName(updatedName)">更新</md-button>
       <md-button ng-show="editName" ng-click="editName = false">取消</md-button>
-      <h2 style="width:100%" ng-hide="editName">{[{group.name}]}
+      <h2 class="group-header" style="width:100%" ng-hide="editName">{[{group.name}]}
         <md-button ng-click="editName = true; updatedName = group.name">修改組名</md-button>
 
-        <a style="float:right;margin-left:5px;color:#fff">
-          <i class="material-icons"  style="font-size:24px;float:left;margin-left:20px;margin-top:11px;margin-right:5px">
+        <a class="group-headerPeopleCount">
+          <i class="material-icons">
             people</i>
             {[{group.students}]}
           </a>
@@ -29,7 +29,7 @@
       </div>
     </md-toolbar>
 
-      <md-dialog-content class="md-padding">
+    <md-dialog-content class="md-padding">
       <md-subheader class="md-no-sticky" ng-hide="editNotice">公告
 
         <md-button class="md-primary md-raised" ng-click="editNotice = true ; updatedNotice = gDetails.notice.text" style="float:right;margin:-10px;margin-right:0">更新公告</md-button></md-subheader>
@@ -41,7 +41,7 @@
             <md-button class="md-primary md-raised" ng-show="editNotice" ng-click="updateNotice(updatedNotice)" style="float:right">更新</md-button>
           </md-input-container>
 
-          <p ng-hide="editNotice" style="font-size:18px;margin:10px 8px 0 8px;border: 2px #9E9E9E dashed">{[{gDetails.notice.text}]}</p>
+          <p class="group-groupNotice" ng-hide="editNotice">{[{gDetails.notice.text}]}</p>
         </md-content>
         <md-subheader class="md-no-sticky">成員</md-subheader>
         <md-grid-list class="g-student-card" md-cols-gt-md="5" md-cols="3" md-cols-md="6"

@@ -32,7 +32,6 @@ angular.module('ipkms')
 .controller('groupsManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
   getMyGroups();
   $scope.myGroups = [];
-
   $scope.bTt = function(b){
     if(b === true){
       return "公開小組";
@@ -97,19 +96,32 @@ angular.module('ipkms')
 
   };
 
+  //抓取小组数据开始
+  var doneGrabingGroupsDataTimer;
+
   function getMyGroups(){
+    $scope.grabingGroupsData = true;
+    clearTimeout(doneGrabingGroupsDataTimer);
     $http({
       url: '/api/teacher/groups/fromtc',
       method: "GET",
     })
     .then(function(response) {
       $scope.myGroups = response.data.teachGroups;
-      //       console.log("GET TEACHER'S GROUP SUCCESS");
+      doneGrabingGroupsDataTimer = setTimeout(doneGrabingGroupsData, 2000);
+
     },
     function(response) { // optional
       console.log(response)
     });
   }
+
+  function doneGrabingGroupsData(){
+    $scope.grabingGroupsData = false;
+    $scope.$apply();
+  }
+  //抓取小组数据结束
+
   function deleteGroup(group_id){
     $http({
       url: '/api/teacher/delete/group/' + group_id,
