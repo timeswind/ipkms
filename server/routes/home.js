@@ -1,9 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
-// var passportLinkedIn = require('../auth/linkedin');
-// var Teacher = require('../models/teacher');
-// var User = require('../models/localuser');
+
+var Teacher = require('../models/teacher');
+var User = require('../models/localuser');
 
 router.get('/', isLoggedIn, function(req, res, next) {
   var user;
@@ -47,7 +47,6 @@ module.exports = router;
 
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
-
   // if user is authenticated in the session, carry on
   if (req.isAuthenticated())
     return next();
