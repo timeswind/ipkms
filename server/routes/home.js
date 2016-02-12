@@ -48,19 +48,20 @@ module.exports = router;
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
   // if user is authenticated in the session, carry on
-  if (req.isAuthenticated())
+  if (req.isAuthenticated()){
     return next();
-
-  // if they aren't redirect them to the home page
-  res.redirect('/');
+  }else{
+    // if they aren't redirect them to the home page
+    res.redirect('/');
+  }
 }
 
 function isAdmin(req, res, next) {
 
   // if user is authenticated in the session, carry on
   if (req.isAuthenticated())
-    if (req.user.local.role == "admin")
-      return next();
+  if (req.user.local.role == "admin")
+  return next();
   // if they aren't redirect them to the home page
   res.redirect('/');
 }
@@ -68,8 +69,8 @@ function isAdmin(req, res, next) {
 function isTeacher(req, res, next) {
   // if user is authenticated in the session, carry on
   if (req.isAuthenticated())
-    if (req.user.local.role == "teacher")
-      return next();
+  if (req.user.local.role == "teacher")
+  return next();
   // if they aren't redirect them to the home page
   res.redirect('/home');
 }
@@ -77,8 +78,8 @@ function isTeacher(req, res, next) {
 function isStudent(req, res, next) {
   // if user is authenticated in the session, carry on
   if (req.isAuthenticated())
-    if (req.user.local.role == "student")
-      return next();
+  if (req.user.local.role == "student")
+  return next();
   // if they aren't redirect them to the home page
   res.redirect('/home');
 }
