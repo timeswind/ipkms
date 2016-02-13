@@ -2,7 +2,8 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 var jwt = require('jsonwebtoken');
-// var passportLinkedIn = require('../auth/linkedin');
+var tokenManager = require('../config/token_manager');
+
 var Teacher = require('../models/teacher');
 var User = require('../models/localuser');
 
@@ -60,7 +61,7 @@ router.post('/login',function(req, res, next) {
 
       //user has authenticated correctly thus we create a JWT token
       var token = jwt.sign(payload, user.local.password, {
-        expiresIn: 60*60*24 // expires in 24 hours
+        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires in 24 hours
       });
 
       return res.json({ token : token });
@@ -101,20 +102,11 @@ router.get('/profile', isLoggedIn, function(req, res) {
 });
 
 router.get('/logout', function(req, res) {
+  tokenManager.expireToken(req);
   req.logout();
   res.redirect('/');
 });
 
-
-
-// router.get('/auth/linkedin', passportLinkedIn.authenticate('linkedin'));
-
-// router.get('/auth/linkedin/callback',
-//   passportLinkedIn.authenticate('linkedin', { failureRedirect: '/login' }),
-//   function(req, res) {
-//     // Successful authentication
-//     res.json(req.user);
-//   });
 
 router.get('/admin', isAdmin, function(req, res) {  //not production！！需要添加权限检查 isAdmin
 

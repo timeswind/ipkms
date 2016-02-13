@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 var jwt = require('jsonwebtoken');
+var tokenManager = require('../config/token_manager');
 
 var Teacher = require('../models/teacher');
 var Student = require('../models/student');
@@ -10,7 +11,7 @@ var Group = require('../models/group')
 var Thomework = require('../models/thomework');
 var Shomework = require('../models/shomework');
 
-router.use(function(req, res, next) {
+router.use( tokenManager.verifyToken, function(req, res, next) {
 
   // check header or url parameters or post parameters for token
   var token = req.body.token || req.query.token || req.headers['x-access-token'];
