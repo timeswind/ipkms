@@ -82,10 +82,37 @@ router.get('/ios/login/fail', function(req, res, next) {
   res.json(0);
 });
 
-router.post('/login/student', passport.authenticate('local-student-login', {
-  successRedirect : '/home', // redirect to the secure profile section
-  failureRedirect : '/login', // redirect back to the signup page if there is an error
-}));
+router.post('/login/student', function(req, res, next) {
+  passport.authenticate('local-student-login', function(err, user, info) {
+    if (err) { return next(err); }
+    if (!user) { return res.status(401).json("fail"); }
+    req.logIn(user, function(err) {
+      if (err) { return next(err); }
+
+      var payload;
+      var userRole = req.user.local.role;
+
+      if (userRole == "student") {
+        payload = {
+          id : user._id,
+          name : user.local.name,
+          schoolid : user.local.schoolId,
+          student : user.local.student,
+          role : "student"
+        }
+      } else {
+        return res.status(401).json("fail");
+      }
+
+      //user has authenticated correctly thus we create a JWT token
+      var token = jwt.sign(payload, user.local.password, {
+        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires in 24 hours
+      });
+
+      return res.json({ token : token });
+    });
+  })(req, res, next);
+});
 
 router.post('/signup/teacher', passport.authenticate('local-teacher-signup', { //isAdmin production need
   successRedirect : '/admin', // redirect to the secure profile section

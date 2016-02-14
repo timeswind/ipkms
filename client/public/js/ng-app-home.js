@@ -355,13 +355,51 @@ angular.module('ipkms')
     $mdDialog.cancel();
   };
 
+
+  $scope.removeMember = function(index){
+    $scope.gDetails.students.splice(index,1);
+  }
+
+  $scope.updateMembers = function(){
+    var updatedMembersArray = $scope.gDetails.students;
+    var reformattedMembersArray = updatedMembersArray.map(function(obj){
+      var rObj = {};
+      rObj["id"] = obj.id._id;
+      return rObj;
+    });
+
+    console.log(reformattedMembersArray)
+
+    if(reformattedMembersArray){
+        $http({
+          url: '/api/teacher/update/group/' + $scope.gDetails._id + '/members',
+          method: "PUT",
+          data: reformattedMembersArray,
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+        })
+        .then(function(response) {
+          // success
+          console.log("success")
+          getGroupDetails()
+          $scope.editMembers = false;
+        },
+        function(response) { // optional
+          // failed
+          getGroupDetails()
+          $scope.editMembers = false;
+        });
+    }else{
+      console.log("updated student field is empty~!")
+    }
+  }
+
   $scope.updateName = function(updatedName){
 
     if(updatedName){
       if($scope.gDetails.name !== updatedName){
         $http({
           url: '/api/teacher/update/group/' + $scope.gDetails._id + '/name',
-          method: "POST",
+          method: "PUT",
           data: updatedName,
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 
@@ -373,6 +411,7 @@ angular.module('ipkms')
         },
         function(response) { // optional
           // failed
+
         });
       }else{
         $scope.editName = false;
@@ -390,7 +429,7 @@ angular.module('ipkms')
       if($scope.gDetails.notice.text !== updatedNotice){
         $http({
           url: '/api/teacher/update/group/' + $scope.gDetails._id + '/notice',
-          method: "POST",
+          method: "PUT",
           data: updatedNotice,
           headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 
@@ -434,6 +473,7 @@ angular.module('ipkms')
     })
     .then(function(response) {
       $scope.gDetails = response.data;
+      $scope.originalData = response.data;
       //       console.log("get group's details success");
     },
     function(response) { // optional

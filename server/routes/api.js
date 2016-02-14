@@ -234,7 +234,7 @@ router.route('/students/multi')  //create multiple students account //admin api 
       newuser.schoolId = idArray[i];
       //             user.name = '';
       newuser.role = 'student';
-      newuser.password = newUser.generateHash("123456");
+      newuser.password = newUser.generateHash("123456"); //默认密码123456
       newUser.save(function(err, u) {
         if (err){
           res.send(err);
@@ -419,16 +419,23 @@ router.route('/teacher/groups/:option') //get teacher's groups //teacher api
   })
 
   router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信息api //teacher api
-  .post(isTeacher, function(req, res){
+  .put(isTeacher, function(req, res){
     var group_id = req.params.group_id;
     var option = req.params.option;
 
     if(option == "notice"){
       var newNotice = Object.keys(req.body)[0];
+      var newLog = {
+        writeBy : req.user.id,
+        date : Date.now(),
+        event : "update notice",
+        text : "發佈新小組通知：" + newNotice
+      }
 
       Group.findById(group_id, function(err, group){
         if(newNotice){
           group.notice.text = newNotice;
+          group.logs.push(newLog);
           group.save(function(err) {
             if (err)
             res.send(err);
@@ -462,8 +469,27 @@ router.route('/teacher/groups/:option') //get teacher's groups //teacher api
         }
       })
 
-    }else{
-      res.send("unknow")
+    }else if (option == "members") {
+      var newMembers = Object.keys(req.body)[0];
+
+      console.log(newMembers)
+
+      if(newMembers){
+
+        Group.update({"_id":group_id}, { $set: { students: JSON.parse(newMembers) }}, function(err, g){
+          if (err) {
+            res.status(500).json("fail");
+          }
+          res.json("update group name success");
+        });
+
+      }else{
+        res.status(500).send({ error: 'The members you submitted is empty' });
+      }
+
+
+    } else {
+      res.status(500).json("fail")
     }
   })
 

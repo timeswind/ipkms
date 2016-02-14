@@ -107,15 +107,34 @@ td {
 }
 
 .g-student-card .md-item-text{
-  background:#EC407A;
+  border: 1px solid #3F51B5;
+border-radius: 5px;
+transition: 0.5s;
 
 }
-.g-student-card p{
-  color:#fff;
+
+.g-student-card .md-item-text-edit{
+  border: 1px solid #E91E63;
+border-radius: 5px;
+transition: 0.5s;
+
+
 }
-.g-student-card .s-name{
+
+
+.g-student-card .s-name-edit{
+  color:#E91E63;
   margin:10px 0 10px 15px;
   font-size:18px;
+  transition: 0.5s;
+
+}
+
+.g-student-card .s-name{
+  color:#3F51B5;
+  margin:10px 0 10px 15px;
+  font-size:18px;
+  transition: 0.5s;
 }
 
 .g-student-card .s-id{
@@ -143,7 +162,16 @@ td {
   padding: 16px;
   height: 151px;
 }
-/*
-Copyright 2016 Google Inc. All Rights Reserved.
-Use of this source code is governed by an MIT-style license that can be in foundin the LICENSE file at http://material.angularjs.org/license.
-*/
+
+.button-icon-left{
+  float: left;
+margin-top: 10px;
+font-size: 16px !important;
+}
+
+.subtitle-icon-left{
+  font-size: 18px !important;
+  float: left;
+  margin-top: -2px;
+  margin-right: 5px;
+}

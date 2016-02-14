@@ -32,14 +32,8 @@ even in small screens. -->
           </div>
         </div>
       </header>
-      <div class="mdl-layout__drawer">
-        <span class="mdl-layout-title">教師主頁</span>
-        <nav class="mdl-navigation">
-          <a class="mdl-navigation__link" href="/home/teacher">主頁</a>
-          <a class="mdl-navigation__link" href="">我的學生</a>
-          <a class="mdl-navigation__link" href="">作業管理</a>
-        </nav>
-      </div>
+
+      <div class="mdl-layout__drawer" teacher-side-drawer ></div>
 
       <main class="mdl-layout__content">
         <md-progress-linear ng-if="grabingGroupsData" class="md-warn" md-mode="query"></md-progress-linear>

@@ -5,6 +5,11 @@ angular.module('ipkms')
     password: ''
   }
 
+  $scope.student = {
+    schoolid: '',
+    password: ''
+  }
+
   $scope.loginOption = "學生登錄"
   $scope.studentLogin = false;
 
@@ -30,6 +35,23 @@ angular.module('ipkms')
       // Erase the token if the user fails to log in
       if (data == "fail") {
         $scope.teacherLoginError = "郵箱或密碼錯誤"
+      }
+      delete $window.sessionStorage.token;
+      // Handle login errors here
+    });
+  };
+
+  $scope.submitStudent = function () {
+    $http
+    .post('/login/student', $scope.student)
+    .success(function (data, status, headers, config) {
+      $window.sessionStorage.token = data.token;
+      window.location = "/home"
+    })
+    .error(function (data, status, headers, config) {
+      // Erase the token if the user fails to log in
+      if (data == "fail") {
+        $scope.studentLoginError = "郵箱或密碼錯誤"
       }
       delete $window.sessionStorage.token;
       // Handle login errors here

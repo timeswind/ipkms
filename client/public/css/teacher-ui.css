@@ -1,16 +1,20 @@
 .group-groupNotice {
-  font-size:18px;
-  margin:10px 8px 0 8px;
-  border: 1px #3F51B5 dashed
+  font-size:16px;
+  margin:0
 }
 
 .group-dialog {
   margin:0 auto;
-  width:800px
+  width:800px;
+}
+
+.group-dialog .md-errors-spacer{
+  display: none
 }
 
 .group-header h2{
-  width:100%
+  width:100%;
+  color:#fff
 }
 
 .group-header a.group-headerPeopleCount {
@@ -25,4 +29,30 @@
   margin-left:20px;
   margin-top:11px;
   margin-right:5px
+}
+
+.md-list-item-text .log-date{
+  color: #3F51B5;
+  padding: 5px 10px;
+  border-radius: 13px;
+  border: 1px solid #3F51B5;
+}
+
+.md-list-item-text .log-writeby {
+
+    color: #3F51B5;
+    font-weight: bold;
+    font-size: 16px;
+    margin-left: 5px;
+
+}
+.md-list-item-text .log-text {
+color:#5C6BC0
+}
+
+
+.delete-group-member-icon{
+  float: right;
+  margin-right: 10px;
+  cursor: pointer
 }
