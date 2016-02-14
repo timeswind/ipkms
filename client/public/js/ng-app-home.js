@@ -253,23 +253,6 @@ angular.module('ipkms')
     })
 
   }
-
-  function containsObject(obj, list) {
-    for (i = 0; i < list.length; i++) {
-      if (list[i]["schoolid"] == obj["schoolid"]) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function arrayContains(needle, arrhaystack)
-  {
-    return (arrhaystack.indexOf(needle) > -1);
-  }
-
-
-
   /**
   * Return the proper object when the append is called.
   */
@@ -341,6 +324,17 @@ angular.module('ipkms')
       // failed
     });
   }
+
+  function containsObject(obj, list) {
+    for (i = 0; i < list.length; i++) {
+      if (list[i]["schoolid"] == obj["schoolid"]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function arrayContains(needle, arrhaystack){return (arrhaystack.indexOf(needle) > -1);}
 })
 
 .controller('GroupModalController', function($scope, $http, $mdDialog, $mdMedia, group) {
@@ -382,10 +376,13 @@ angular.module('ipkms')
           console.log("success")
           getGroupDetails()
           $scope.editMembers = false;
+          $scope.addMemberPenel = false;
+          $scope.group.students = $scope.gDetails.students.length;
         },
         function(response) { // optional
           // failed
           getGroupDetails()
+          $scope.addMemberPenel = false;
           $scope.editMembers = false;
         });
     }else{
@@ -480,5 +477,97 @@ angular.module('ipkms')
       console.log("fail to get group's details")
     });
   };
+
+  $scope.searchDone = true;
+  $scope.queryedStudents = [];
+  var searchedText = [];
+  var typingTimer;                //timer identifier
+  var doneTypingInterval = 1000;
+
+  //on keyup, start the countdown
+  $scope.keyup = function(){
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(doneTyping, doneTypingInterval);
+  }
+  //on keydown, clear the countdown
+  $scope.keydown = function(){
+    if (event.keyCode == 8) {
+      $scope.searchDone = true;
+    }else{
+      $scope.searchDone = false;
+    }
+    clearTimeout(typingTimer);
+  }
+
+  //user is "finished typing," do student query
+  function doneTyping () {
+    if(($scope.searchText !== '') && !(arrayContains($scope.searchText, searchedText))){
+      queryStudents($scope.searchText);
+    }
+  }
+  //student query function
+  function queryStudents(query){
+    $http({
+      method: 'GET',
+      url: '/api/students/query/' + query
+    }).then(function successCallback(response) {
+      for (var i = 0; i < response.data.length; i++) {
+        var studentObject ={
+          "id":{
+            "schoolId": response.data[i]["schoolId"],
+            "name": response.data[i]["name"],
+            "_id": response.data[i]["_id"]
+          },
+          "select" : false
+        };
+
+        if(!containsObject(studentObject, $scope.gDetails.students)){
+          if(!containsObject(studentObject, $scope.queryedStudents)){
+            $scope.queryedStudents.unshift(studentObject);
+          }
+        }
+
+        if(!arrayContains(response.data[i]["name"], searchedText)){
+          searchedText.push(response.data[i]["name"]);
+        }
+
+        if(!arrayContains(response.data[i]["schoolId"], searchedText)){
+          searchedText.push(response.data[i]["schoolId"]);
+        }
+      }
+
+      if(response.data.length !== 0){
+        if(!arrayContains(query, searchedText)){
+          searchedText.push(query);
+        }
+      }
+      $scope.searchDone = true;
+    }, function errorCallback(response) {
+      console.log(response);
+    })
+
+  }
+
+  $scope.clickStudentTile = function(stu,index){
+
+    console.log($scope.gDetails.students)
+
+    if(!containsObject(stu, $scope.gDetails.students)){
+      $scope.gDetails.students.push(stu);
+      $scope.queryedStudents[index]["select"] = true;
+
+    }
+  };
+
+  function containsObject(obj, list) {
+    for (i = 0; i < list.length; i++) {
+      if (list[i]["id"]["schoolId"] == obj["id"]["schoolId"]) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function arrayContains(needle, arrhaystack){return (arrhaystack.indexOf(needle) > -1);}
 
 })

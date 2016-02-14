@@ -71,14 +71,36 @@
         <md-grid-tile ng-repeat="student in gDetails.students">
           <div ng-class="{'md-item-text': !editMembers, 'md-item-text-edit': editMembers}"  flex="">
             <p ng-class="{'s-name': !editMembers, 's-name-edit':editMembers}">{[{student.id.name}]}
-              <i class="material-icons delete-group-member-icon" ng-show="editMembers" ng-click="removeMember($index)">close</i>
+              <i class="material-icons delete-group-member-icon" ng-show="editMembers && !addMemberPenel" ng-click="removeMember($index)">close</i>
             </p>
           </div>
         </md-grid-tile>
-        <md-grid-tile ng-show="editMembers" style="cursor:pointer;" ng-click="AddMemberPenel ＝ true">
+        <md-grid-tile ng-show="editMembers" style="cursor:pointer" ng-click="addMemberPenel = true;">
           <div class="md-item-text"  flex="">
-            <p class="s-name">新增成員
+            <p class="s-name">新增
               <i class="material-icons delete-group-member-icon">add</i>
+            </p>
+          </div>
+        </md-grid-tile>
+      </md-grid-list>
+      <div ng-show="addMemberPenel" style="margin-left:15px">
+      <md-input-container style="margin-top:0;">
+        <label>搜索學生</label>
+        <input type="text" ng-model="searchText" ng-keydown="keydown($event)" ng-keyup="keyup()">
+      </md-input-container>
+      <md-button class="md-primary" ng-click="addMemberPenel = false">
+        <i class="material-icons button-icon-left">close</i>
+        關閉搜索</md-button>
+      </div>
+
+      <md-grid-list ng-show="addMemberPenel" class="g-student-card"
+      md-cols-gt-md="5" md-cols="3" md-cols-md="6"
+      md-row-height="40px"
+      md-gutter="10px" style="margin:15px;margin-bottom:30px">
+        <md-grid-tile ng-repeat="stu in queryedStudents" ng-click="clickStudentTile(stu,$index)">
+          <div class="md-item-text-query" flex="">
+            <p class="s-name-query">{[{stu.id.name}]}
+              <i class="material-icons delete-group-member-icon" ng-show="stu.select">done</i>
             </p>
           </div>
         </md-grid-tile>

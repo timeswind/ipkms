@@ -271,7 +271,7 @@ router.route('/students/query/:query')  //query students with their name //user 
   var query = req.params.query;
   if(query == "all"){
     Student.find(
-      {}, "_id name schoolId",
+      {}, "_id name schoolId", //以後可以包括班級，便於辨別重名學生
       function(err,students) {
         res.json(students);
       }

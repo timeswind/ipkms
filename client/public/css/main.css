@@ -137,6 +137,20 @@ transition: 0.5s;
   transition: 0.5s;
 }
 
+.g-student-card .md-item-text-query{
+  border: 1px solid #009688;
+border-radius: 5px;
+transition: 0.5s;
+
+}
+
+.g-student-card .s-name-query{
+  color:#009688;
+  margin:10px 0 10px 15px;
+  font-size:18px;
+  transition: 0.5s;
+}
+
 .g-student-card .s-id{
   margin:0 0 10px 15px;
   font-size:14px;
