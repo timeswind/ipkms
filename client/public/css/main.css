@@ -107,7 +107,7 @@ td {
 }
 
 .g-student-card .md-item-text{
-  border: 1px solid #3F51B5;
+  border: 1px solid #607D8B;
 border-radius: 5px;
 transition: 0.5s;
 
@@ -131,7 +131,7 @@ transition: 0.5s;
 }
 
 .g-student-card .s-name{
-  color:#3F51B5;
+  color:#607D8B;
   margin:10px 0 10px 15px;
   font-size:18px;
   transition: 0.5s;

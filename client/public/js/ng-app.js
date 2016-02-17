@@ -1,4 +1,4 @@
-angular.module('ipkms', ['ngMaterial','ngMessages'])
+angular.module('ipkms', ['ngMaterial','ngMessages','ui.tinymce'])
 .config(function($interpolateProvider, $httpProvider, $mdThemingProvider){
   $interpolateProvider.startSymbol('{[{');
   $interpolateProvider.endSymbol('}]}');

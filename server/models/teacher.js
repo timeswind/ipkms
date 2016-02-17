@@ -6,13 +6,7 @@ var teacherSchema = mongoose.Schema({
 
   user : { type: ObjectId, ref: 'User' },
   name : String,
-  thomeworks : [{
-    name : String,
-    delivery : Boolean,
-    group : ObjectId,
-    thomework: { type: ObjectId, ref: 'Thomework' },
-    count : String
-  }],
+  thomeworks : [{ type: ObjectId, ref: 'Thomework' }],
   teachGroups : [{
     group : { type: ObjectId, ref: 'Group' },
     cName: String,

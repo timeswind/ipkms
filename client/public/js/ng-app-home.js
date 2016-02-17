@@ -5,26 +5,80 @@ angular.module('ipkms')
   console.log("hello home!")
 
 })
-.controller('homeworkManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
-
+.controller('homeworksManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
+  getMyThomeworks();
   $scope.showNewHomeworkForm = function(ev) {
     var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'));
     $mdDialog.show({
-      controller: NewHWDialogController,
       templateUrl: '/html/newhomeworkform.tmpl.html',
       parent: angular.element(document.body),
       targetEvent: ev,
       clickOutsideToClose:false,
-      fullscreen: useFullScreen
+      fullscreen: useFullScreen,
+      controllerAs: 'ctrl',
+      controller: "NewHWDialogController"
     })
-    .then(function(answer) {
-      $scope.status = 'You said the information was "' + answer + '".';
-    }, function() {
-      $scope.status = 'You cancelled the dialog.';
-    });
 
   };
 
+  $scope.bTd = function(boolean){
+    if (boolean == true) {
+      return "已布置"
+    } else {
+      return "未布置"
+    }
+  }
+  $scope.idToDate = function(id){
+    var timestamp;
+    var date;
+    if(id){
+      timestamp = id.toString().substring(0,8)
+      date = new Date( parseInt( timestamp, 16 ) * 1000 )
+      return date
+    }else {
+      return " "
+    }
+  }
+
+  var doneGrabingGroupsDataTimer;
+
+  function getMyThomeworks(){
+    $scope.grabingGroupsData = true;
+    clearTimeout(doneGrabingGroupsDataTimer);
+    $http({
+      url: '/api/teacher/homeworks/fromtc',
+      method: "GET",
+    })
+    .then(function(response) {
+      $scope.MyThomeworks = response.data.thomeworks.slice().reverse();
+      doneGrabingGroupsDataTimer = setTimeout(doneGrabingGroupsData, 1500);
+    },
+    function(response) { // optional
+      console.log(response)
+    });
+  }
+
+  function doneGrabingGroupsData(){
+    $scope.grabingGroupsData = false;
+    $scope.$apply();
+  }
+
+  $scope.arrayToString = function(array){
+    var aL = array.length;
+    var values = "";
+    for(i = 0; i < aL; i++ ){
+      values = values + " " + array[i]
+    }
+    return values
+
+  }
+
+  $scope.predicate = 'none';
+  $scope.reverse = false;
+  $scope.order = function(predicate) {
+    $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
+    $scope.predicate = predicate;
+  };
 
 
 })
@@ -108,7 +162,7 @@ angular.module('ipkms')
     })
     .then(function(response) {
       $scope.myGroups = response.data.teachGroups;
-      doneGrabingGroupsDataTimer = setTimeout(doneGrabingGroupsData, 2000);
+      doneGrabingGroupsDataTimer = setTimeout(doneGrabingGroupsData, 1500);
 
     },
     function(response) { // optional
@@ -138,7 +192,18 @@ angular.module('ipkms')
 })
 
 .controller('NewHWDialogController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
-  $scope.subjects = ["數學","中文","英文","通識"]
+  $scope.subjects = [
+    { name : "數學", id: "math" },
+    { name : "英文", id: "eng" },
+    { name : "中文", id: "chi" },
+    { name : "通識", id: "ls" }
+  ]
+
+  $scope.groupsClasses = null;
+  $scope.newhomework = {
+    delivery : "false",
+    tags : []
+  };
 
   $scope.hide = function() {
     $mdDialog.hide();
@@ -146,6 +211,60 @@ angular.module('ipkms')
   $scope.cancel = function() {
     $mdDialog.cancel();
   };
+
+  $scope.loadMyGroups = function() {
+
+    $http({
+      url: '/api/teacher/groups/simple',
+      method: "GET",
+    })
+    .then(function(response) {
+
+      var reformatedResponse = response.data.teachGroups.map(function(obj){
+        var robj = {};
+        robj["category"] = 'group';
+        robj["name"] = obj.group.name;
+        robj["id"] = obj.group._id;
+
+        return robj;
+      })
+      return $scope.groupsClasses = reformatedResponse
+    },
+    function(response) { // optional
+      console.log(response)
+    });
+
+
+  }
+
+  $scope.createHomework = function(){
+    var homeworkData = {
+      delivery : $scope.newhomework.delivery,
+      title : $scope.newhomework.title,
+      requirement : $scope.newhomework.requirement,
+      subject : $scope.newhomework.subject,
+      tags : $scope.newhomework.tags,
+      targetGroup : $scope.newhomework.targetGroup,
+      deadline : $scope.newhomework.deadline
+    }
+    console.log(homeworkData);
+    $http({
+      url: '/api/teacher/manage/homework',
+      method: "POST",
+      data: homeworkData,
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+
+    })
+    .then(function(response) {
+      // success
+      $mdDialog.hide();
+    },
+    function(response) { // optional
+      // failed
+      console.log("create Homework fail")
+
+    });
+  }
 
 })
 
@@ -365,26 +484,26 @@ angular.module('ipkms')
     console.log(reformattedMembersArray)
 
     if(reformattedMembersArray){
-        $http({
-          url: '/api/teacher/update/group/' + $scope.gDetails._id + '/members',
-          method: "PUT",
-          data: reformattedMembersArray,
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-        })
-        .then(function(response) {
-          // success
-          console.log("success")
-          getGroupDetails()
-          $scope.editMembers = false;
-          $scope.addMemberPenel = false;
-          $scope.group.students = $scope.gDetails.students.length;
-        },
-        function(response) { // optional
-          // failed
-          getGroupDetails()
-          $scope.addMemberPenel = false;
-          $scope.editMembers = false;
-        });
+      $http({
+        url: '/api/teacher/update/group/' + $scope.gDetails._id + '/members',
+        method: "PUT",
+        data: reformattedMembersArray,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+      })
+      .then(function(response) {
+        // success
+        console.log("success")
+        getGroupDetails()
+        $scope.editMembers = false;
+        $scope.addMemberPenel = false;
+        $scope.group.students = $scope.gDetails.students.length;
+      },
+      function(response) { // optional
+        // failed
+        getGroupDetails()
+        $scope.addMemberPenel = false;
+        $scope.editMembers = false;
+      });
     }else{
       console.log("updated student field is empty~!")
     }

@@ -27,7 +27,7 @@ router.get('/teacher', isTeacher, function(req, res, next) {
 
 router.get('/teacher/managehomework', isTeacher, function(req, res, next) {
   var user = req.user;
-  res.render('manage-homework', { title: 'Home', user: user});
+  res.render('manage-homework', { title: '管理功課', user: user});
 
 });
 
