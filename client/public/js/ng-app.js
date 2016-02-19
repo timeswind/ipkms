@@ -5,9 +5,6 @@ angular.module('ipkms', ['ngMaterial','ngMessages','ui.tinymce'])
 
   $httpProvider.interceptors.push('authInterceptor');
 
-  $mdThemingProvider.theme('docs-dark', 'default')
-  .primaryPalette('yellow')
-  .dark();
 })
 .factory('authInterceptor', function ($rootScope, $q, $window) {
   return {
@@ -15,13 +12,15 @@ angular.module('ipkms', ['ngMaterial','ngMessages','ui.tinymce'])
       config.headers = config.headers || {};
       if ($window.sessionStorage.token) {
         config.headers['x-access-token'] = $window.sessionStorage.token;
-        // config.headers.Authorization = 'Bearer ' + $window.sessionStorage.token;
+      } else {
+        window.location = "/"
       }
       return config;
     }
     // response: function (response) {
-    //   if (response.status === 401) {
-    //     // handle the case where the user is not authenticated
+    //   console.log(response)
+    //   if (response.status == 401) {
+    //     console.log("401")
     //   }
     //   return response || $q.when(response);
     // }

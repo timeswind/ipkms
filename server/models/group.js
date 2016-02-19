@@ -25,7 +25,8 @@ var groupSchema = mongoose.Schema({
     date: {type: Date},
     event: String,
     text: String
-  }]
+  }],
+  homeworks : [{ type: ObjectId, ref: 'Thomework' }]
 
 });
 

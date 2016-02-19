@@ -13,133 +13,151 @@
       <md-button ng-show="editName" ng-click="updateName(updatedName)">
         <i class="material-icons button-icon-left">done</i>
         立刻更新</md-button>
-      <md-button ng-show="editName" ng-click="editName = false">取消</md-button>
-      <h2 class="group-header" style="width:100%" ng-hide="editName">{[{group.name}]}
-        <md-button ng-click="editName = true; updatedName = group.name">
-          <i class="material-icons button-icon-left">edit</i>
-          修改組名</md-button>
-
-        <a class="group-headerPeopleCount">
-          <i class="material-icons">
-            people</i>
-            {[{group.students}]}
-          </a>
-
-        </h2>
-        <span flex></span>
-        <md-button class="md-icon-button" ng-click="cancel()">
-          <i class="material-icons">close</i>
-        </md-button>
-      </div>
-    </md-toolbar>
-
-    <md-dialog-content>
-      <md-subheader class="md-no-sticky">
-<i class="material-icons subtitle-icon-left">assignment_late</i>
-        公告
-        <md-button class="md-primary" ng-click="editNotice = true ; updatedNotice = gDetails.notice.text" style="float:right;margin-top:-10px;margin-right:0;color: #607D8B;" ng-hide="editNotice">
-<i class="material-icons button-icon-left">edit</i>
-          更新公告</md-button>
-        <md-button class="md-warn" ng-show="editNotice" ng-click="editNotice = false" style="float:right;margin-top:-10px;margin-right:0">取消</md-button>
-        <md-button class="md-primary" ng-show="editNotice" ng-click="updateNotice(updatedNotice)" style="float:right;margin-top:-10px;">
-          <i class="material-icons button-icon-left">done</i>立刻更新</md-button>
-      </md-subheader>
-        <md-content flex layout-padding style="padding-top:0;width:100%">
-          <md-input-container class="md-block" ng-show="editNotice" style="margin:0">
-            <textarea ng-model="updatedNotice" columns="1">{[{gDetails.notice.text}]}</textarea>
-          </md-input-container>
-
-          <p class="group-groupNotice" ng-hide="editNotice">{[{gDetails.notice.text}]}</p>
-        </md-content>
-
-        <md-divider></md-divider>
-
-        <md-subheader class="md-no-sticky">
-          <i class="material-icons subtitle-icon-left">people</i>
-          成員
-          <md-button class="md-primary" ng-click="editMembers = true;" style="float:right;margin-top:-10px;margin-right:0;color: #607D8B;" ng-hide="editMembers">
+        <md-button ng-show="editName" ng-click="editName = false">取消</md-button>
+        <h2 class="group-header" style="width:100%" ng-hide="editName">{[{group.name}]}
+          <md-button ng-click="editName = true; updatedName = group.name">
             <i class="material-icons button-icon-left">edit</i>
-            編輯成員</md-button>
-          <md-button class="md-warn" ng-show="editMembers" ng-click="editMembers = false;addMemberPenel = false" style="float:right;margin-top:-10px;margin-right:0">取消</md-button>
-          <md-button class="md-primary" ng-show="editMembers" ng-click="updateMembers()" style="float:right;margin-top:-10px;">
-            <i class="material-icons button-icon-left">done</i>
-            完成编辑</md-button>
-        </md-subheader>
-        <md-grid-list class="g-student-card" md-cols-gt-md="5" md-cols="3" md-cols-md="6"
-        md-row-height="40px"
-        md-gutter="10px" style="margin:15px;margin-bottom:30px">
-        <md-grid-tile ng-repeat="student in gDetails.students">
-          <div ng-class="{'md-item-text': !editMembers, 'md-item-text-edit': editMembers}"  flex="">
-            <p ng-class="{'s-name': !editMembers, 's-name-edit':editMembers}">{[{student.id.name}]}
-              <i class="material-icons delete-group-member-icon" ng-show="editMembers && !addMemberPenel" ng-click="removeMember($index)">close</i>
-            </p>
+            修改組名</md-button>
+
+            <a class="group-headerPeopleCount">
+              <i class="material-icons">
+                people</i>
+                {[{group.students}]}
+              </a>
+
+            </h2>
+            <span flex></span>
+            <md-button class="md-icon-button" ng-click="cancel()">
+              <i class="material-icons">close</i>
+            </md-button>
           </div>
-        </md-grid-tile>
-        <md-grid-tile ng-show="editMembers" style="cursor:pointer" ng-click="addMemberPenel = true;">
-          <div class="md-item-text"  flex="">
-            <p class="s-name">新增
-              <i class="material-icons delete-group-member-icon">add</i>
-            </p>
-          </div>
-        </md-grid-tile>
-      </md-grid-list>
-      <div ng-show="addMemberPenel" style="margin-left:15px;text-align:center">
-      <md-input-container style="margin:0;">
-        <label style="color:#607D8B">搜索學生</label>
-        <input style="border-color:#607D8B" type="text" ng-model="searchText" ng-keydown="keydown($event)" ng-keyup="keyup()">
-      </md-input-container>
-      <md-button style="color:#607D8B" ng-click="addMemberPenel = false">
-        <i class="material-icons button-icon-left">close</i>
-        關閉搜索</md-button>
-      </div>
+        </md-toolbar>
 
-      <md-grid-list ng-show="addMemberPenel" class="g-student-card"
-      md-cols-gt-md="5" md-cols="3" md-cols-md="6"
-      md-row-height="40px"
-      md-gutter="10px" style="margin:15px;margin-bottom:30px">
-        <md-grid-tile ng-repeat="stu in queryedStudents" ng-click="clickStudentTile(stu,$index)">
-          <div class="md-item-text-query" flex="">
-            <p class="s-name-query">{[{stu.id.name}]}
-              <i class="material-icons delete-group-member-icon" ng-show="stu.select">done</i>
-            </p>
-          </div>
-        </md-grid-tile>
-      </md-grid-list>
+        <md-dialog-content>
+          <md-subheader class="md-no-sticky">
+            <i class="material-icons subtitle-icon-left">assignment_late</i>
+            公告
+            <md-button class="md-primary" ng-click="editNotice = true ; updatedNotice = gDetails.notice.text" style="float:right;margin-top:-10px;margin-right:0;color: #607D8B;" ng-hide="editNotice">
+              <i class="material-icons button-icon-left">edit</i>
+              更新公告</md-button>
+              <md-button class="md-warn" ng-show="editNotice" ng-click="editNotice = false" style="float:right;margin-top:-10px;margin-right:0">取消</md-button>
+              <md-button class="md-primary" ng-show="editNotice" ng-click="updateNotice(updatedNotice)" style="float:right;margin-top:-10px;">
+                <i class="material-icons button-icon-left">done</i>立刻更新</md-button>
+              </md-subheader>
+              <md-content flex layout-padding style="padding-top:0;width:100%">
+                <md-input-container md-no-float class="md-block" ng-show="editNotice" style="margin:0">
+                  <textarea ng-model="updatedNotice" columns="1">{[{gDetails.notice.text}]}</textarea>
+                </md-input-container>
 
-      <md-divider></md-divider>
+                <p style="  font-size: 20px;
+                  margin:0;
+                  text-align: center;
+                  color: #FF5722" ng-hide="editNotice">{[{gDetails.notice.text}]}</p>
+              </md-content>
 
-      <md-subheader class="md-no-sticky">
-        <i class="material-icons subtitle-icon-left">update</i>
-        動態</md-subheader>
-      <md-content style="padding-top:10px">
-        <md-list-item ng-repeat="log in gDetails.logs" style="margin-bottom: 15px;">
-          <div class="md-list-item-text" layout="row">
-            <a class="log-date">{[{log.date | date:" MM'月'dd'日' HH:mm"}]}</a>
+              <md-divider></md-divider>
 
-            <div layout="column">
-            <a class="log-writeby">{[{log.writeBy.local.name}]}</a>
-            <p class="log-text">{[{log.text}]}</p>
+              <md-subheader class="md-no-sticky">
+                <i class="material-icons subtitle-icon-left">people</i>
+                成員
+                <md-button class="md-primary" ng-click="editMembers = true;" style="float:right;margin-top:-10px;margin-right:0;color: #607D8B;" ng-hide="editMembers">
+                  <i class="material-icons button-icon-left">edit</i>
+                  編輯成員</md-button>
+                  <md-button class="md-warn" ng-show="editMembers" ng-click="editMembers = false;addMemberPenel = false" style="float:right;margin-top:-10px;margin-right:0">取消</md-button>
+                  <md-button class="md-primary" ng-show="editMembers" ng-click="updateMembers()" style="float:right;margin-top:-10px;">
+                    <i class="material-icons button-icon-left">done</i>
+                    完成编辑</md-button>
+                  </md-subheader>
+                  <md-grid-list class="g-student-card" md-cols-gt-md="5" md-cols="3" md-cols-md="6"
+                  md-row-height="40px"
+                  md-gutter="10px" style="margin:15px;margin-bottom:30px">
+                  <md-grid-tile ng-repeat="student in gDetails.students">
+                    <div ng-class="{'md-item-text': !editMembers, 'md-item-text-edit': editMembers}"  flex="">
+                      <p ng-class="{'s-name': !editMembers, 's-name-edit':editMembers}">{[{student.id.name}]}
+                        <i class="material-icons delete-group-member-icon" ng-show="editMembers && !addMemberPenel" ng-click="removeMember($index)">close</i>
+                      </p>
+                    </div>
+                  </md-grid-tile>
+                  <md-grid-tile ng-show="editMembers" style="cursor:pointer" ng-click="addMemberPenel = true;">
+                    <div class="md-item-text"  flex="">
+                      <p class="s-name">新增
+                        <i class="material-icons delete-group-member-icon">add</i>
+                      </p>
+                    </div>
+                  </md-grid-tile>
+                </md-grid-list>
+                <div ng-show="addMemberPenel" style="margin-left:15px;text-align:center">
+                  <md-input-container style="margin:0;">
+                    <label style="color:#607D8B">搜索學生</label>
+                    <input style="border-color:#607D8B" type="text" ng-model="searchText" ng-keydown="keydown($event)" ng-keyup="keyup()">
+                  </md-input-container>
+                  <md-button style="color:#607D8B" ng-click="addMemberPenel = false">
+                    <i class="material-icons button-icon-left">close</i>
+                    關閉搜索</md-button>
+                  </div>
 
-          </div>
-          </div>
-        </md-list-item>
+                  <md-grid-list ng-show="addMemberPenel" class="g-student-card"
+                  md-cols-gt-md="5" md-cols="3" md-cols-md="6"
+                  md-row-height="40px"
+                  md-gutter="10px" style="margin:15px;margin-bottom:30px">
+                  <md-grid-tile ng-repeat="stu in queryedStudents" ng-click="clickStudentTile(stu,$index)">
+                    <div class="md-item-text-query" flex="">
+                      <p class="s-name-query">{[{stu.id.name}]}
+                        <i class="material-icons delete-group-member-icon" ng-show="stu.select">done</i>
+                      </p>
+                    </div>
+                  </md-grid-tile>
+                </md-grid-list>
 
-      </md-content>
+                <md-divider></md-divider>
 
-      <md-divider></md-divider>
+                <md-subheader class="md-no-sticky">
+                  <i class="material-icons subtitle-icon-left">update</i>
+                  動態</md-subheader>
+                  <p style="text-align:center">
+                  <md-button class="md-raised" style="background-color:#607D8B;color:#fff" ng-click="showLogs = true" ng-hide="showLogs">
+                    <i class="material-icons button-icon-left">slideshow</i>
+                    顯示{[{gDetails.logs.length}]}個動態
+                  </md-button>
+                  <md-button class="md-raised" style="background-color:#607D8B;color:#fff" ng-click="showLogs = false" ng-show="showLogs">
+                    <i class="material-icons button-icon-left">close</i>
+                    隱藏動態
+                  </md-button>
+                </p>
+                  <md-content style="padding-top:10px" ng-show="showLogs">
+                    <md-list-item ng-repeat="log in gDetails.logs" style="margin-bottom: 15px;">
+                      <div class="md-list-item-text" layout="row">
+                        <a class="log-date">{[{log.date | date:" MM'月'dd'日' HH:mm"}]}</a>
 
-      <md-subheader class="md-no-sticky">
-        <i class="material-icons subtitle-icon-left">comment</i>
-        留言板</md-subheader>
+                        <div layout="column">
+                          <a class="log-writeby">{[{log.writeBy.local.name}]}</a>
+                          <p class="log-text">{[{log.text}]}</p>
 
-      <md-divider></md-divider>
+                        </div>
+                      </div>
+                    </md-list-item>
 
-      <md-subheader class="md-no-sticky">功課墻
-        <i class="material-icons subtitle-icon-left">assignment</i>
-      </md-subheader>
-    </md-dialog-content>
-    <!--     <md-dialog-actions layout="row">
-    <md-button class="md-raised md-primary" style="margin-right:20px;" ng-click="createGroup()">建立</md-button>
-  </md-dialog-actions> -->
+                  </md-content>
 
-</md-dialog>
+                  <md-divider></md-divider>
+
+                  <md-subheader class="md-no-sticky">
+                    <i class="material-icons subtitle-icon-left">comment</i>
+                    留言板</md-subheader>
+
+                    <md-divider></md-divider>
+
+                    <md-subheader class="md-no-sticky">功課墻
+                      <i class="material-icons subtitle-icon-left">assignment</i>
+                    </md-subheader>
+                    <div class="mdl-grid">
+                      <div class="mdl-cell mdl-cell--4-col homework-wall-card" ng-repeat="homework in gDetails.homeworks" layout="column">
+                        <p><span class="homework-wall-subject">{[{idToName(homework.subject)}]}</span></p>
+                        <p class="homework-wall-title">{[{homework.title}]}</p>
+                        <p class="homework-wall-deadline">上交日期：{[{homework.deadline | date:" MM'月'dd'日'"}]}</p>
+                      </div>
+
+                    </div>
+                  </md-dialog-content>
+
+              </md-dialog>

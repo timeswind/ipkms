@@ -1,5 +1,5 @@
 .group-groupNotice, {
-  font-size:18px;
+  font-size: 20px;
   margin:0;
   text-align: center;
   color: #FF5722
@@ -45,15 +45,15 @@
 
 .md-list-item-text .log-writeby {
 
-    color: #607D8B;
-    font-weight: bold;
-    font-size: 16px;
-    margin-left: 5px;
+  color: #607D8B;
+  font-weight: bold;
+  font-size: 16px;
+  margin-left: 5px;
 
 }
 .md-list-item-text .log-text {
-color:#607D8B;
-padding-left: 5px;
+  color:#607D8B;
+  padding-left: 5px;
 }
 
 
@@ -86,7 +86,7 @@ padding-left: 5px;
 }
 .secondary-panel {
   border-right: 1px solid #E0E0E0;
-      background-color: #f8f8f8;
+  background-color: #f8f8f8;
 }
 
 .thomework-list-item {
@@ -117,8 +117,7 @@ padding-left: 5px;
 }
 
 .h-create-date{
-  margin-left: 40px;
-  margin-right: 20px
+  margin-right: 0px
 }
 
 .h-tags i {
@@ -136,4 +135,46 @@ padding-left: 5px;
 
 .even-list-item {
   background-color: #f8f8f8;
+}
+
+.inner-shadow-box {
+  padding: 10px;
+  border-radius: 5px;
+  background: #ECEFF1;
+  border: 1px solid #607D8B;
+}
+
+.mdtitle-icon-left {
+  float: left;
+  margin-top: 12px;
+  margin-right: 5px;
+  color: #607D8B;
+}
+
+.homework-wall-card {
+  padding: 10px;
+  border: 2px solid #795548;
+  border-radius: 5px;
+}
+
+.homework-wall-subject {
+  margin-bottom: 5px;
+  text-align: center;
+  background-color: #795548;
+  color: #fff;
+  font-size: 16px;
+  padding: 4px 8px;
+  border-radius: 13px;
+}
+
+.homework-wall-title {
+  margin: 0;
+  text-align: right;
+  color: #6D4C41;
+  font-size: 20px;
+}
+.homework-wall-deadline {
+  margin-bottom: 0;
+      text-align: right;
+      color: #A1887F;
 }

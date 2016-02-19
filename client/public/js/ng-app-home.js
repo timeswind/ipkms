@@ -5,10 +5,10 @@ angular.module('ipkms')
   console.log("hello home!")
 
 })
-.controller('homeworksManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
+.controller('homeworksManageController', function($rootScope, $scope, $http, $mdDialog, $mdMedia, apiService, homeworkService, generalService) {
   getMyThomeworks();
+  var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'));
   $scope.showNewHomeworkForm = function(ev) {
-    var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'));
     $mdDialog.show({
       templateUrl: '/html/newhomeworkform.tmpl.html',
       parent: angular.element(document.body),
@@ -17,27 +17,43 @@ angular.module('ipkms')
       fullscreen: useFullScreen,
       controllerAs: 'ctrl',
       controller: "NewHWDialogController"
-    })
+    }).then(function(results) {
+      if(results == "success"){
+        getMyThomeworks();
+      }
+    }, function() {
+      console.log('You cancelled the dialog.');
+    });
+
+  };
+  $scope.showThomeworkDialog = function(ev, t) {
+    $scope.thomework = t;
+    $mdDialog.show({
+      templateUrl: '/html/thomework-modal.tmpl.html',
+      parent: angular.element(document.body),
+      targetEvent: ev,
+      clickOutsideToClose:true,
+      fullscreen: useFullScreen,
+      locals: {
+        thomework: $scope.thomework
+      },
+      controller: "ThomeworkModalController"
+    }).then(function(results) {
+      if(results == "success"){
+        getMyThomeworks();
+      }
+    }, function() {
+      console.log('You cancelled the dialog.');
+    });
 
   };
 
   $scope.bTd = function(boolean){
-    if (boolean == true) {
-      return "已布置"
-    } else {
-      return "未布置"
-    }
+    return homeworkService.deliveryBooleanToText(boolean)
   }
+
   $scope.idToDate = function(id){
-    var timestamp;
-    var date;
-    if(id){
-      timestamp = id.toString().substring(0,8)
-      date = new Date( parseInt( timestamp, 16 ) * 1000 )
-      return date
-    }else {
-      return " "
-    }
+    return generalService.idToDate(id)
   }
 
   var doneGrabingGroupsDataTimer;
@@ -45,17 +61,14 @@ angular.module('ipkms')
   function getMyThomeworks(){
     $scope.grabingGroupsData = true;
     clearTimeout(doneGrabingGroupsDataTimer);
-    $http({
-      url: '/api/teacher/homeworks/fromtc',
-      method: "GET",
-    })
-    .then(function(response) {
-      $scope.MyThomeworks = response.data.thomeworks.slice().reverse();
-      doneGrabingGroupsDataTimer = setTimeout(doneGrabingGroupsData, 1500);
-    },
-    function(response) { // optional
-      console.log(response)
-    });
+    apiService.get("/api/teacher/homeworks/fromtc").then(
+      function( response ) {
+        $scope.MyThomeworks = response.data.thomeworks.slice().reverse();
+        doneGrabingGroupsDataTimer = setTimeout(doneGrabingGroupsData, 1500);
+      },
+      function(response) { // optional
+        console.log("fail to get thomework" + response)
+      })
   }
 
   function doneGrabingGroupsData(){
@@ -64,13 +77,7 @@ angular.module('ipkms')
   }
 
   $scope.arrayToString = function(array){
-    var aL = array.length;
-    var values = "";
-    for(i = 0; i < aL; i++ ){
-      values = values + " " + array[i]
-    }
-    return values
-
+    return generalService.tagsArrayToString(array)
   }
 
   $scope.predicate = 'none';
@@ -79,6 +86,17 @@ angular.module('ipkms')
     $scope.reverse = ($scope.predicate === predicate) ? !$scope.reverse : false;
     $scope.predicate = predicate;
   };
+
+  $scope.deleteThomework = function(id){
+    console.log(id)
+    var apiURL = '/api/delete/teacher/thomework/' + id
+    apiService.delete(apiURL).then(function(response) {
+      getMyThomeworks();
+    },
+    function(response) { // optional
+      console.log("fail to delete this thomework")
+    });
+  }
 
 
 })
@@ -191,13 +209,8 @@ angular.module('ipkms')
 
 })
 
-.controller('NewHWDialogController', function($rootScope, $scope, $http, $mdDialog, $mdMedia) {
-  $scope.subjects = [
-    { name : "數學", id: "math" },
-    { name : "英文", id: "eng" },
-    { name : "中文", id: "chi" },
-    { name : "通識", id: "ls" }
-  ]
+.controller('NewHWDialogController', function($rootScope, $scope, $http, $mdDialog, $mdMedia, apiService, subjectsService) {
+  $scope.subjects = subjectsService.subjects
 
   $scope.groupsClasses = null;
   $scope.newhomework = {
@@ -214,27 +227,21 @@ angular.module('ipkms')
 
   $scope.loadMyGroups = function() {
 
-    $http({
-      url: '/api/teacher/groups/simple',
-      method: "GET",
-    })
-    .then(function(response) {
+    apiService.get("/api/teacher/groups/simple").then(
+      function( response ) {
+        var reformatedResponse = response.data.teachGroups.map(function(obj){
+          var robj = {};
+          robj["category"] = 'group';
+          robj["name"] = obj.group.name;
+          robj["id"] = obj.group._id;
 
-      var reformatedResponse = response.data.teachGroups.map(function(obj){
-        var robj = {};
-        robj["category"] = 'group';
-        robj["name"] = obj.group.name;
-        robj["id"] = obj.group._id;
-
-        return robj;
+          return robj;
+        })
+        return $scope.groupsClasses = reformatedResponse
+      },
+      function(response) { // optional
+        console.log("fail to get mygroups" + response)
       })
-      return $scope.groupsClasses = reformatedResponse
-    },
-    function(response) { // optional
-      console.log(response)
-    });
-
-
   }
 
   $scope.createHomework = function(){
@@ -248,18 +255,11 @@ angular.module('ipkms')
       deadline : $scope.newhomework.deadline
     }
     console.log(homeworkData);
-    $http({
-      url: '/api/teacher/manage/homework',
-      method: "POST",
-      data: homeworkData,
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-
-    })
-    .then(function(response) {
+    apiService.post("/api/teacher/manage/homework", homeworkData).then(function(response) {
       // success
-      $mdDialog.hide();
+      $mdDialog.hide("success");
     },
-    function(response) { // optional
+    function(response) {
       // failed
       console.log("create Homework fail")
 
@@ -412,11 +412,6 @@ angular.module('ipkms')
 
   function loadStudents() {
     var veggies = cs;
-    //     return veggies.map(function(veg) {
-    //       veg._lowername = veg.name.toLowerCase();
-    //       veg._lowertype = veg.type.toLowerCase();
-    //       return veg;
-    //     });
     return veggies;
   }
 
@@ -456,7 +451,95 @@ angular.module('ipkms')
   function arrayContains(needle, arrhaystack){return (arrhaystack.indexOf(needle) > -1);}
 })
 
-.controller('GroupModalController', function($scope, $http, $mdDialog, $mdMedia, group) {
+.controller('ThomeworkModalController', function($scope, $http, $sce, $mdDialog, $mdMedia, thomework, apiService, subjectsService, homeworkService) {
+  getThomeworkDetails();
+  thomework.subjectText = subjectsService.idToName(thomework.subject)
+  thomework.deliveryText = homeworkService.deliveryBooleanToText(thomework.delivery)
+  $scope.thomework = thomework
+  $scope.hide = function() {
+    $mdDialog.hide()
+  };
+
+  $scope.cancel = function() {
+    $mdDialog.cancel()
+  };
+
+  function getThomeworkDetails(){
+    var apiURL = '/api/teacher/homework/' + thomework._id
+    apiService.get(apiURL).then(function(response) {
+      $scope.thomeworkDetails = response.data
+      $scope.requirementHtml = $sce.trustAsHtml(response.data.requirement)
+      $scope.editableRequirement = response.data.requirement
+    },
+    function(response) { // optional
+      console.log("fail to get homework's details")
+    });
+
+  }
+
+  $scope.loadMyGroups = function() {
+
+    apiService.get("/api/teacher/groups/simple").then(
+      function( response ) {
+        var reformatedResponse = response.data.teachGroups.map(function(obj){
+          var robj = {};
+          robj["category"] = 'group';
+          robj["name"] = obj.group.name;
+          robj["id"] = obj.group._id;
+
+          return robj;
+        })
+        return $scope.groupsClasses = reformatedResponse
+      },
+      function(response) { // optional
+        console.log("fail to get mygroups" + response)
+      })
+  }
+
+  $scope.publishSavedHomework = function(){
+    var publishHomeworkData = {
+      targetGroup : $scope.publishhomework.targetGroup,
+      deadline : $scope.publishhomework.deadline
+    }
+
+    var apiURL = "/api/update/teacher/thomework/" + thomework._id + "/publish"
+    apiService.put(apiURL, publishHomeworkData).then(
+      function( response ) {
+        $mdDialog.hide("success")
+      },
+      function(response) { // optional
+        console.log("fail to publish thomework" + response)
+      })
+
+    console.log(publishHomeworkData);
+  }
+
+  $scope.updateRequirement = function(){
+    var apiURL = "/api/update/teacher/thomework/" + thomework._id + "/requirement"
+    apiService.put(apiURL, $scope.editableRequirement).then(
+      function( response ) {
+        getThomeworkDetails();
+        $scope.editRequirement = false;
+      },
+      function(response) { // optional
+        console.log("fail to update thomework requirement" + response)
+      })
+  }
+
+  $scope.updateTags = function(){
+    var apiURL = "/api/update/teacher/thomework/" + thomework._id + "/tags"
+    apiService.put(apiURL, $scope.thomework.tags).then(
+      function( response ) {
+        getThomeworkDetails();
+        $scope.editTags = false;
+      },
+      function(response) {
+        console.log("fail to update thomework tags")
+      })
+  }
+
+})
+.controller('GroupModalController', function($scope, $http, $mdDialog, $mdMedia, group, subjectsService) {
   getGroupDetails();
   $scope.group = group;
 
@@ -468,6 +551,9 @@ angular.module('ipkms')
     $mdDialog.cancel();
   };
 
+  $scope.idToName = function(id){
+    return subjectsService.idToName(id)
+  }
 
   $scope.removeMember = function(index){
     $scope.gDetails.students.splice(index,1);
@@ -588,6 +674,7 @@ angular.module('ipkms')
       method: "GET",
     })
     .then(function(response) {
+      console.log(response);
       $scope.gDetails = response.data;
       $scope.originalData = response.data;
       //       console.log("get group's details success");

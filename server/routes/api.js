@@ -12,6 +12,9 @@ var Group = require('../models/group')
 var Thomework = require('../models/thomework');
 var Shomework = require('../models/shomework');
 
+var updateApiRoutes = require('./apis/update.js');
+var deleteApiRoutes = require('./apis/delete.js');
+
 router.use( tokenManager.verifyToken, function(req, res, next) {
 
   // check header or url parameters or post parameters for token
@@ -45,7 +48,7 @@ router.use( tokenManager.verifyToken, function(req, res, next) {
   } else {
     // if there is no token
     // return an error
-    return res.status(403).send({
+    return res.status(401).send({
       success: false,
       message: '你是誰？'
     });
@@ -53,6 +56,9 @@ router.use( tokenManager.verifyToken, function(req, res, next) {
   }
 
 });
+
+router.use('/update', updateApiRoutes); //-->apis/update.js //seperate api file
+router.use('/delete', deleteApiRoutes); //-->apis/update.js //seperate api file
 
 
 router.route('/teachers')  //get all teacher //admin api
@@ -363,99 +369,115 @@ router.route('/teacher/manage/homework')
     newThomework.requirement = homeworkJsonData.requirement;
     newThomework.tags = homeworkJsonData.tags;
     newThomework.subject = homeworkJsonData.subject;
+    newThomework.targetGroup.id = homeworkJsonData.targetGroup;
+    newThomework.deadline = homeworkJsonData.deadline;
 
+    async.waterfall([
+      function(callback) {
+        newThomework.save(function(err, thomework) {
+          if(err) res.status(500).send(err)
 
-    newThomework.save(function(err, thomework) {
-      if(err) res.send(err)
-
-      Teacher.findByIdAndUpdate(teacher_id,
-        {$push: {thomeworks: thomework.id}},
-        {safe: true, upsert: true},
-        function(err) {
-          if(err) res.send(err)
-
-          res.json("test success");
+          callback(null, thomework.id)
         })
-      })
+      },
+      function(thomeworkId, callback) {
+        console.log("thomeworkId IS" + thomeworkId);
+        Teacher.findByIdAndUpdate(teacher_id, {$push: {thomeworks: thomeworkId}}, {safe: true, upsert: true}, function(err) {
+          if (err) {
+            res.status(500).send(err)
+          } else if (homeworkJsonData.delivery == 'true' && homeworkJsonData.targetGroup) {
+            callback(null, thomeworkId)
+          } else {
+            res.json("create thomework success");
+          }
+        })
+      },
+      function(thomeworkId, callback) {
+        var newLog = {
+          writeBy : req.user.id,
+          date : Date.now(),
+          event : "publish homework",
+          text : "發佈了新功課 - " + homeworkJsonData.title
+        }
+        console.log(newLog);
+        Group.findByIdAndUpdate(homeworkJsonData.targetGroup, { $push: { logs: newLog, homeworks: thomeworkId} }, {safe: true, upsert: true}, function(err){
+          if(err) { throw err; }
 
-    } else {
-      res.status(403).json("test fail")
+          callback(null)
+        })
+      }
+    ], function(err) {
+      if (err) return next(err);
+      res.json("create thomework success");
+    })
+
+  } else {
+    res.status(403).json("create thomework fail")
+  }
+});
+
+router.route('/teacher/homeworks/:option') //get teacher's groups //teacher api
+.get(isTeacher, function(req, res){
+  var option = req.params.option;
+  var teacher_id = req.user.teacher;
+  if(option == "fromtc"){
+    Teacher.findById(req.user.teacher,
+      'thomeworks').populate('thomeworks', 'name delivery subject title tags').lean()
+      .exec(function (err, thomeworks) {
+        if (err) res.json(err);
+
+        res.json(thomeworks);
+      });
+
+    }else{
+      res.json("hello");
     }
-  });
+  })
 
-  router.route('/teacher/homeworks/:option') //get teacher's groups //teacher api
+  router.route('/teacher/homework/:homework_id') //get teacher's group info //teacher api
+  .get(isTeacher, function(req, res){
+    var homework_id = req.params.homework_id;
+    Thomework.findById(homework_id, "requirement targetGroup deadline").populate('targetGroup.id','name').lean().exec(function (err, thomework) {
+      res.json(thomework)
+    })
+  })
+
+  router.route('/teacher/groups/:option') //get teacher's groups //teacher api
   .get(isTeacher, function(req, res){
     var option = req.params.option;
     var teacher_id = req.user.teacher;
-    if(option == "fromtc"){
+
+    if(option == "fromtc"){ //from teacher's collection
       Teacher.findById(req.user.teacher,
-        'thomeworks').populate('thomeworks', 'name delivery subject title tags').lean()
-        .exec(function (err, thomeworks) {
+        'teachGroups').populate('teachGroups.group', 'name students public.boolean').lean()
+        .exec(function (err, teachGroups) {
           if (err) res.json(err);
 
-          res.json(thomeworks);
-        });
+          var arrayToModify = teachGroups;
+          for(i=0;i<arrayToModify["teachGroups"].length;i++){
+            arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
+          }
+          res.json(arrayToModify);
+        })
 
-      }else{
-        res.json("hello");
-      }
-    })
-
-    router.route('/teacher/groups/:option') //get teacher's groups //teacher api
-    .get(isTeacher, function(req, res){
-      var option = req.params.option;
-      var teacher_id = req.user.teacher;
-
-      // Deprecated APIs 未来用法有待测试
-
-      //   if(option == "simple"){
-      //     Group.aggregate([{$match:{"public.owner" : teacher_id}},
-      //                      {$project: {students: {$size: '$students'},
-      //                                  name: '$name',
-      //                                  public:{
-      //                                    boolean:'$public.boolean'
-      //                                  }}}],
-      //                     function(err,groups) {
-      //       res.json(groups);
-      //     })
-      //   }else if(option == "students"){
-      //     Group.aggregate([{$match:{"public.owner" : teacher_id}},
-      //                      {$project: {students: '$students'}}],
-      //                     function(err,groups) {
-      //       res.json(groups);
-      //     })
-      //   }else
-      if(option == "fromtc"){
+      } else if (option == "simple"){
         Teacher.findById(req.user.teacher,
-          'teachGroups').populate('teachGroups.group', 'name students public.boolean').lean()
+          'teachGroups').populate('teachGroups.group', 'name').lean()
           .exec(function (err, teachGroups) {
             if (err) res.json(err);
 
-            var arrayToModify = teachGroups;
-            for(i=0;i<arrayToModify["teachGroups"].length;i++){
-              arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
-            }
-            res.json(arrayToModify);
+            res.json(teachGroups);
           })
-
-        } else if (option == "simple"){
-          Teacher.findById(req.user.teacher,
-            'teachGroups').populate('teachGroups.group', 'name').lean()
-            .exec(function (err, teachGroups) {
-              if (err) res.json(err);
-
-              res.json(teachGroups);
-            })
-          } else {
-            res.json("hello");
-          }
-        });
+        } else {
+          res.json("hello");
+        }
+      });
 
       router.route('/teacher/group/:group_id') //get teacher's group info //teacher api
       .get(isTeacher, function(req, res){
         var group_id = req.params.group_id;
-        var poputaleQuery = [{path:"students.id", select:"name schoolId"},{path:"logs.writeBy", select:"local.name"}]
-        Group.findById(group_id, "students notice logs").populate(poputaleQuery)
+        var poputaleQuery = [{path:"students.id", select:"name schoolId"},{path:"logs.writeBy", select:"local.name"},{path:"homeworks", select:"title subject deadline"}]
+        Group.findById(group_id, "students notice logs homeworks").populate(poputaleQuery)
         .exec(function (err, group) {
           res.json(group)
         })
