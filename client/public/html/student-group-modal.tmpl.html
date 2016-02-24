@@ -1,0 +1,56 @@
+<md-dialog aria-label="{[{group.name}]}" layout="column" class="group-dialog">
+
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+
+      <h2 class="group-header" style="width:100%">{[{group.name}]}</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <i class="material-icons">close</i>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <md-content class="md-padding" layout="column">
+
+      <h2 class="md-title" style="margin:0">小組公告</h2>
+      <p>{[{group.notice.text}]}</p>
+      <md-divider></md-divider>
+
+      <h2 class="md-title" style="margin:0">小組成員</h2>
+      <p style="text-align:center;margin:0">
+        <md-button class="md-raised" style="background-color:#607D8B;color:#fff" ng-click="showMembers = true" ng-hide="showMembers">
+          <i class="material-icons button-icon-left">slideshow</i>
+          顯示{[{gDetails.students.length}]}個組員
+        </md-button>
+        <md-button class="md-raised" style="background-color:#607D8B;color:#fff" ng-click="showMembers = false" ng-show="showMembers">
+          <i class="material-icons button-icon-left">close</i>
+          隱藏組員
+        </md-button>
+      </p>
+      <md-grid-list ng-show="showMembers" class="g-student-card" md-cols-gt-md="5" md-cols="3" md-cols-md="6" md-row-height="40px" md-gutter="10px" style="margin:15px;margin-bottom:30px">
+        <md-grid-tile ng-repeat="student in gDetails.students" >
+          <div class="md-item-text"  flex="">
+            <p class="s-name">{[{student.id.name}]}</p>
+          </div>
+        </md-grid-tile>
+      </md-grid-list>
+      <md-divider></md-divider>
+
+      <h2 class="md-title" style="margin:0">功課墻</h2>
+      <div class="mdl-cell mdl-cell--4-col homework-wall-card" ng-repeat="homework in gDetails.homeworks" layout="column">
+        <p><span class="homework-wall-subject">{[{idToName(homework.subject)}]}</span></p>
+        <p class="homework-wall-title">{[{homework.title}]}</p>
+        <p class="homework-wall-deadline">上交日期：{[{homework.deadline | date:" MM'月'dd'日'"}]}</p>
+      </div>
+      <md-divider></md-divider>
+
+      <h2 class="md-title" style="margin:0">留言板</h2>
+
+
+
+    </md-content>
+  </md-dialog-content>
+
+</md-dialog>

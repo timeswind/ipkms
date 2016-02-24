@@ -8,14 +8,16 @@ var User = require('../models/localuser');
 router.get('/', isLoggedIn, function(req, res, next) {
   var user;
   if (req.user) {
-    user = req.user;
-    if (req.user.local.role == "teacher"){
+    role = req.user.local.role;
+    if (role === "teacher"){
       res.redirect('/home/teacher');
+    }else if (role === "admin"){
+      res.redirect('/admin');
     }else{
       res.render('home', { title: 'Home', user: user });
     }
   }else{
-    res.render('home', { title: 'Home', user: user });
+    res.status(403)
   }
 });
 
@@ -33,7 +35,13 @@ router.get('/teacher/managehomework', isTeacher, function(req, res, next) {
 
 router.get('/teacher/managegroups', isTeacher, function(req, res, next) {
   var user = req.user;
-  res.render('manage-groups', { title: 'Home', user: user});
+  res.render('manage-groups', { title: '管理小組', user: user});
+
+});
+
+router.get('/teacher/questions', isTeacher, function(req, res, next) {
+  var user = req.user;
+  res.render('questions', { title: '題庫', user: user});
 
 });
 

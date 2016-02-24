@@ -11,7 +11,7 @@ var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var mongoose = require('mongoose');
 // *** mongoose *** //
-mongoose.connect('mongodb://localhost/nodedb');
+// mongoose.connect('mongodb://localhost/nodedb');
 require('./auth/local')(passport);
 
 // *** routes *** //

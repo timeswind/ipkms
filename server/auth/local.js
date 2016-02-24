@@ -1,7 +1,6 @@
 // load all the things we need
 var LocalStrategy = require('passport-local').Strategy;
 var jwt    = require('jsonwebtoken'); // used to create, sign, and verify tokens
-var config = require('../_config'); // get our config file
 
 // load up the user model
 var User = require('../models/localuser');

@@ -50,9 +50,9 @@
                 </md-input-container>
 
                 <p style="  font-size: 20px;
-                  margin:0;
-                  text-align: center;
-                  color: #FF5722" ng-hide="editNotice">{[{gDetails.notice.text}]}</p>
+                margin:0;
+                text-align: center;
+                color: #FF5722" ng-hide="editNotice">{[{gDetails.notice.text}]}</p>
               </md-content>
 
               <md-divider></md-divider>
@@ -68,6 +68,7 @@
                     <i class="material-icons button-icon-left">done</i>
                     完成编辑</md-button>
                   </md-subheader>
+
                   <md-grid-list class="g-student-card" md-cols-gt-md="5" md-cols="3" md-cols-md="6"
                   md-row-height="40px"
                   md-gutter="10px" style="margin:15px;margin-bottom:30px">
@@ -115,15 +116,15 @@
                   <i class="material-icons subtitle-icon-left">update</i>
                   動態</md-subheader>
                   <p style="text-align:center">
-                  <md-button class="md-raised" style="background-color:#607D8B;color:#fff" ng-click="showLogs = true" ng-hide="showLogs">
-                    <i class="material-icons button-icon-left">slideshow</i>
-                    顯示{[{gDetails.logs.length}]}個動態
-                  </md-button>
-                  <md-button class="md-raised" style="background-color:#607D8B;color:#fff" ng-click="showLogs = false" ng-show="showLogs">
-                    <i class="material-icons button-icon-left">close</i>
-                    隱藏動態
-                  </md-button>
-                </p>
+                    <md-button class="md-raised" style="background-color:#607D8B;color:#fff" ng-click="showLogs = true" ng-hide="showLogs">
+                      <i class="material-icons button-icon-left">slideshow</i>
+                      顯示{[{gDetails.logs.length}]}個動態
+                    </md-button>
+                    <md-button class="md-raised" style="background-color:#607D8B;color:#fff" ng-click="showLogs = false" ng-show="showLogs">
+                      <i class="material-icons button-icon-left">close</i>
+                      隱藏動態
+                    </md-button>
+                  </p>
                   <md-content style="padding-top:10px" ng-show="showLogs">
                     <md-list-item ng-repeat="log in gDetails.logs" style="margin-bottom: 15px;">
                       <div class="md-list-item-text" layout="row">
@@ -150,14 +151,13 @@
                     <md-subheader class="md-no-sticky">功課墻
                       <i class="material-icons subtitle-icon-left">assignment</i>
                     </md-subheader>
-                    <div class="mdl-grid">
-                      <div class="mdl-cell mdl-cell--4-col homework-wall-card" ng-repeat="homework in gDetails.homeworks" layout="column">
-                        <p><span class="homework-wall-subject">{[{idToName(homework.subject)}]}</span></p>
-                        <p class="homework-wall-title">{[{homework.title}]}</p>
-                        <p class="homework-wall-deadline">上交日期：{[{homework.deadline | date:" MM'月'dd'日'"}]}</p>
-                      </div>
 
+                    <div class="mdl-cell mdl-cell--4-col homework-wall-card" ng-repeat="homework in gDetails.homeworks" layout="column">
+                      <p><span class="homework-wall-subject">{[{idToName(homework.subject)}]}</span></p>
+                      <p class="homework-wall-title">{[{homework.title}]}</p>
+                      <p class="homework-wall-deadline">上交日期：{[{homework.deadline | date:" MM'月'dd'日'"}]}</p>
                     </div>
+
                   </md-dialog-content>
 
-              </md-dialog>
+                </md-dialog>

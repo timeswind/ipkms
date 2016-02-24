@@ -17,7 +17,6 @@ exports.verifyToken = function (req, res, next) {
       res.sendStatus(401);
     }
     else {
-      console.log("redis checked the token is good!")
       next();
     }
 
@@ -28,7 +27,6 @@ exports.expireToken = function(req) {
   var token = getToken(req);
 
   if (token != null) {
-    console.log("expire token:" + token);
     redisClient.set(token, { is_expired: true });
     redisClient.expire(token, TOKEN_EXPIRATION_SEC);
   }

@@ -4,6 +4,7 @@
 
 
 {% block content %}
+<link rel="stylesheet" href="/css/student-ui.css">
 <script type="text/javascript" src="/js/ng-app-home-student.js"></script>
 <link rel="stylesheet" href="https://code.getmdl.io/1.1.1/material.teal-purple.min.css" />
 
@@ -33,13 +34,13 @@ even in small screens. -->
         </div>
       </header>
       <div class="mdl-layout__drawer">
-        <header class="user-drawer-header">
+        <!-- <header class="user-drawer-header">
           <img src="/images/user.jpg" class="user-avatar">
           <div class="demo-avatar-dropdown">
             <span>hello@example.com</span>
             <div class="mdl-layout-spacer"></div>
           </div>
-        </header>
+        </header> -->
         <nav class="mdl-navigation">
           <a class="mdl-navigation__link" href="/home">我的主頁</a>
           <a class="mdl-navigation__link" href="">我的老師</a>
@@ -66,7 +67,7 @@ even in small screens. -->
               <div class="mdl-card__actions mdl-card--border">
 <!--                 <a class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect" ng-click="showGroupDialog($event, group.group)">查看小組
                 </a> -->
-                <md-button style="color:#009688; margin:0">進入小組</md-button>
+                <md-button style="color:#009688; margin:0" ng-click="showGroupDialog($event, group)">進入小組</md-button>
                 <div class="mdl-layout-spacer"></div>
 <!--                 <i class="material-icons" style="color:#3F51B5">edit</i> -->
               </div>

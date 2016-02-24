@@ -1,5 +1,6 @@
 angular.module('ipkms')
-  .controller('manageTeachers', function($rootScope, $scope, $http) {
+
+.controller('manageTeachers', function($rootScope, $scope, $http, apiService) {
   getTeachers();
 
   function getTeachers(){
@@ -16,19 +17,25 @@ angular.module('ipkms')
     });
   }
 
-  $scope.deleteTeacher = function(userId, teacherId){
-    $http({
-      method: 'DELETE',
-      url: '../api/teacher/' + userId + "/" + teacherId
-    }).then(function successCallback(response) {
+  $scope.deleteTeacher = function(userId){
+
+    apiService.deleteWithParams('/api/manage-account/user-teacher', userId).then(function(response) {
       getTeachers();
       $rootScope.$broadcast('refreshUserList');
+    });
 
-      console.log(response);
-
-    }, function errorCallback(response) {
-      console.log(response);
-    })
+    // $http({
+    //   method: 'DELETE',
+    //   url: '../api/teacher/' + userId + "/" + teacherId
+    // }).then(function successCallback(response) {
+    //   getTeachers();
+    //   $rootScope.$broadcast('refreshUserList');
+    //
+    //   console.log(response);
+    //
+    // }, function errorCallback(response) {
+    //   console.log(response);
+    // })
   }
 
   $scope.$on('refreshTeacherList', function(event, args) {
@@ -36,7 +43,7 @@ angular.module('ipkms')
   });
 
 })
-  .controller('manageUsers', function($rootScope, $scope, $http) {
+.controller('manageUsers', function($rootScope, $scope, $http, apiService) {
   getUsers();
 
   function getUsers(){
@@ -69,14 +76,13 @@ angular.module('ipkms')
   }
 
   $scope.addTeacher = function(userId){
-    $http.post('../api/teacher/' + userId).
-    success(function(data) {
+
+    apiService.post('/api/manage-account/user-teacher', userId).then(function(response) {
       $rootScope.$broadcast('refreshTeacherList');
       getUsers();
-      console.log("posted successfully");
-    }).error(function(data) {
-      console.error("error in posting");
-    })
+      console.log(response);
+    });
+
   }
 
   $scope.$on('refreshUserList', function(event, args) {
@@ -86,7 +92,7 @@ angular.module('ipkms')
 
 })
 
-  .controller('manageStudents', function($rootScope, $scope, $http) {
+.controller('manageStudents', function($rootScope, $scope, $http, apiService) {
   getStudents();
 
   function getStudents(){
@@ -129,27 +135,13 @@ angular.module('ipkms')
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
 
     })
-      .then(function(response) {
+    .then(function(response) {
       // successconso
       console.log(response);
     },
-            function(response) { // optional
+    function(response) { // optional
       // failed
     });
   }
 
 })
-
-  .directive('ngReallyClick', [function() {
-    return {
-      restrict: 'A',
-      link: function(scope, element, attrs) {
-        element.bind('click', function() {
-          var message = attrs.ngReallyMessage;
-          if (message && confirm(message)) {
-            scope.$apply(attrs.ngReallyClick);
-          }
-        });
-      }
-    }
-  }]);

@@ -14,6 +14,9 @@ var Shomework = require('../models/shomework');
 
 var updateApiRoutes = require('./apis/update.js');
 var deleteApiRoutes = require('./apis/delete.js');
+var messageApiRoutes = require('./apis/message.js');
+var manageAccountApiRoutes = require('./apis/manage-account.js');
+
 
 router.use( tokenManager.verifyToken, function(req, res, next) {
 
@@ -24,7 +27,6 @@ router.use( tokenManager.verifyToken, function(req, res, next) {
   if (token) {
     // get the decoded payload and header
     var firstdecoded = jwt.decode(token, {complete: true});
-    console.log(firstdecoded.payload.id);
     var userid = firstdecoded.payload.id;
 
     User.findById(userid, function(err, user){
@@ -58,8 +60,25 @@ router.use( tokenManager.verifyToken, function(req, res, next) {
 });
 
 router.use('/update', updateApiRoutes); //-->apis/update.js //seperate api file
-router.use('/delete', deleteApiRoutes); //-->apis/update.js //seperate api file
+router.use('/delete', deleteApiRoutes);
+router.use('/message', messageApiRoutes);
+router.use('/manage-account', manageAccountApiRoutes);
 
+
+router.route('/myinfo')  //get all teacher //admin api
+.get(isLoggedIn, function(req, res) {
+  User.findById(req.user.id, function(err, user) {
+    if (err)
+    res.send(err);
+
+    var responseData = {
+      role: user.local.role,
+      id: user.id
+    }
+
+    res.json(responseData);
+  });
+});
 
 router.route('/teachers')  //get all teacher //admin api
 .get(isAdmin, function(req, res) {
@@ -325,17 +344,24 @@ router.route('/group')
       res.send(err);
     }else{
       Teacher.findById(req.user.teacher, function(err, t){
-        t.teachGroups.push({
-          group: group.id,
-        });
-        t.save(function(err) {
-          if(err){
-            res.send(err);
-          }else{
-            res.json("create group success");
-          }
+        if(err) {
+          res.send(err)
+        }else{
+          if (t) {
+            t.teachGroups.push({
+              group: group.id,
+            });
 
-        })
+            t.save(function(err) {
+              if(err){
+                res.send(err);
+              }else{
+                res.json("create group success");
+              }
+
+            })
+          }
+        }
 
       });
     }
@@ -442,6 +468,7 @@ router.route('/teacher/homeworks/:option') //get teacher's groups //teacher api
     })
   })
 
+
   router.route('/teacher/groups/:option') //get teacher's groups //teacher api
   .get(isTeacher, function(req, res){
     var option = req.params.option;
@@ -453,11 +480,16 @@ router.route('/teacher/homeworks/:option') //get teacher's groups //teacher api
         .exec(function (err, teachGroups) {
           if (err) res.json(err);
 
-          var arrayToModify = teachGroups;
-          for(i=0;i<arrayToModify["teachGroups"].length;i++){
-            arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
+          if (teachGroups) {
+            var arrayToModify = teachGroups;
+            for(i=0;i<arrayToModify["teachGroups"].length;i++){
+              arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
+            }
+            res.json(arrayToModify);
+          } else {
+            res.json("empty");
           }
-          res.json(arrayToModify);
+
         })
 
       } else if (option == "simple"){
@@ -484,6 +516,19 @@ router.route('/teacher/homeworks/:option') //get teacher's groups //teacher api
 
 
       })
+
+      router.route('/student/group/:group_id') //get teacher's group info //teacher api
+      .get(isStudent, function(req, res){
+        var group_id = req.params.group_id;
+        var poputaleQuery = [{path:"students.id", select:"name schoolId"},{path:"homeworks", select:"title subject deadline"}]
+        Group.findById(group_id, "students notice homeworks").populate(poputaleQuery)
+        .exec(function (err, group) {
+          res.json(group)
+        })
+
+
+      })
+
       router.route('/teacher/delete/group/:group_id') //教師刪除小組api //teacher pi
       .delete(isTeacher, function(req, res){
         var group_id = req.params.group_id;

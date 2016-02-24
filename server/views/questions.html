@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+
+{% block title %}{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="/css/teacher-ui.css">
+<script type="text/javascript" src="/js/ng-app-questions.js"></script>
+<link rel="stylesheet" href="https://code.getmdl.io/1.1.1/material.blue-yellow.min.css" />
+
+<div ng-app="ipkms" ng-controller="questionsController">
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header
+  mdl-layout--fixed-tabs">
+  <header class="mdl-layout__header">
+    <div class="mdl-layout__header-row">
+      <!-- Title -->
+      <span class="mdl-layout-title">{{title}}</span>
+    </div>
+    <!-- Tabs -->
+    <div class="mdl-layout__tab-bar mdl-js-ripple-effect">
+      <a href="#search" class="mdl-layout__tab is-active">搜索<a>
+        <a href="#create" class="mdl-layout__tab">發佈</a>
+        <a href="#manage" class="mdl-layout__tab">管理</a>
+      </div>
+    </header>
+    <div class="mdl-layout__drawer">
+      <span class="mdl-layout-title">{{title}}</span>
+    </div>
+    <main class="mdl-layout__content" style="background-color:#f8f8f8">
+      <section class="mdl-layout__tab-panel is-active" id="search">
+        <div class="page-content">
+          <div style="background-color: #fff;box-shadow: 1px 3px 10px #aaa;">
+            <form style="text-align:center;padding:40px 0;">
+              <div class="mdl-textfield mdl-js-textfield">
+                <input class="mdl-textfield__input" type="text" id="search-input" style="font-size:30px">
+                <label class="mdl-textfield__label" for="search-input" style="font-size:30px;line-height:30px;">輸入關鍵詞...</label>
+              </div>
+            </form>
+          </div>
+          <div class="md-padding">
+            <!-- <h5>搜索結果</h5> -->
+            <h5>最新入庫</h5>
+          </div>
+        </div>
+      </section>
+      <section class="mdl-layout__tab-panel" id="create">
+        <div class="page-content">
+          <div style="text-align: center;padding: 20px 0;background-color: #fff;box-shadow: 1px 3px 10px #aaa;">
+            <div>
+              <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-1" style="margin-right:40px">
+                <input type="radio" id="option-1" class="mdl-radio__button" name="options" value="1" ng-model="settings.createMode">
+                <span class="mdl-radio__label">單條發佈</span>
+              </label>
+              <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-2">
+                <input type="radio" id="option-2" class="mdl-radio__button" name="options" value="2" ng-model="settings.createMode">
+                <span class="mdl-radio__label">批量發佈</span>
+              </label>
+              <button class="mdl-button mdl-js-button mdl-button--primary" ng-show="hideSettings" ng-click="hideSettings = false">
+                顯示設置
+              </button>
+            </div>
+
+            <div ng-show="settings.createMode === '2' && !hideSettings" layout="column">
+
+              <md-select ng-model="settings.subject" aria-label="create settings" placeholder="選擇科目" style="width:300px;margin:20px auto;">
+                <md-option ng-repeat="subject in subjects" value="{[{subject.id}]}">
+                  {[{subject.name}]}
+                </md-option>
+              </md-select>
+
+              <md-chips ng-model="settings.tags" readonly="false" style="width: 300px;margin: 0px auto;" placeholder="標籤"></md-chips>
+
+            </div>
+
+            <button class="mdl-button mdl-js-button mdl-button--primary" style="margin-top:20px;" ng-show="settings.createMode === '2' && !hideSettings" ng-click="hideSettings = true">
+              隱藏設置
+            </button>
+
+          </div>
+        </div>
+      </section>
+      <section class="mdl-layout__tab-panel" id="manage">
+        <div class="page-content"><!-- Your content goes here --></div>
+      </section>
+    </main>
+  </div>
+
+
+</div>
+
+{% endblock %}

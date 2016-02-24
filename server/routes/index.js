@@ -124,8 +124,12 @@ router.post('/signup/user', passport.authenticate('local-signup', { //isAdmin pr
   failureRedirect : '/error', // redirect back to the signup page if there is an error
 }));
 
-router.get('/profile', isLoggedIn, function(req, res) {
-  res.render('profile', { message: 'Login success', user: req.user });
+// router.get('/profile', isLoggedIn, function(req, res) {
+//   res.render('profile', { message: 'Login success', user: req.user });
+// });
+
+router.get('/chatroom', isLoggedIn, function(req, res) {
+  res.render('chatroom', { user: req.user });
 });
 
 router.get('/logout', function(req, res) {

@@ -539,7 +539,7 @@ angular.module('ipkms')
   }
 
 })
-.controller('GroupModalController', function($scope, $http, $mdDialog, $mdMedia, group, subjectsService) {
+.controller('GroupModalController', function($scope, $http, $mdDialog, $mdMedia, group, subjectsService, apiService) {
   getGroupDetails();
   $scope.group = group;
 
@@ -669,15 +669,11 @@ angular.module('ipkms')
   };
 
   function getGroupDetails(){
-    $http({
-      url: '/api/teacher/group/' + group._id,
-      method: "GET",
-    })
-    .then(function(response) {
+    var apiURL = '/api/teacher/group/' + group._id
+    apiService.get(apiURL).then(function(response) {
       console.log(response);
       $scope.gDetails = response.data;
       $scope.originalData = response.data;
-      //       console.log("get group's details success");
     },
     function(response) { // optional
       console.log("fail to get group's details")
