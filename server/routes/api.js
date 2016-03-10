@@ -16,6 +16,7 @@ var updateApiRoutes = require('./apis/update.js');
 var deleteApiRoutes = require('./apis/delete.js');
 var messageApiRoutes = require('./apis/message.js');
 var manageAccountApiRoutes = require('./apis/manage-account.js');
+var manageQuestionApiRoutes = require('./apis/manage-question.js');
 
 
 router.use( tokenManager.verifyToken, function(req, res, next) {
@@ -63,6 +64,7 @@ router.use('/update', updateApiRoutes); //-->apis/update.js //seperate api file
 router.use('/delete', deleteApiRoutes);
 router.use('/message', messageApiRoutes);
 router.use('/manage-account', manageAccountApiRoutes);
+router.use('/manage-question', manageQuestionApiRoutes);
 
 
 router.route('/myinfo')  //get all teacher //admin api

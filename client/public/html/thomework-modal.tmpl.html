@@ -42,8 +42,9 @@
         <div class="inner-shadow-box" ng-bind-html="requirementHtml" ng-show="!editRequirement"></div>
 
         <div ng-show="editRequirement">
-          <textarea ui-tinymce ng-model="editableRequirement"></textarea>
+          <textarea ui-tinymce="tinymceOptions" ng-model="editableRequirement"></textarea>
         </div>
+
         <h2 class="md-title" style="margin:0;margin-top:10px">
           <i class="material-icons mdtitle-icon-left">local_offer</i>
           標籤

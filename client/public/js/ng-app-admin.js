@@ -1,5 +1,4 @@
 angular.module('ipkms')
-
 .controller('manageTeachers', function($rootScope, $scope, $http, apiService) {
   getTeachers();
 
@@ -23,19 +22,6 @@ angular.module('ipkms')
       getTeachers();
       $rootScope.$broadcast('refreshUserList');
     });
-
-    // $http({
-    //   method: 'DELETE',
-    //   url: '../api/teacher/' + userId + "/" + teacherId
-    // }).then(function successCallback(response) {
-    //   getTeachers();
-    //   $rootScope.$broadcast('refreshUserList');
-    //
-    //   console.log(response);
-    //
-    // }, function errorCallback(response) {
-    //   console.log(response);
-    // })
   }
 
   $scope.$on('refreshTeacherList', function(event, args) {

@@ -225,6 +225,16 @@ angular.module('ipkms')
     $mdDialog.cancel();
   };
 
+  $scope.tinymceOptions = {
+    language: 'zh_TW',
+    menubar: false,
+    statusbar: false,
+    plugins: 'insertMath',
+    content_css : '/bower_components/katex/dist/katex.min.css',
+    toolbar: 'undo redo | bold italic | bullist numlist | insertMath'
+    // plugins: 'insertMath'
+  };
+
   $scope.loadMyGroups = function() {
 
     apiService.get("/api/teacher/groups/simple").then(
@@ -462,6 +472,15 @@ angular.module('ipkms')
 
   $scope.cancel = function() {
     $mdDialog.cancel()
+  };
+
+  $scope.tinymceOptions = {
+    language: 'zh_TW',
+    menubar: false,
+    statusbar: false,
+    plugins: 'insertMath',
+    toolbar: 'undo redo | bold italic | bullist numlist | insertMath'
+    // plugins: 'insertMath'
   };
 
   function getThomeworkDetails(){

@@ -3,13 +3,24 @@
 {% block title %}{% endblock %}
 
 {% block content %}
+
 <link rel="stylesheet" href="/css/teacher-ui.css">
 <script type="text/javascript" src="/js/ng-app-questions.js"></script>
-<link rel="stylesheet" href="https://code.getmdl.io/1.1.1/material.blue-yellow.min.css" />
+<!-- <link rel="stylesheet" href="https://code.getmdl.io/1.1.1/material.blue-yellow.min.css" /> -->
 
+
+<style>
+.md-chips{
+  margin-top:8px;
+  margin-bottom: 20px
+}
+.md-select-value.md-select-placeholder{
+  padding-bottom: 8px;
+  font-size: 16px;
+}
+</style>
 <div ng-app="ipkms" ng-controller="questionsController">
-  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header
-  mdl-layout--fixed-tabs">
+  <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-layout--fixed-tabs">
   <header class="mdl-layout__header">
     <div class="mdl-layout__header-row">
       <!-- Title -->
@@ -29,6 +40,7 @@
       <section class="mdl-layout__tab-panel is-active" id="search">
         <div class="page-content">
           <div style="background-color: #fff;box-shadow: 1px 3px 10px #aaa;">
+
             <form style="text-align:center;padding:40px 0;">
               <div class="mdl-textfield mdl-js-textfield">
                 <input class="mdl-textfield__input" type="text" id="search-input" style="font-size:30px">
@@ -39,43 +51,105 @@
           <div class="md-padding">
             <!-- <h5>搜索結果</h5> -->
             <h5>最新入庫</h5>
+
           </div>
         </div>
       </section>
       <section class="mdl-layout__tab-panel" id="create">
         <div class="page-content">
+
+          <button id="post-newq-button" ng-click="createNewQuestion()" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" style="position:fixed;right:30px;bottom:45px">
+            <i class="material-icons">send</i>
+          </button>
+          <div class="mdl-tooltip" for="post-newq-button">
+            發佈
+          </div>
+
           <div style="text-align: center;padding: 20px 0;background-color: #fff;box-shadow: 1px 3px 10px #aaa;">
-            <div>
-              <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-1" style="margin-right:40px">
-                <input type="radio" id="option-1" class="mdl-radio__button" name="options" value="1" ng-model="settings.createMode">
-                <span class="mdl-radio__label">單條發佈</span>
-              </label>
-              <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-2">
-                <input type="radio" id="option-2" class="mdl-radio__button" name="options" value="2" ng-model="settings.createMode">
-                <span class="mdl-radio__label">批量發佈</span>
-              </label>
-              <button class="mdl-button mdl-js-button mdl-button--primary" ng-show="hideSettings" ng-click="hideSettings = false">
-                顯示設置
-              </button>
-            </div>
 
-            <div ng-show="settings.createMode === '2' && !hideSettings" layout="column">
+            <div layout-sm="column" layout-xs="column" layout="row">
 
-              <md-select ng-model="settings.subject" aria-label="create settings" placeholder="選擇科目" style="width:300px;margin:20px auto;">
+              <md-select ng-model="newquestion.subject" aria-label="create settings" placeholder="選擇科目" style="width:300px;margin:20px auto;">
                 <md-option ng-repeat="subject in subjects" value="{[{subject.id}]}">
                   {[{subject.name}]}
                 </md-option>
               </md-select>
 
-              <md-chips ng-model="settings.tags" readonly="false" style="width: 300px;margin: 0px auto;" placeholder="標籤"></md-chips>
+              <md-chips ng-model="newquestion.tags" style="width: 300px;margin: 0px auto;" placeholder="標籤"></md-chips>
+
+            </div>
+            <div>
+              <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-1" style="margin-right:40px">
+                <input type="radio" id="option-1" class="mdl-radio__button" name="options" value="mc" ng-model="newquestion.type">
+                <span class="mdl-radio__label">多項選擇</span>
+              </label>
+              <label class="mdl-radio mdl-js-radio mdl-js-ripple-effect" for="option-2">
+                <input type="radio" id="option-2" class="mdl-radio__button" name="options" value="long" ng-model="newquestion.type">
+                <span class="mdl-radio__label">長題目</span>
+              </label>
+            </div>
+
+            <div class="question-difficulty-box">
+              <label>難度</label>
+
+              <i class="material-icons" ng-click="newquestion.difficulty = 1" ng-class="{'heighlight': newquestion.difficulty > 0}">star_rate</i>
+              <i class="material-icons" ng-click="newquestion.difficulty = 2" ng-class="{'heighlight': newquestion.difficulty > 1}">star_rate</i>
+              <i class="material-icons" ng-click="newquestion.difficulty = 3" ng-class="{'heighlight': newquestion.difficulty > 2}">star_rate</i>
+              <i class="material-icons" ng-click="newquestion.difficulty = 4" ng-class="{'heighlight': newquestion.difficulty > 3}">star_rate</i>
+              <i class="material-icons" ng-click="newquestion.difficulty = 5" ng-class="{'heighlight': newquestion.difficulty > 4}">star_rate</i>
+            </div>
+
+
+          </div>
+          <div style="max-width:800px;margin:0 auto;" ng-cloak>
+            <h5 style="padding-left:10px">編輯題目</h5>
+            <div layout="row">
+              <div style="margin: 10px;width:50%">
+                <textarea ui-tinymce="contextInputOptions" ng-model="newquestion.context" ng-change="updatePreview()"></textarea>
+              </div>
+              <div class="questionPreview" layout="column">
+                <p class="c-header">
+                  預覽
+                </p>
+              <div  id="questionPreview">
+
+              </div>
+            </div>
+            </div>
+
+            <h5 style="padding-left:10px">編輯答案</h5>
+            <div ng-show="newquestion.type === 'mc'">
+
+              <div layout="row">
+                <div style="margin: 10px;width:50%">
+                  <p class="mc-option-letter">A</p>
+                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[0]"></textarea>
+                </div>
+                <div style="margin: 10px;width:50%">
+                  <p class="mc-option-letter">B</p>
+                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[1]"></textarea>
+                </div>
+              </div>
+              <div layout="row">
+                <div style="margin: 10px;width:50%">
+                  <p class="mc-option-letter">C</p>
+                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[2]"></textarea>
+                </div>
+                <div style="margin: 10px;width:50%">
+                  <p class="mc-option-letter">D</p>
+                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[3]"></textarea>
+                </div>
+              </div>
 
             </div>
 
-            <button class="mdl-button mdl-js-button mdl-button--primary" style="margin-top:20px;" ng-show="settings.createMode === '2' && !hideSettings" ng-click="hideSettings = true">
-              隱藏設置
-            </button>
-
+            <div ng-show="newquestion.type === 'long'">
+              <div style="margin: 10px;">
+                <textarea ui-tinymce="longAnswerInputOptions" ng-model="newquestion.answer.long"></textarea>
+              </div>
+            </div>
           </div>
+
         </div>
       </section>
       <section class="mdl-layout__tab-panel" id="manage">
@@ -83,8 +157,10 @@
       </section>
     </main>
   </div>
-
-
+  <div id="snackbar-success" class="mdl-js-snackbar mdl-snackbar">
+    <div class="mdl-snackbar__text"></div>
+    <button class="mdl-snackbar__action" type="button"></button>
+  </div>
 </div>
 
 {% endblock %}

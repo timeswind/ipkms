@@ -45,6 +45,18 @@ angular.module('ipkms')
     })
   }
 
+  this.postJSON = function(apiURL, data) {
+    var request = {
+      url: apiURL,
+      method: "POST",
+      data: data,
+      headers: {'Content-Type': 'application/json'}
+    }
+    return $http(request).then(function(response){
+      return response
+    })
+  }
+
   this.put = function(apiURL, data) {
     var request = {
       url: apiURL,
