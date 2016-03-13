@@ -50,20 +50,34 @@
           </div>
           <div class="md-padding">
             <!-- <h5>搜索結果</h5> -->
-            <h5>最新入庫</h5>
+            <h5 style="padding-left:16px">最新入庫</h5>
+            <div id="question-preview-container" class="mdl-grid">
+              <div class="mdl-cell mdl-cell--4-col question-preview-card" ng-repeat="lq in latestQuestions"  ng-init="$last ? renderQuestionCard() : angular.noop()" style="height:100%">
+                <a class="subject-title">{[{idToName(lq.subject)}]}</a>
+                <a>{[{lq.type}]}</a>
+                <div class="question-preview-card-difficulty">
+                  <i class="material-icons heighlight" ng-repeat="i in getNumberArray(lq.difficulty) track by $index">star_rate</i>
+                </div>
+                <div ng-bind-html="to_trusted(lq.context)"></div>
 
+                <span class="question-preview-card-tags" ng-repeat="tag in lq.tags">
+                  <i class="material-icons">local_offer</i>
+                  {[{tag}]}
+                </span>
+                <!-- <md-chips ng-model="lq.tags" readonly="true"></md-chips> -->
+
+              </div>
+            </div>
           </div>
         </div>
       </section>
       <section class="mdl-layout__tab-panel" id="create">
         <div class="page-content">
 
-          <button id="post-newq-button" ng-click="createNewQuestion()" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored" style="position:fixed;right:30px;bottom:45px">
-            <i class="material-icons">send</i>
+          <button class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent" style="position:fixed;right:30px;bottom:30px" ng-click="createNewQuestion()">
+            發 佈
           </button>
-          <div class="mdl-tooltip" for="post-newq-button">
-            發佈
-          </div>
+
 
           <div style="text-align: center;padding: 20px 0;background-color: #fff;box-shadow: 1px 3px 10px #aaa;">
 
@@ -105,39 +119,63 @@
             <h5 style="padding-left:10px">編輯題目</h5>
             <div layout="row">
               <div style="margin: 10px;width:50%">
-                <textarea ui-tinymce="contextInputOptions" ng-model="newquestion.context" ng-change="updatePreview()"></textarea>
+                <textarea ui-tinymce="contextInputOptions" ng-model="newquestion.context" ng-change="updateContextPreview()"></textarea>
               </div>
               <div class="questionPreview" layout="column">
                 <p class="c-header">
                   預覽
                 </p>
-              <div  id="questionPreview">
-
+              <div id="questionPreview" ng-bind-html="to_trusted(newquestion.context)"></div>
+            </div>
+          </div>
+          <div id="mc-preview-container" ng-show="newquestion.type === 'mc'">
+            <div layout="row">
+              <div style="margin: 0 0 0 10px;width:50%" layout="row">
+                <p class="mc-option-preview-letter">A</p>
+                <div ng-bind-html="to_trusted(newquestion.choices[0])"></div>
+              </div>
+              <div style="margin: 0 0 0 10px;width:50%" layout="row">
+                <p class="mc-option-preview-letter">B</p>
+                <div ng-bind-html="to_trusted(newquestion.choices[1])"></div>
               </div>
             </div>
+            <div layout="row">
+              <div style="margin: 0 0 0 10px;width:50%" layout="row">
+                <p class="mc-option-preview-letter">C</p>
+                <div ng-bind-html="to_trusted(newquestion.choices[2])"></div>
+              </div>
+              <div style="margin: 0 0 0 10px;width:50%" layout="row">
+                <p class="mc-option-preview-letter">D</p>
+                <div ng-bind-html="to_trusted(newquestion.choices[3])"></div>
+              </div>
             </div>
+          </div>
 
-            <h5 style="padding-left:10px">編輯答案</h5>
+            <h5 style="padding-left:10px">編輯選項/答案</h5>
             <div ng-show="newquestion.type === 'mc'">
 
               <div layout="row">
                 <div style="margin: 10px;width:50%">
+                  <span class="correct-answer-botton" ng-class="{'correct-answer-botton-active': newquestion.answer.mc === 0}" ng-click="newquestion.answer.mc = 0"><i class="material-icons">check_circle</i><a>正確答案</a></span>
                   <p class="mc-option-letter">A</p>
-                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[0]"></textarea>
+                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[0]" ng-change="updateMcPreview()"></textarea>
                 </div>
                 <div style="margin: 10px;width:50%">
+                  <span class="correct-answer-botton" ng-class="{'correct-answer-botton-active': newquestion.answer.mc === 1}" ng-click="newquestion.answer.mc = 1"><i class="material-icons">check_circle</i><a>正確答案</a></span>
                   <p class="mc-option-letter">B</p>
-                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[1]"></textarea>
+                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[1]" ng-change="updateMcPreview()"></textarea>
                 </div>
               </div>
               <div layout="row">
                 <div style="margin: 10px;width:50%">
+                  <span class="correct-answer-botton" ng-class="{'correct-answer-botton-active': newquestion.answer.mc === 2}" ng-click="newquestion.answer.mc = 2"><i class="material-icons">check_circle</i><a>正確答案</a></span>
                   <p class="mc-option-letter">C</p>
-                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[2]"></textarea>
+                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[2]" ng-change="updateMcPreview()"></textarea>
                 </div>
                 <div style="margin: 10px;width:50%">
+                  <span class="correct-answer-botton" ng-class="{'correct-answer-botton-active': newquestion.answer.mc === 3}" ng-click="newquestion.answer.mc = 3"><i class="material-icons">check_circle</i><a>正確答案</a></span>
                   <p class="mc-option-letter">D</p>
-                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[3]"></textarea>
+                  <textarea ui-tinymce="mcInputOptions" ng-model="newquestion.choices[3]" ng-change="updateMcPreview()"></textarea>
                 </div>
               </div>
 

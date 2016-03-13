@@ -11,9 +11,8 @@ router.route('/new')
 .post(isTeacher, function(req, res) {
   if(req.body){
     var jsonData = req.body;
-    console.log(jsonData);
-
     var newQuestion = new Question();
+    
     newQuestion.createdBy = req.user.id;
     newQuestion.type = jsonData.type;
     newQuestion.subject = jsonData.subject;
@@ -35,6 +34,17 @@ router.route('/new')
       }
     });
   }
+})
+
+router.route('/latest')
+.get(isTeacher, function(req, res) {
+  Question.find({}, 'context tags subject difficulty type').sort({_id:-1}).limit(10).exec(function(err, questions){
+    if (err) {
+      res.send(err);
+    } else {
+      res.json(questions);
+    }
+  });
 })
 
 
