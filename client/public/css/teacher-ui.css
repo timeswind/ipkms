@@ -259,17 +259,25 @@
 
 .question-preview-card {
   cursor: pointer;
-  padding: 8px 16px;
   background: #fff;
   border:1px solid #aaa;
   border-radius: 3px;
   transition: 0.2s;
+  height: 100%
+}
+
+.question-preview-card .wrapper{
+  padding: 8px 16px;
 }
 
 .question-preview-card:hover {
   background: #424242;
   color: #fff;
   border-color: #424242
+}
+
+.question-preview-card:hover .question-preview-card-tools button{
+  color: #fff
 }
 
 .question-preview-card .subject-title {
@@ -305,6 +313,10 @@
 .question-preview-card-difficulty {
   float: right;
   margin-top: 5px
+}
+.question-preview-card-tools{
+  border-top: 1px solid #aaa;
+  padding: 4px;
 }
 
 .correct-answer-botton{

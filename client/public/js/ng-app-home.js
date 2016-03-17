@@ -88,7 +88,6 @@ angular.module('ipkms')
   };
 
   $scope.deleteThomework = function(id){
-    console.log(id)
     var apiURL = '/api/delete/teacher/thomework/' + id
     apiService.delete(apiURL).then(function(response) {
       getMyThomeworks();

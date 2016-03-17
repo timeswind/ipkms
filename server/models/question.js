@@ -15,8 +15,30 @@ var questionSchema = mongoose.Schema({
   },
   tags : [String],
   difficulty : Number, //难度系数1-5
-  tips : String
+  tips : String,
+  accuracy : {
+    correct : Number,
+    wrong : Number
+  },
+  created_at: Date,
+  updated_at: Date
 
+});
+
+// on every save, add the date
+questionSchema.pre('save', function(next) {
+  // get the current date
+  var currentDate = new Date();
+
+  // change the updated_at field to current date
+  this.updated_at = currentDate;
+
+  // if created_at doesn't exist, add to that field
+  if (!this.created_at){
+    this.created_at = currentDate;
+  }
+
+  next();
 });
 
 // create the model for users and expose it to our app

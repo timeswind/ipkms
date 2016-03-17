@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var passport = require('passport');
+var path = require('path');
 
 var Teacher = require('../models/teacher');
 var User = require('../models/localuser');
@@ -42,6 +43,18 @@ router.get('/teacher/managegroups', isTeacher, function(req, res, next) {
 router.get('/teacher/questions', isTeacher, function(req, res, next) {
   var user = req.user;
   res.render('questions', { title: '題庫', user: user});
+
+});
+
+router.get('/teacher/questions/manage-questions', isTeacher, function(req, res, next) {
+  var user = req.user;
+  res.render('manage-questions', { title: '管理題目', user: user});
+
+});
+
+router.get('/teacher/questions/manage-qcollections', isTeacher, function(req, res, next) {
+  var user = req.user;
+  res.sendFile(path.join(__dirname, '../../client/public/home/teacher/questions/manage-qcollection/index.html'));
 
 });
 

@@ -1,0 +1,30 @@
+<div layout-fill layout="column" class="inset" ng-cloak paddi>
+  <div id="question-preview-container" class="mdl-grid">
+    <div class="mdl-cell mdl-cell--4-col question-preview-card" ng-repeat="lq in mineQuestions"  ng-init="$last ? renderQuestionCard() : angular.noop()">
+      <div class="wrapper">
+        <a class="subject-title">{[{idToName(lq.subject)}]}</a>
+        <a>{[{lq.type}]}</a>
+        <div class="question-preview-card-difficulty">
+          <i class="material-icons heighlight" ng-repeat="i in getNumberArray(lq.difficulty) track by $index">star_rate</i>
+        </div>
+        <div ng-bind-html="to_trusted(lq.context)"></div>
+
+        <span class="question-preview-card-tags" ng-repeat="tag in lq.tags">
+          <i class="material-icons">local_offer</i>
+          {[{tag}]}
+        </span>
+      </div>
+      <div layout="row" class="question-preview-card-tools">
+        <button class="mdl-button mdl-js-button mdl-js-ripple-effect">
+          <i class="material-icons">add</i>加入題集
+        </button>
+        <button class="mdl-button mdl-js-button mdl-js-ripple-effect">
+          <i class="material-icons">search</i>查看
+        </button>
+        <button class="mdl-button mdl-js-button mdl-js-ripple-effect" ng-really-message="確定要刪除這個題目？（不可撤銷）" ng-really-click="deleteSingleQuestion(lq._id, $index)">
+          <i class="material-icons">close</i>刪除
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

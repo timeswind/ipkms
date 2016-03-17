@@ -4,6 +4,12 @@ angular.module('ipkms')
     templateUrl: '/html/teacher-side-drawer.html'
   };
 })
+.directive('tQuestions', function() {
+  return {
+    templateUrl: '/html/questions/t-questions.tmpl.html',
+    controller: 'tQuestionsController'
+  };
+})
 .directive('ngReallyClick', function() {
   return {
     restrict: 'A',

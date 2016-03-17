@@ -17,6 +17,7 @@ var deleteApiRoutes = require('./apis/delete.js');
 var messageApiRoutes = require('./apis/message.js');
 var manageAccountApiRoutes = require('./apis/manage-account.js');
 var manageQuestionApiRoutes = require('./apis/manage-question.js');
+var manageQcollectonApiRoutes = require('./apis/manage-qcollection.js');
 
 
 router.use( tokenManager.verifyToken, function(req, res, next) {
@@ -65,6 +66,7 @@ router.use('/delete', deleteApiRoutes);
 router.use('/message', messageApiRoutes);
 router.use('/manage-account', manageAccountApiRoutes);
 router.use('/manage-question', manageQuestionApiRoutes);
+router.use('/manage-qcollection', manageQcollectonApiRoutes);
 
 
 router.route('/myinfo')  //get all teacher //admin api
