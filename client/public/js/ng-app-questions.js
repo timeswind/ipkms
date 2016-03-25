@@ -23,8 +23,7 @@ angular.module('ipkms')
   $scope.idToName = function(id){
     return subjectsService.idToName(id)
   }
-
-
+  
   $scope.updateContextPreview = function(){
 
     setTimeout(function renderMcPreview(){

@@ -7,9 +7,10 @@ var Student = require('../../models/student');
 var User = require('../../models/localuser');
 
 var Question = require('../../models/question');
+var Qcollection = require('../../models/qcollection');
 
 //create new question
-router.route('/new')
+router.route('/add')
 .post(isTeacher, function(req, res) {
   if(req.body){
     var jsonData = req.body;
@@ -35,6 +36,8 @@ router.route('/new')
         res.json(q)
       }
     });
+  } else {
+    res.status(400);
   }
 })
 
@@ -45,6 +48,30 @@ router.route('/latest')
       res.send(err);
     } else {
       res.json(questions);
+    }
+  });
+})
+
+router.route('/detail')
+.get(isLoggedIn, function(req, res) {
+  var question_id = req.query.question_id
+  Question.findById(question_id, 'context tags subject difficulty type choices').exec(function(err, question){
+    if (err) {
+      res.send(err);
+    } else {
+      res.json(question);
+    }
+  });
+})
+
+router.route('/answer')
+.get(isLoggedIn, function(req, res) {
+  var question_id = req.query.question_id
+  Question.findById(question_id).exec(function(err, question){
+    if (err) {
+      res.send(err);
+    } else {
+      res.json(question.answer);
     }
   });
 })
@@ -66,7 +93,7 @@ router.route('/delete/single/:question_id')
 //获取用户自己创建的题目
 router.route('/mine')
 .get(isTeacher, function(req, res) {
-  Question.find({createdBy:req.user.id}, 'context tags subject difficulty type').sort({_id:-1}).limit(10).exec(function(err, questions){
+  Question.find({createdBy:req.user.id}, 'context tags subject difficulty type').exec(function(err, questions){
     if (err) {
       res.send(err);
     } else {
@@ -75,6 +102,17 @@ router.route('/mine')
   });
 })
 
+//获取所有题目
+router.route('/all')
+.get(isTeacher, function(req, res) {
+  Question.find({}, 'context tags subject difficulty type').exec(function(err, questions){
+    if (err) {
+      res.send(err);
+    } else {
+      res.json(questions);
+    }
+  });
+})
 
 module.exports = router;
 

@@ -12,6 +12,8 @@ angular.module('ipkms', ['ngMaterial','ngMessages','ui.tinymce','katex'])
       config.headers = config.headers || {};
       if ($window.sessionStorage.token) {
         config.headers['x-access-token'] = $window.sessionStorage.token;
+      } else {
+        window.location = '/'
       }
 
       return config;

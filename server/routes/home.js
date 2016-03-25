@@ -42,21 +42,16 @@ router.get('/teacher/managegroups', isTeacher, function(req, res, next) {
 
 router.get('/teacher/questions', isTeacher, function(req, res, next) {
   var user = req.user;
-  res.render('questions', { title: '題庫', user: user});
+  // res.render('questions', { title: '題庫', user: user});
+    res.sendFile(path.join(__dirname, '../../client/public/home/question-library/index.html'));
 
 });
 
-router.get('/teacher/questions/manage-questions', isTeacher, function(req, res, next) {
-  var user = req.user;
-  res.render('manage-questions', { title: '管理題目', user: user});
-
-});
-
-router.get('/teacher/questions/manage-qcollections', isTeacher, function(req, res, next) {
-  var user = req.user;
-  res.sendFile(path.join(__dirname, '../../client/public/home/teacher/questions/manage-qcollection/index.html'));
-
-});
+// router.get('/teacher/questions/beta', isTeacher, function(req, res, next) {
+//   var user = req.user;
+//   res.sendFile(path.join(__dirname, '../../client/public/home/teacher/questions/index.html'));
+//
+// });
 
 router.get('/student/mygroups', isStudent, function(req, res, next) {
   var user = req.user;
