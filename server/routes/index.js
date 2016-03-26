@@ -27,7 +27,7 @@ router.get('/error', function(req, res, next) {
 router.post('/login',function(req, res, next) {
   passport.authenticate('local-login', function(err, user, info) {
     if (err) { return next(err); }
-    if (!user) { return res.status(401).json("fail"); }
+    if (!user) { return res.status(401).json("login fail"); }
     req.logIn(user, function(err) {
       if (err) { return next(err); }
 
@@ -61,7 +61,7 @@ router.post('/login',function(req, res, next) {
 
       //user has authenticated correctly thus we create a JWT token
       var token = jwt.sign(payload, user.local.password, {
-        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires in 24 hours
+        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
       });
 
       return res.json({ token : token });
@@ -69,23 +69,10 @@ router.post('/login',function(req, res, next) {
   })(req, res, next);
 });
 
-router.post('/ios/login', passport.authenticate('local-login', {
-  successRedirect : '/ios/login/success', // redirect to the secure profile section
-  failureRedirect : '/ios/login/fail', // redirect back to the signup page if there is an error
-}));
-
-router.get('/ios/login/success', isLoggedIn, function(req, res, next) {
-  res.json(1);
-});
-
-router.get('/ios/login/fail', function(req, res, next) {
-  res.json(0);
-});
-
 router.post('/login/student', function(req, res, next) {
   passport.authenticate('local-student-login', function(err, user, info) {
     if (err) { return next(err); }
-    if (!user) { return res.status(401).json("fail"); }
+    if (!user) { return res.status(401).json("student login fail"); }
     req.logIn(user, function(err) {
       if (err) { return next(err); }
 
@@ -101,12 +88,11 @@ router.post('/login/student', function(req, res, next) {
           role : "student"
         }
       } else {
-        return res.status(401).json("fail");
+        return res.status(401).json("this is not a student account");
       }
 
-      //user has authenticated correctly thus we create a JWT token
       var token = jwt.sign(payload, user.local.password, {
-        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires in 24 hours
+        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC
       });
 
       return res.json({ token : token });
@@ -124,10 +110,6 @@ router.post('/signup/user', passport.authenticate('local-signup', { //isAdmin pr
   failureRedirect : '/error', // redirect back to the signup page if there is an error
 }));
 
-// router.get('/profile', isLoggedIn, function(req, res) {
-//   res.render('profile', { message: 'Login success', user: req.user });
-// });
-
 router.get('/chatroom', isLoggedIn, function(req, res) {
   res.render('chatroom', { user: req.user });
 });
@@ -137,7 +119,6 @@ router.get('/logout', function(req, res) {
   req.logout();
   res.redirect('/');
 });
-
 
 router.get('/admin', isAdmin, function(req, res) {  //not production！！需要添加权限检查 isAdmin
 

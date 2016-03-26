@@ -33,12 +33,12 @@ router.use( tokenManager.verifyToken, function(req, res, next) {
 
     User.findById(userid, function(err, user){
       if (err) {
-        return res.json({ success: false, message: '哎呀，預料之外的錯誤' });
+        return res.json({ success: false, message: '用户未找到' });
       } else {
         // verifies secret and checks exp
         jwt.verify(token, user.local.password, function(err, decoded) {
           if (err) {
-            return res.json({ success: false, message: '哎呀，認證失敗' });
+            return res.json({ success: false, message: '認證失敗' });
           } else {
             // if everything is good, save to request for use in other routes
             req.user = decoded;
@@ -54,7 +54,7 @@ router.use( tokenManager.verifyToken, function(req, res, next) {
     // return an error
     return res.status(401).send({
       success: false,
-      message: '你是誰？'
+      message: '认证失败'
     });
 
   }

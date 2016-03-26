@@ -11,9 +11,8 @@ exports.verifyToken = function (req, res, next) {
       console.log(err);
       return res.sendStatus(500);
     }
-
     if (reply) {
-      console.log("redis checked that the token is expired because the user logged out");
+      console.log("Token is expired because the user logged out");
       res.sendStatus(401);
     }
     else {

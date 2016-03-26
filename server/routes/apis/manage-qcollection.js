@@ -38,10 +38,15 @@ router.route('/delete/single')
 .delete(isTeacher, function(req, res) {
   var qcollection_id = req.body.qcollection_id;
   if (qcollection_id) {
-    Qcollection.findByIdAndRemove(qcollection_id, function (err){
-      if(err) { throw err; }
-
-      res.json('deleted')
+    Qcollection.findById(qcollection_id, function(err, qc){
+      if (qc.createdBy == req.user.id) {
+        Qcollection.findByIdAndRemove(qcollection_id, function (err){
+          if(err) { throw err; }
+          res.json('deleted')
+        })
+      } else {
+        res.status(401).json('没有权限');
+      }
     })
   } else {
     res.status(400);
@@ -62,7 +67,7 @@ router.route('/mine')
 //获取所有公开题集
 router.route('/all')
 .get(isLoggedIn, function(req, res) {
-  Qcollection.find({ public: true }, 'name subject public createdBy').populate('createdBy', 'local.name').exec(function(err, qcollections){
+  Qcollection.find({ public: true }, 'name subject public createdBy aveDifficulty').populate('createdBy', 'local.name').exec(function(err, qcollections){
     if (err) {
       res.send(err);
     } else {

@@ -76,14 +76,19 @@ router.route('/answer')
   });
 })
 
-router.route('/delete/single/:question_id')
+router.route('/delete/single')
 .delete(isTeacher, function(req, res) {
-  var question_id = req.params.question_id;
+  var question_id = req.body.question_id;
   if (question_id) {
-    Question.findByIdAndRemove(question_id, function (err){
-      if(err) { throw err; }
-
-      res.json('deleted')
+    Question.findById(question_id, function(err, q){
+      if (q.createdBy == req.user.id) {
+        Question.findByIdAndRemove(question_id, function (err){
+          if(err) { throw err; }
+          res.json('deleted')
+        })
+      } else {
+        res.status(401).json('没有权限');
+      }
     })
   } else {
     res.status(400);
