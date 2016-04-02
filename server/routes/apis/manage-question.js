@@ -9,7 +9,7 @@ var User = require('../../models/localuser');
 var Question = require('../../models/question');
 var Qcollection = require('../../models/qcollection');
 
-//create new question
+//创建新题目
 router.route('/add')
 .post(isTeacher, function(req, res) {
   if(req.body){
@@ -41,6 +41,7 @@ router.route('/add')
   }
 })
 
+//获取最近发布的10个题目
 router.route('/latest')
 .get(isTeacher, function(req, res) {
   Question.find({}, 'context tags subject difficulty type').sort({_id:-1}).limit(10).exec(function(err, questions){
@@ -52,6 +53,7 @@ router.route('/latest')
   });
 })
 
+//获取一个题目的详细信息
 router.route('/detail')
 .get(isLoggedIn, function(req, res) {
   var question_id = req.query.question_id
@@ -64,6 +66,7 @@ router.route('/detail')
   });
 })
 
+//获取题目的答案
 router.route('/answer')
 .get(isLoggedIn, function(req, res) {
   var question_id = req.query.question_id
@@ -76,6 +79,7 @@ router.route('/answer')
   });
 })
 
+//删除一个用户自己创建的题目
 router.route('/delete/single')
 .delete(isTeacher, function(req, res) {
   var question_id = req.body.question_id;
@@ -111,6 +115,19 @@ router.route('/mine')
 router.route('/all')
 .get(isTeacher, function(req, res) {
   Question.find({}, 'context tags subject difficulty type').exec(function(err, questions){
+    if (err) {
+      res.send(err);
+    } else {
+      res.json(questions);
+    }
+  });
+})
+
+//根据标签进行搜索题目
+router.route('/query/tags')
+.post(isLoggedIn, function(req, res) {
+  var tags = req.body.tags;
+  Question.find({ tags: { $in: tags }}, 'context tags subject difficulty type').exec(function(err, questions){
     if (err) {
       res.send(err);
     } else {

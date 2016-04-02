@@ -1,4 +1,4 @@
-angular.module('ipkms')
+angular.module('ipkmsService', [])
 .service('apiService', function($http){
 
   this.get = function(apiURL) {

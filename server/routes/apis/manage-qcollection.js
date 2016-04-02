@@ -9,7 +9,7 @@ var User = require('../../models/localuser');
 var Question = require('../../models/question');
 var Qcollection = require('../../models/qcollection');
 
-//create new question collection
+//创建新题集
 router.route('/add')
 .post(isLoggedIn, function(req, res) {
   if(req.body){
@@ -34,6 +34,7 @@ router.route('/add')
   }
 })
 
+//删除用户自己创建的题集
 router.route('/delete/single')
 .delete(isTeacher, function(req, res) {
   var qcollection_id = req.body.qcollection_id;
@@ -53,6 +54,7 @@ router.route('/delete/single')
   }
 })
 
+//获取用户自己创建的题集
 router.route('/mine')
 .get(isLoggedIn, function(req, res) {
   Qcollection.find({createdBy:req.user.id}, 'name subject public').sort({_id:-1}).exec(function(err, qcollections){
@@ -76,6 +78,7 @@ router.route('/all')
   });
 })
 
+//获取题集的详细内容
 router.route('/detail/:qcollection_id')
 .get(isLoggedIn, function(req, res) {
   var qcollection_id = req.params.qcollection_id;
@@ -88,6 +91,7 @@ router.route('/detail/:qcollection_id')
   });
 })
 
+//更新题集基本信息
 router.route('/update-info')
 .put(isLoggedIn, function(req, res) {
   var qcollection_id = req.body.qcollection_id;
@@ -105,6 +109,7 @@ router.route('/update-info')
   })
 })
 
+//更新题集的平均难度
 router.route('/update-difficulty')
 .put(isLoggedIn, function(req, res) {
   var qcollection_id = req.body.qcollection_id;
@@ -120,6 +125,7 @@ router.route('/update-difficulty')
   })
 })
 
+//给题集增加题目
 router.route('/add-question')
 .post(isLoggedIn, function(req, res) {
   if(req.body){
@@ -144,6 +150,7 @@ router.route('/add-question')
   }
 })
 
+//从题集里移除题目
 router.route('/remove-question')
 .delete(isLoggedIn, function(req, res) {
   if(req.body){
@@ -165,6 +172,19 @@ router.route('/remove-question')
   }else {
     res.status(400);
   }
+})
+
+//搜索题集的名字
+router.route('/query')
+.post(isLoggedIn, function(req, res) {
+  var name = req.body.name;
+  Question.find({ name: new RegExp(name, 'i')}, 'name subject public createdBy aveDifficulty').exec(function(err, qcollections){
+    if (err) {
+      res.send(err);
+    } else {
+      res.json(qcollections);
+    }
+  });
 })
 
 module.exports = router;

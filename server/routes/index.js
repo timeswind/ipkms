@@ -9,11 +9,7 @@ var User = require('../models/localuser');
 
 
 router.get('/', function(req, res, next) {
-  var user;
-  if (req.user) {
-    user = req.user;
-  }
-  res.render('index', { title: 'Myhomework', user: user });
+  res.render('index');
 });
 
 router.get('/login', function(req, res, next) {
@@ -100,18 +96,18 @@ router.post('/login/student', function(req, res, next) {
   })(req, res, next);
 });
 
-router.post('/signup/teacher', passport.authenticate('local-teacher-signup', { //isAdmin production need
-  successRedirect : '/admin', // redirect to the secure profile section
-  failureRedirect : '/error', // redirect back to the signup page if there is an error
+router.post('/signup/teacher', isAdmin, passport.authenticate('local-teacher-signup', {
+  successRedirect : '/admin',
+  failureRedirect : '/error'
 }));
 
-router.post('/signup/user', passport.authenticate('local-signup', { //isAdmin production need
-  successRedirect : '/admin', // redirect to the secure profile section
-  failureRedirect : '/error', // redirect back to the signup page if there is an error
+router.post('/signup/user', isAdmin, passport.authenticate('local-signup', {
+  successRedirect : '/admin',
+  failureRedirect : '/error'
 }));
 
 router.get('/chatroom', isLoggedIn, function(req, res) {
-  res.render('chatroom', { user: req.user });
+  res.render('chatroom/chatroom', { user: req.user });
 });
 
 router.get('/logout', function(req, res) {
@@ -120,9 +116,9 @@ router.get('/logout', function(req, res) {
   res.redirect('/');
 });
 
-router.get('/admin', isAdmin, function(req, res) {  //not production！！需要添加权限检查 isAdmin
+router.get('/admin', isAdmin, function(req, res) {
 
-  res.render('admin', { message: 'Welcome back, Chuck!'});
+  res.render('admin/index');
 
 });
 

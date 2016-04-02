@@ -1,0 +1,212 @@
+{% extends '../layout/admin-layout.html' %}
+{% block title %}{% endblock %}
+{% block content %}
+<script src="/js/ipkms-admin/ng-ipkmsAdmin-user.js"></script>
+
+<div class="container" ng-app="ipkmsAdmin">
+
+  <h1>賬號管理</h1>
+  <hr><br>
+
+  <div ng-controller="manageTeachers" class="panel panel-default">
+    <div class="panel-heading"><h3>教師賬號管理
+      <button type="button" class="btn btn-primary btn-sm pull-right" data-toggle="modal" data-target="#newTeacherModal">
+        開設新的教師賬號
+      </button>
+      </h3>
+
+    </div>
+
+
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>姓名</th>
+          <th>教师ID</th>
+          <th>賬戶ID</th>
+          <th style="text-align:center;">操作</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr ng-repeat="teacher in teachers">
+          <th>{[{$index + 1}]}</th>
+          <td>{[{teacher.name}]}</td>
+          <td>{[{teacher._id}]}</td>
+          <td>{[{teacher.user}]}</td>
+
+          <td style="width:120px;text-align:center"><div class="dropdown">
+            <button class="btn btn-info btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style="text-align:center">
+              操作
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              <li><a href="#" ng-click="deleteTeacher(teacher.user, teacher._id)">刪除教師賬號</a></li>
+              <li><a href="#">修改教師資料</a></li>
+            </ul>
+            </div></td>
+        </tr>
+      </tbody> </table>
+
+  </div><hr><br>
+
+  <div ng-controller="manageUsers" class="panel panel-default">
+    <div class="panel-heading"><h3>用戶管理
+      <button type="button" class="btn btn-primary btn-sm pull-right" data-toggle="modal" data-target="#newUserModal">
+        開設新的用戶賬號
+      </button>
+      </h3>
+    </div>
+
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>姓名</th>
+          <th>賬戶ID</th>
+          <th>電郵</th>
+          <th>角色</th>
+
+          <th style="text-align:center">操作</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr ng-repeat="user in users">
+          <th>{[{$index + 1}]}</th>
+          <td>{[{user.local.name}]}</td>
+          <td>{[{user._id}]}</td>
+          <td>{[{user.local.email}]}</td>
+          <td>{[{user.local.role}]}</td>
+          <td style="width:120px;text-align:center"><div class="dropdown">
+            <button class="btn btn-info btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style="text-align:center">
+              操作
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+              <li ng-hide="user.local.role == 'admin'"><a ng-click="deleteUser(user._id)">刪除用戶</a></li>
+              <li><a href="#">修改用戶資料</a></li>
+              <li role="separator" class="divider"></li>
+              <li ng-show="user.local.role == 'user'"><a ng-click="addTeacher(user._id)">添加為教師</a></li>
+              <li><a href="#">重置密码</a></li>
+            </ul>
+            </div></td>
+        </tr>
+      </tbody> </table>
+
+  </div>
+
+  <div ng-controller="manageStudents" class="panel panel-default">
+    <div class="panel-heading"><h3>學生管理</h3>
+
+    </div>
+    <table class="table table-hover">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>姓名</th>
+          <th>學生ID</th>
+          <th>賬戶ID</th>
+          <th>學校ID</th>
+
+          <th style="text-align:center">操作</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr ng-repeat="student in students">
+          <th>{[{$index + 1}]}</th>
+          <td>{[{student.name}]}</td>
+          <td>{[{student._id}]}</td>
+          <td>{[{student.user}]}</td>
+          <td>{[{student.schoolId}]}</td>
+          <td style="width:120px;text-align:center">
+            <div class="dropdown">
+              <button class="btn btn-info btn-sm dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style="text-align:center">
+                操作
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                <li ng-hide="user.local.role == 'admin'"><a ng-click="deleteStudent(student._id)">刪除學生賬號</a></li>
+                <li><a href="#">查看賬號資料</a></li>
+              </ul>
+            </div></td>
+        </tr>
+      </tbody> </table>
+    <!-- <div>
+      <textarea ng-model="schoolids"></textarea>
+      <a class="btn btn-primary btn-sm" ng-click="createStudents(schoolids)">開設新的學生賬號</a>
+    </div> -->
+
+
+
+  </div>
+
+  <!-- new teacher Modal -->
+  <div class="modal fade" id="newTeacherModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">新教师用户</h4>
+        </div>
+        <div class="modal-body">
+
+          <form action="/signup/teacher" method="post">
+            <div class="form-group">
+              <label>郵箱</label>
+              <input type="text" class="form-control" name="email">
+            </div>
+            <div class="form-group">
+              <label>密碼</label>
+              <input type="password" class="form-control" name="password">
+            </div>
+            <div class="form-group">
+              <label>姓名</label>
+              <input type="text" class="form-control" name="name">
+            </div>
+
+            <button type="submit" class="btn btn-default">创建</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- new USER Modal -->
+  <div class="modal fade" id="newUserModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title" id="myModalLabel">新用户</h4>
+        </div>
+        <div class="modal-body">
+
+          <form action="/signup/user" method="post">
+            <div class="form-group">
+              <label>郵箱</label>
+              <input type="text" class="form-control" name="email">
+            </div>
+            <div class="form-group">
+              <label>密碼</label>
+              <input type="password" class="form-control" name="password">
+            </div>
+            <div class="form-group">
+              <label>姓名</label>
+              <input type="text" class="form-control" name="name">
+            </div>
+
+            <button type="submit" class="btn btn-default">创建</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+{% endblock %}

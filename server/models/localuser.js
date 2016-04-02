@@ -6,14 +6,15 @@ var ObjectId = mongoose.Schema.ObjectId;
 // define the schema for our user model
 var userSchema = mongoose.Schema({
 
-    local            : {
-        email        : String,
-        schoolId     : String,
-        password     : String,
-        name         : String,
-        role         : String,
-        teacher      : { type: ObjectId, ref: 'Teacher' },
-        student      : { type: ObjectId, ref: 'Student' }
+    local: {
+        email: String,
+        schoolId: String,
+        password: String,
+        name: String,
+        role: String,
+        teacher: { type: ObjectId, ref: 'Teacher' },
+        student: { type: ObjectId, ref: 'Student' },
+        last_login: Date
     }
 
 });

@@ -15,7 +15,7 @@ router.get('/', isLoggedIn, function(req, res, next) {
     }else if (role === "admin"){
       res.redirect('/admin');
     }else{
-      res.render('home', { title: 'Home', user: user });
+      res.render('home');
     }
   }else{
     res.status(403)
@@ -24,7 +24,7 @@ router.get('/', isLoggedIn, function(req, res, next) {
 
 router.get('/teacher', isTeacher, function(req, res, next) {
   var user;
-  res.render('home-teacher', { title: 'Home', user: user});
+  res.render('home-teacher');
 
 });
 
@@ -46,12 +46,6 @@ router.get('/teacher/questions', isTeacher, function(req, res, next) {
     res.sendFile(path.join(__dirname, '../../client/public/home/question-library/index.html'));
 
 });
-
-// router.get('/teacher/questions/beta', isTeacher, function(req, res, next) {
-//   var user = req.user;
-//   res.sendFile(path.join(__dirname, '../../client/public/home/teacher/questions/index.html'));
-//
-// });
 
 router.get('/student/mygroups', isStudent, function(req, res, next) {
   var user = req.user;

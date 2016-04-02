@@ -68,8 +68,22 @@ router.use('/manage-account', manageAccountApiRoutes);
 router.use('/manage-question', manageQuestionApiRoutes);
 router.use('/manage-qcollection', manageQcollectonApiRoutes);
 
+router.route('/isadmin')
+.get(function(req, res) {
+  User.findById(req.user.id, function(err, user) {
+    if (err)
+    res.send(err);
 
-router.route('/myinfo')  //get all teacher //admin api
+    var responseData = {
+      role: user.local.role,
+      id: user.id
+    }
+
+    res.json(responseData);
+  });
+});
+
+router.route('/myinfo')
 .get(isLoggedIn, function(req, res) {
   User.findById(req.user.id, function(err, user) {
     if (err)
@@ -252,49 +266,47 @@ router.route('/students')  //get all students //admin api
   });
 });
 
-router.route('/students/multi')  //create multiple students account //admin api //not complete
-.post(isAdmin, function(req, res) {
-  if(req.body){
-    var idArray = req.body['data[]'];
-    var arrayLength = idArray.length;
-    for (var i = 0; i < arrayLength; i++) {
-      console.log(idArray[i]);
-      //Do something
-      var newUser = new User();
-      newuser.schoolId = idArray[i];
-      //             user.name = '';
-      newuser.role = 'student';
-      newuser.password = newUser.generateHash("123456"); //默认密码123456
-      newUser.save(function(err, u) {
-        if (err){
-          res.send(err);
-        }else{
-          var student = new Student();
-          student.user = u.id;
-          student.name = u.name;
-          student.schoolId = u.local.schoolId;
-          student.save(function(err, s){
-            User.findById(u.id, function(err, user) {
-              user.student = s.id;
-              user.save();
-            });
-          });
-        }
-
-      });
-    };
-
-    Student.find(function(err, students) {
-      if (err)
-      res.send(err);
-
-      res.json(students);
-    });
-
-  }else{
-    res.json({ message: 'student create failed!' });
-  }
-});
+// router.route('/students/multi')  //create multiple students account //admin api //not complete
+// .post(isAdmin, function(req, res) {
+//   if(req.body){
+//     var idArray = req.body['data[]'];
+//     var arrayLength = idArray.length;
+//     for (var i = 0; i < arrayLength; i++) {
+//
+//       var newUser = new User();
+//       newuser.schoolId = idArray[i];
+//       newuser.role = 'student';
+//       newuser.password = newUser.generateHash("123456"); //默认密码123456
+//       newUser.save(function(err, u) {
+//         if (err){
+//           res.send(err);
+//         }else{
+//           var student = new Student();
+//           student.user = u.id;
+//           student.name = u.name;
+//           student.schoolId = u.local.schoolId;
+//           student.save(function(err, s){
+//             User.findById(u.id, function(err, user) {
+//               user.student = s.id;
+//               user.save();
+//             });
+//           });
+//         }
+//
+//       });
+//     };
+//
+//     Student.find(function(err, students) {
+//       if (err)
+//       res.send(err);
+//
+//       res.json(students);
+//     });
+//
+//   }else{
+//     res.json({ message: 'student create failed!' });
+//   }
+// });
 
 router.route('/students/query/:query')  //query students with their name //user api
 .get(isLoggedIn, function(req, res) {
@@ -451,250 +463,252 @@ router.route('/teacher/homeworks/:option') //get teacher's groups //teacher api
   var option = req.params.option;
   var teacher_id = req.user.teacher;
   if(option == "fromtc"){
-    Teacher.findById(req.user.teacher,
-      'thomeworks').populate('thomeworks', 'name delivery subject title tags').lean()
-      .exec(function (err, thomeworks) {
-        if (err) res.json(err);
+    Teacher.findById(req.user.teacher, 'thomeworks')
+    .populate('thomeworks', 'name delivery subject title tags')
+    .lean()
+    .exec(function (err, thomeworks) {
+      if (err) res.json(err);
 
-        res.json(thomeworks);
+      res.json(thomeworks);
+    });
+
+  }else{
+    res.json("hello");
+  }
+})
+
+router.route('/teacher/homework/:homework_id') //get teacher's group info //teacher api
+.get(isTeacher, function(req, res){
+  var homework_id = req.params.homework_id;
+  Thomework.findById(homework_id, "requirement targetGroup deadline").populate('targetGroup.id','name').lean().exec(function (err, thomework) {
+    res.json(thomework)
+  })
+})
+
+router.route('/teacher/groups/:option') //get teacher's groups //teacher api
+.get(isTeacher, function(req, res){
+  var option = req.params.option;
+  var teacher_id = req.user.teacher;
+
+  if(option == "fromtc"){ //from teacher's collection
+  Teacher.findById(req.user.teacher, 'teachGroups')
+  .populate('teachGroups.group', 'name students public.boolean')
+  .lean()
+  .exec(function (err, teachGroups) {
+    if (err) res.json(err);
+
+    if (teachGroups) {
+      var arrayToModify = teachGroups;
+      for(i=0;i<arrayToModify["teachGroups"].length;i++){
+        arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
+      }
+      res.json(arrayToModify);
+    } else {
+      res.json("empty");
+    }
+
+  })
+
+} else if (option == "simple"){
+  Teacher.findById(req.user.teacher, 'teachGroups')
+  .populate('teachGroups.group', 'name')
+  .lean()
+  .exec(function (err, teachGroups) {
+    if (err) res.json(err);
+
+    res.json(teachGroups);
+  })
+} else {
+  res.json("hello");
+}
+});
+
+router.route('/teacher/group/:group_id') //get teacher's group info //teacher api
+.get(isTeacher, function(req, res){
+  var group_id = req.params.group_id;
+  var poputaleQuery = [{path:"students.id", select:"name schoolId"},{path:"logs.writeBy", select:"local.name"},{path:"homeworks", select:"title subject deadline"}]
+  Group.findById(group_id, "students notice logs homeworks").populate(poputaleQuery)
+  .exec(function (err, group) {
+    res.json(group)
+  })
+
+
+})
+
+router.route('/student/group/:group_id') //get teacher's group info //teacher api
+.get(isStudent, function(req, res){
+  var group_id = req.params.group_id;
+  var poputaleQuery = [{path:"students.id", select:"name schoolId"},{path:"homeworks", select:"title subject deadline"}]
+  Group.findById(group_id, "students notice homeworks").populate(poputaleQuery)
+  .exec(function (err, group) {
+    res.json(group)
+  })
+
+
+})
+
+router.route('/teacher/delete/group/:group_id') //教師刪除小組api //teacher pi
+.delete(isTeacher, function(req, res){
+  var group_id = req.params.group_id;
+  var teacher_id = req.user.teacher;
+  Group.remove({_id: group_id}, function(err) {
+    if(err) res.send(err);
+
+    Teacher.findById(teacher_id, function(err, teacher){
+      teacher.teachGroups.pull({group: group_id});
+      teacher.save(function(err){
+        if(err) res.send(err);
+
+        res.json("success delete a group")
+      })
+    })
+  })
+})
+
+router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信息api //teacher api
+.put(isTeacher, function(req, res){
+  var group_id = req.params.group_id;
+  var option = req.params.option;
+
+  if(option == "notice"){
+    var newNotice = Object.keys(req.body)[0];
+    var newLog = {
+      writeBy : req.user.id,
+      date : Date.now(),
+      event : "update notice",
+      text : "發佈新小組通知：" + newNotice
+    }
+
+    Group.findById(group_id, function(err, group){
+      if(newNotice){
+        group.notice.text = newNotice;
+        group.logs.push(newLog);
+        group.save(function(err) {
+          if (err)
+          res.send(err);
+
+          res.json("update notice success");
+        });
+      }else{
+        group.notice.text = " ";
+        group.save(function(err) {
+          if (err)
+          res.send(err);
+
+          res.json("update notice success");
+        });
+      }
+    })
+  }else if (option == "name") {
+    var newName = Object.keys(req.body)[0];
+
+    Group.findById(group_id, function(err, group){
+      if(newName){
+        group.name = newName;
+        group.save(function(err) {
+          if (err)
+          res.send(err);
+
+          res.json("update group name success");
+        });
+      }else{
+        res.status(500).send({ error: 'The name you entered is empty' });
+      }
+    })
+
+  }else if (option == "members") {
+    var newMembers = Object.keys(req.body)[0];
+
+    console.log(newMembers)
+
+    if(newMembers){
+
+      Group.update({"_id":group_id}, { $set: { students: JSON.parse(newMembers) }}, function(err, g){
+        if (err) {
+          res.status(500).json("fail");
+        }
+        res.json("update group name success");
       });
 
     }else{
-      res.json("hello");
+      res.status(500).send({ error: 'The members you submitted is empty' });
     }
-  })
-
-  router.route('/teacher/homework/:homework_id') //get teacher's group info //teacher api
-  .get(isTeacher, function(req, res){
-    var homework_id = req.params.homework_id;
-    Thomework.findById(homework_id, "requirement targetGroup deadline").populate('targetGroup.id','name').lean().exec(function (err, thomework) {
-      res.json(thomework)
-    })
-  })
 
 
-  router.route('/teacher/groups/:option') //get teacher's groups //teacher api
-  .get(isTeacher, function(req, res){
-    var option = req.params.option;
-    var teacher_id = req.user.teacher;
+  } else {
+    res.status(500).json("fail")
+  }
+})
 
-    if(option == "fromtc"){ //from teacher's collection
-      Teacher.findById(req.user.teacher,
-        'teachGroups').populate('teachGroups.group', 'name students public.boolean').lean()
-        .exec(function (err, teachGroups) {
-          if (err) res.json(err);
+router.route('/user/info') //get teacher's group info //teacher api
+.get(function(req, res){
 
-          if (teachGroups) {
-            var arrayToModify = teachGroups;
-            for(i=0;i<arrayToModify["teachGroups"].length;i++){
-              arrayToModify["teachGroups"][i].group.students = arrayToModify["teachGroups"][i].group.students.length;
-            }
-            res.json(arrayToModify);
-          } else {
-            res.json("empty");
-          }
+  User.findById(req.user.id, {"local.password": 0}, function(err, user){
+    if(err){
+      res.send(err);
+    }else{
+      res.json(user)
+    }
+  });
 
-        })
+});
+module.exports = router;
 
-      } else if (option == "simple"){
-        Teacher.findById(req.user.teacher,
-          'teachGroups').populate('teachGroups.group', 'name').lean()
-          .exec(function (err, teachGroups) {
-            if (err) res.json(err);
+// route middleware to make sure a user is logged in
+function isLoggedIn(req, res, next) {
+  // if user is authenticated in the session, carry on
+  // if (req.isAuthenticated())
+  // return next();
+  //
+  // // if they aren't redirect them to the home page
+  // res.json("you are not logged in");
+  if (req.user){
+    return next();
+  }else{
+    res.json("hello");
+  }
+}
 
-            res.json(teachGroups);
-          })
-        } else {
-          res.json("hello");
-        }
-      });
+function isAdmin(req, res, next) {
+  //旧的session认证取消，使用新的token认证
+  // if user is authenticated in the session, carry on
+  // if (req.isAuthenticated())
+  // if (req.user.role == "admin")
+  // return next();
+  // // if they aren't redirect them to the home page
+  // res.json("hello");
+  if (req.user.role == "admin"){
+    return next();
+  }else{
+    res.json("hello");
+  }
+}
 
-      router.route('/teacher/group/:group_id') //get teacher's group info //teacher api
-      .get(isTeacher, function(req, res){
-        var group_id = req.params.group_id;
-        var poputaleQuery = [{path:"students.id", select:"name schoolId"},{path:"logs.writeBy", select:"local.name"},{path:"homeworks", select:"title subject deadline"}]
-        Group.findById(group_id, "students notice logs homeworks").populate(poputaleQuery)
-        .exec(function (err, group) {
-          res.json(group)
-        })
+function isTeacher(req, res, next) {
+  //旧的session认证取消，使用新的token认证
+  // if user is authenticated in the session, carry on
+  // if (req.isAuthenticated())
+  // if (req.user.role == "teacher")
+  // return next();
+  // if they aren't redirect them to the home page
+  if (req.user.role == "teacher"){
+    return next();
+  }else{
+    res.json("hello");
+  }
+}
 
-
-      })
-
-      router.route('/student/group/:group_id') //get teacher's group info //teacher api
-      .get(isStudent, function(req, res){
-        var group_id = req.params.group_id;
-        var poputaleQuery = [{path:"students.id", select:"name schoolId"},{path:"homeworks", select:"title subject deadline"}]
-        Group.findById(group_id, "students notice homeworks").populate(poputaleQuery)
-        .exec(function (err, group) {
-          res.json(group)
-        })
-
-
-      })
-
-      router.route('/teacher/delete/group/:group_id') //教師刪除小組api //teacher pi
-      .delete(isTeacher, function(req, res){
-        var group_id = req.params.group_id;
-        var teacher_id = req.user.teacher;
-        Group.remove({_id: group_id}, function(err) {
-          if(err) res.send(err);
-
-          Teacher.findById(teacher_id, function(err, teacher){
-            teacher.teachGroups.pull({group: group_id});
-            teacher.save(function(err){
-              if(err) res.send(err);
-
-              res.json("success delete a group")
-            })
-          })
-        })
-      })
-
-      router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信息api //teacher api
-      .put(isTeacher, function(req, res){
-        var group_id = req.params.group_id;
-        var option = req.params.option;
-
-        if(option == "notice"){
-          var newNotice = Object.keys(req.body)[0];
-          var newLog = {
-            writeBy : req.user.id,
-            date : Date.now(),
-            event : "update notice",
-            text : "發佈新小組通知：" + newNotice
-          }
-
-          Group.findById(group_id, function(err, group){
-            if(newNotice){
-              group.notice.text = newNotice;
-              group.logs.push(newLog);
-              group.save(function(err) {
-                if (err)
-                res.send(err);
-
-                res.json("update notice success");
-              });
-            }else{
-              group.notice.text = " ";
-              group.save(function(err) {
-                if (err)
-                res.send(err);
-
-                res.json("update notice success");
-              });
-            }
-          })
-        }else if (option == "name") {
-          var newName = Object.keys(req.body)[0];
-
-          Group.findById(group_id, function(err, group){
-            if(newName){
-              group.name = newName;
-              group.save(function(err) {
-                if (err)
-                res.send(err);
-
-                res.json("update group name success");
-              });
-            }else{
-              res.status(500).send({ error: 'The name you entered is empty' });
-            }
-          })
-
-        }else if (option == "members") {
-          var newMembers = Object.keys(req.body)[0];
-
-          console.log(newMembers)
-
-          if(newMembers){
-
-            Group.update({"_id":group_id}, { $set: { students: JSON.parse(newMembers) }}, function(err, g){
-              if (err) {
-                res.status(500).json("fail");
-              }
-              res.json("update group name success");
-            });
-
-          }else{
-            res.status(500).send({ error: 'The members you submitted is empty' });
-          }
-
-
-        } else {
-          res.status(500).json("fail")
-        }
-      })
-
-      router.route('/user/info') //get teacher's group info //teacher api
-      .get(function(req, res){
-
-        User.findById(req.user.id, {"local.password": 0}, function(err, user){
-          if(err){
-            res.send(err);
-          }else{
-            res.json(user)
-          }
-        });
-
-      });
-      module.exports = router;
-
-      // route middleware to make sure a user is logged in
-      function isLoggedIn(req, res, next) {
-        // if user is authenticated in the session, carry on
-        // if (req.isAuthenticated())
-        // return next();
-        //
-        // // if they aren't redirect them to the home page
-        // res.json("you are not logged in");
-        if (req.user){
-          return next();
-        }else{
-          res.json("hello");
-        }
-      }
-
-      function isAdmin(req, res, next) {
-        //旧的session认证取消，使用新的token认证
-        // if user is authenticated in the session, carry on
-        // if (req.isAuthenticated())
-        // if (req.user.role == "admin")
-        // return next();
-        // // if they aren't redirect them to the home page
-        // res.json("hello");
-        if (req.user.role == "admin"){
-          return next();
-        }else{
-          res.json("hello");
-        }
-      }
-
-      function isTeacher(req, res, next) {
-        //旧的session认证取消，使用新的token认证
-        // if user is authenticated in the session, carry on
-        // if (req.isAuthenticated())
-        // if (req.user.role == "teacher")
-        // return next();
-        // if they aren't redirect them to the home page
-        if (req.user.role == "teacher"){
-          return next();
-        }else{
-          res.json("hello");
-        }
-      }
-
-      function isStudent(req, res, next) {
-        //旧的session认证取消，使用新的token认证
-        // if user is authenticated in the session, carry on
-        // if (req.isAuthenticated())
-        // if (req.user.role == "student")
-        // return next();
-        // // if they aren't redirect them to the home page
-        // res.json("hello");
-        if (req.user.role == "student"){
-          return next();
-        }else{
-          res.json("hello");
-        }
-      }
+function isStudent(req, res, next) {
+  //旧的session认证取消，使用新的token认证
+  // if user is authenticated in the session, carry on
+  // if (req.isAuthenticated())
+  // if (req.user.role == "student")
+  // return next();
+  // // if they aren't redirect them to the home page
+  // res.json("hello");
+  if (req.user.role == "student"){
+    return next();
+  }else{
+    res.json("hello");
+  }
+}

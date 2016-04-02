@@ -112,10 +112,10 @@ module.exports = function(passport) {
 
           // if there is no user with that email
           // create the user
-          var newUser            = new User();
+          var newUser = new User();
           var userId;
           // set the user's local credentials
-          newUser.local.email    = email;
+          newUser.local.email = email;
           newUser.local.password = newUser.generateHash(password);
           newUser.local.name = req.body.name;
           newUser.local.role = "teacher";
@@ -172,7 +172,7 @@ module.exports = function(passport) {
 
           // if there is no user with that email
           // create the user
-          var newUser            = new User();
+          var newUser = new User();
           // set the user's local credentials
           newUser.local.schoolId    = schoolId;
           newUser.local.password = newUser.generateHash(password);
@@ -213,7 +213,6 @@ module.exports = function(passport) {
     passReqToCallback : true // allows us to pass back the entire request to the callback
   },
   function(req, email, password, done) { // callback with email and password from our form
-
     // find a user whose email is the same as the forms email
     // we are checking to see if the user trying to login already exists
     User.findOne({ 'local.email' :  email }, function(err, user) {
