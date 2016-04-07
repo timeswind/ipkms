@@ -1,30 +1,38 @@
-var async = require("async");
 var express = require('express');
 var router = express.Router();
 
-var User = require('../../models/localuser');
 var Chatroom = require('../../models/chatroom');
 
 
-//获取小组的最近的10条消息
+//获取小组的最近的20条消息
 router.route('/catchup/:chatroom_id')
-.get(isLoggedIn, function(req, res) {
-  var roomId = req.params.chatroom_id;
-  Chatroom.findOne({group: roomId}).populate("messages.sender", "local.name").exec(function(err, chatroom){
-    var messages = chatroom.messages.slice(Math.max(chatroom.messages.length - 10, 1));
+    .get(isLoggedIn, function (req, res) {
+        var roomId = req.params.chatroom_id;
+        Chatroom.findOne({group: roomId}).populate("messages.sender", "local.name").lean().exec(function (err, chatroom) {
+            if (chatroom) {
+                var messages;
+                if (chatroom.messages.length > 20) {
+                    messages = chatroom.messages.slice(Math.max(chatroom.messages.length - 20, 1));
 
-    res.json(messages);
-  });
+                } else {
+                    messages = chatroom.messages;
+                }
+                res.json(messages);
+            } else {
+                res.json([])
+            }
 
-})
+        });
+
+    });
 
 module.exports = router;
 
 function isLoggedIn(req, res, next) {
 
-  if (req.user){
-    return next();
-  }else{
-    res.json("hello");
-  }
+    if (req.user) {
+        return next();
+    } else {
+        res.json("hello");
+    }
 }

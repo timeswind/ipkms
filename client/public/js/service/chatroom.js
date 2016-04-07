@@ -1,4 +1,4 @@
-angular.module('ipkms')
+angular.module('chatroom')
 .factory('socket', function ($rootScope) {
   var socket = io.connect();
   return {

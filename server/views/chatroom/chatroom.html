@@ -1,76 +1,191 @@
-{% extends 'layout.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-{% block title %}{% endblock %}
+    <!-- angular-material 1.0.5 -->
+    <link rel="stylesheet" href="/bower_components/angular-material/angular-material.min.css">
+    <script src="/bower_components/angular/angular.min.js"></script>
+    <script src="/bower_components/angular-animate/angular-animate.min.js"></script>
+    <script src="/bower_components/angular-aria/angular-aria.min.js"></script>
+    <script src="/bower_components/angular-messages/angular-messages.min.js"></script>
+
+    <!-- Main config file-->
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="/js/ng-app.js"></script>
+    <script type="text/javascript" src="/js/ng-chatroom.js"></script>
+    <script type="text/javascript" src="/js/service/ipkms-service.js"></script>
+    <script type="text/javascript" src="/js/service/chatroom.js"></script>
 
 
-{% block content %}
-<script src="/socket.io/socket.io.js"></script>
-<link rel="stylesheet" href="/css/student-ui.css">
-<script type="text/javascript" src="/js/ng-chatroom.js"></script>
-<script type="text/javascript" src="/js/service/chatroom.js"></script>
-<link rel="stylesheet" href="https://code.getmdl.io/1.1.1/material.teal-purple.min.css" />
-<style>
-.md-errors-spacer {
-  display: none;
-}
+    <!-- Angular Material Library -->
+    <script src="/bower_components/angular-material/angular-material.min.js"></script>
+
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/material-design-icons/2.2.0/iconfont/material-icons.css">
+
+    <link rel="stylesheet" href="/css/chatroom.css">
+</head>
+
+<body>
+<div ng-app="chatroom" layout="column" style="height:100%;" ng-controller="chatroomController">
+    <section layout="row" flex>
+
+        <md-sidenav
+                class="md-sidenav-left"
+                md-component-id="left"
+                md-is-locked-open="$mdMedia('gt-sm')"
+                md-is-open="isSidenavOpen"
+                md-disable-backdrop
+                md-whiteframe="4">
+
+            <md-content>
+                <md-list flex>
+                    <div class="user-box" layout="column" style="align-items: center">
+                        <span class="name">{{user.local.name}}</span>
+                        <span class="role">{{user.local.role}}</span>
+                        <div layout="row">
+                            <md-button layout="row" class="profile" onclick="window.location.href = '/home/profile' "><i
+                                    class="material-icons">account_box</i> 個人資料
+                            </md-button>
+                            <md-button class="md-primary" layout="row" onclick="window.location.href = '/logout' "><i
+                                    class="material-icons">exit_to_app</i> 登 出
+                            </md-button>
+                        </div>
+                    </div>
+
+                    <md-divider></md-divider>
+                    <md-list-item class="group-list-item" ng-repeat="group in myGroups" ng-click="selectRoom(group.name, group._id)" ng-class="{'active-group': roomId === group._id}">
+                        <div class="md-list-item-text" layout="column">
+                            <div layout="row">
+                                <span class="name">{[{group.name}]}</span>
+                                <span><span class="unread-count" ng-show="unreadCount[group._id]">{[{unreadCount[group._id]}]}</span>
+                            </div>
+                        </div>
+                    </md-list-item>
+
+                    <md-divider></md-divider>
+                </md-list>
+            </md-content>
+        </md-sidenav>
+        <md-content id="scrollBox" layout="column" style="flex: 1; background-color: #E9E2DC">
+            <md-toolbar class="md-whiteframe-2dp" style="position: fixed">
+                <div class="md-toolbar-tools">
+                    <md-button class="md-icon-button" ng-click="toggleLeftNav()" ng-show="isMobile">
+                        <i class="material-icons">menu</i>
+                    </md-button>
+                    <h2 style="padding-left: 16px">
+                        <span>{[{roomName}]}</span>
+                    </h2>
+                </div>
+            </md-toolbar>
+
+            <div id="messageBox">
+                <div>
+                    <div class="message" ng-repeat="msg in historyMessages[roomId]" ng-class="{'tail-selfmsg': selfMessage(msg.userid)}">
+                        <div ng-class="{'message-in': !selfMessage(msg.userid), 'message-out':selfMessage(msg.userid)}">
+                            <a class="sender" ng-style="{'color': msg.nameColor }" href="/home/profile/{[{msg.userid}]}">{[{msg.username}]}</a>
+                            <div layout="row" style="align-items: baseline">
+                                <p class="contents" style="margin:0">{[{msg.contents}]}</p>
+                                <span class="date">{[{msg.date | date:"M/d h:mm a"}]}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="timeline-marker">歷史消息</div>
+                <div style="margin-bottom:80px">
+                    <div class="message" ng-repeat-start="msg in messages[roomId]" ng-class="{'tail-selfmsg': selfMessage(msg.userid)}">
+                        <div ng-class="{'message-in': !selfMessage(msg.userid), 'message-out':selfMessage(msg.userid)}">
+                            <a class="sender" ng-style="{'color': msg.nameColor }" href="/home/profile/{[{msg.userid}]}">{[{msg.username}]}</a>
+                            <div layout="row" style="align-items: baseline">
+                                <p class="contents" style="margin:0">{[{msg.contents}]}</p>
+                                <span class="date">{[{msg.date | date:"h:mm a"}]}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="timeline-marker" ng-if="$index === unreadLine[roomId]" ng-repeat-end>新消息</div>
+
+                </div>
+
+                <div class="message-inputs" layout="row">
+
+                    <div style="margin:0 20px;flex:1 1 auto">
+                        <input ng-model="msg.content"
+                               style="width: 100%;height: 20px;border: none;padding: 10px;margin-top: 10px;border-radius:5px"
+                               placeholder="輸入信息" ng-keypress="listenForEnter($event)"/>
+                    </div>
+                    <md-button ng-click="sendMessage()" class="md-icon-button" style="margin:10px 20px">
+                        <i class="material-icons" style="color:#9E9E9E">send</i>
+                    </md-button>
+                </div>
+            </div>
+        </md-content>
+    </section>
 
 
-</style>
-<div>
-  <div ng-app="ipkms" ng-controller="chatroomController">
-    <!-- The drawer is always open in large screens. The header is always shown,
-    even in small screens. -->
-    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
-    mdl-layout--fixed-header">
-    <header class="mdl-layout__header">
-      <div class="mdl-layout__header-row">
-        <span class="mdl-layout-title">小組聊天室</span>
-        <div class="mdl-layout-spacer">
-        </div>
-        <div class="mdl-textfield mdl-js-textfield mdl-textfield--expandable
-        mdl-textfield--floating-label mdl-textfield--align-right">
-        <!-- <label class="mdl-button mdl-js-button mdl-button--icon"
-        for="fixed-header-drawer-exp">
-        <i class="material-icons">search</i>
-      </label> -->
-      <div class="mdl-textfield__expandable-holder">
-        <input class="mdl-textfield__input" type="text" name="sample"
-        id="fixed-header-drawer-exp">
-      </div>
-    </div>
-  </div>
-</header>
-<div class="mdl-layout__drawer" ng-cloak>
-  <span class="mdl-layout-title">{{user.local.name}}</span>
-  <nav class="mdl-navigation">
-    <a class="mdl-navigation__link" ng-repeat="group in myGroups" ng-click="selectRooom(group.group._id)">{[{group.group.name}]}</a>
-  </nav>
 </div>
-
-<main id="messageBox" class="mdl-layout__content" style="background-color:#E9E2DC;padding:0 30px;margin-bottom:60px">
-<div style="margin-bottom:80px">
-  <div ng-repeat="msg in messages[roomId]" ng-class="{'tail-selfmsg': selfMessage(msg.userid)}" ng-cloak>
-    <div ng-class="{'message-in': !selfMessage(msg.userid), 'message-out':selfMessage(msg.userid)}">
-      <a>{[{msg.username}]}</a>
-      <p style="margin:0">{[{msg.contents}]}</p>
-    </div>
-  </div>
-</div>
-
-  <div class="message-inputs" layout="row">
-
-    <div style="margin:0 20px;flex:1 1 auto">
-      <input ng-model="msg.content" style="width: 100%;height: 20px;border: none;padding: 10px;margin-top: 10px;border-radius:5px" placeholder="輸入信息" ng-keypress="listenForEnter($event)"/>
-    </div>
-    <md-button ng-click="sendMessage()" class="md-icon-button" style="margin:10px 20px">
-      <i class="material-icons" style="color:#9E9E9E">send</i>
-    </md-button>
-  </div>
-</main>
-</div>
+</body>
 
 
-</div>
-</div>
+<!--<body>-->
+<!--<div ng-app="chatroom" ng-controller="chatroomController">-->
+<!--&lt;!&ndash; The drawer is always open in large screens. The header is always shown,-->
+<!--even in small screens. &ndash;&gt;-->
+<!--<div class="mdl-layout mdl-js-layout mdl-layout&#45;&#45;fixed-drawer-->
+<!--mdl-layout&#45;&#45;fixed-header">-->
+<!--<header class="mdl-layout__header">-->
+<!--<div class="mdl-layout__header-row">-->
+<!--<span class="mdl-layout-title">小組聊天室</span>-->
+<!--<div class="mdl-layout-spacer">-->
+<!--</div>-->
+<!--<div class="mdl-textfield mdl-js-textfield mdl-textfield&#45;&#45;expandable-->
+<!--mdl-textfield&#45;&#45;floating-label mdl-textfield&#45;&#45;align-right">-->
+<!--&lt;!&ndash; <label class="mdl-button mdl-js-button mdl-button&#45;&#45;icon"-->
+<!--for="fixed-header-drawer-exp">-->
+<!--<i class="material-icons">search</i>-->
+<!--</label> &ndash;&gt;-->
+<!--<div class="mdl-textfield__expandable-holder">-->
+<!--<input class="mdl-textfield__input" type="text" name="sample"-->
+<!--id="fixed-header-drawer-exp">-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+<!--</header>-->
+<!--<div class="mdl-layout__drawer" ng-cloak>-->
+<!--<span class="mdl-layout-title">{{user.local.name}}</span>-->
+<!--<nav class="mdl-navigation">-->
+<!--<a class="mdl-navigation__link" ng-repeat="group in myGroups" ng-click="selectRooom(group._id)">{[{group.name}]}</a>-->
+<!--</nav>-->
+<!--</div>-->
 
-{% endblock %}
+<!--<main id="messageBox" class="mdl-layout__content"-->
+<!--style="background-color:#E9E2DC;padding:0 30px;margin-bottom:60px">-->
+<!--<div style="margin-bottom:80px">-->
+<!--<div ng-repeat="msg in messages[roomId]" ng-class="{'tail-selfmsg': selfMessage(msg.userid)}" ng-cloak>-->
+<!--<div ng-class="{'message-in': !selfMessage(msg.userid), 'message-out':selfMessage(msg.userid)}">-->
+<!--<a>{[{msg.username}]}</a>-->
+<!--<p style="margin:0">{[{msg.contents}]}</p>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+
+<!--<div class="message-inputs" layout="row">-->
+
+<!--<div style="margin:0 20px;flex:1 1 auto">-->
+<!--<input ng-model="msg.content"-->
+<!--style="width: 100%;height: 20px;border: none;padding: 10px;margin-top: 10px;border-radius:5px"-->
+<!--placeholder="輸入信息" ng-keypress="listenForEnter($event)"/>-->
+<!--</div>-->
+<!--<md-button ng-click="sendMessage()" class="md-icon-button" style="margin:10px 20px">-->
+<!--<i class="material-icons" style="color:#9E9E9E">send</i>-->
+<!--</md-button>-->
+<!--</div>-->
+<!--</main>-->
+<!--</div>-->
+
+
+<!--</div>-->
+<!--</body>-->

@@ -1,73 +1,87 @@
-{% extends 'layout.html' %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{{ title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-{% block title %}{% endblock %}
+    <link rel="stylesheet" href="/bower_components/angular-material/angular-material.min.css">
+    <link rel="stylesheet" href="/css/login.css">
 
-{% block content %}
-<style>
-body{
-  background-color: #fafafa !important;
-}
-</style>
-<script type="text/javascript" src="/js/ng-app-login.js"></script>
+    <script src="/bower_components/angular/angular.min.js"></script>
+    <script src="/bower_components/angular-animate/angular-animate.min.js"></script>
+    <script src="/bower_components/angular-aria/angular-aria.min.js"></script>
+    <script src="/bower_components/angular-messages/angular-messages.min.js"></script>
+
+
+    <script src="/js/ng-app.js"></script>
+    <script src="/js/service/ipkms-service.js"></script>
+    <script type="text/javascript" src="/js/ng-app-login.js"></script>
+
+    <script src="/bower_components/angular-material/angular-material.min.js"></script>
+
+    <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/material-design-icons/2.2.0/iconfont/material-icons.css">
+
+</head>
+
+<body>
 <div>
-  <div ng-app="ipkms" ng-controller="loginController" ng-cloak>
-    <h1 style="text-align:center;margin:0;padding-top:20px;padding-bottom:20px">iPkms<br>
+    <div ng-app="login" ng-controller="loginController" ng-cloak>
+        <h1 class="logo md-display-3">iPkms</h1>
 
-      <button onClick="window.location='logout';" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored">
-        登出(dev use)
-      </button>
-      <button ng-click="switchLogin()" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
-        {[{loginOption}]}
-      </button>
-    </h1>
+        <div class="login-card md-whiteframe-4dp" ng-show="!studentLogin">
+            <md-button class="switch-login-button md-accent" ng-click="switchLogin()">
+                <i class="material-icons">cached</i>
+                {[{loginOption}]}
+            </md-button>
+            <p class="login-type">教師登入</p>
+            <p class="login-error">{[{teacherLoginError}]}</p>
+            <div>
 
-    <form class="mdl-shadow--2dp" ng-submit="submitTeacher()" style="margin:0 auto;max-width:280px;background-color:#fff;padding-top:10px" ng-show="!studentLogin">
-      <p style="padding:10px 0px 10px 20px;margin:0;font-size:18px;border-left:5px solid #3F51B5">教師登入</p>
-      <p style="margin:0;padding-left:25px;color:#F44336">{[{teacherLoginError}]}</p>
-      <div style="padding:5px 25px 15px 25px;">
-        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          <input class="mdl-textfield__input" type="email" id="teacher_email" ng-model="teacher.email">
-          <label class="mdl-textfield__label" for="teacher_email">教師郵箱</label>
+                <md-input-container class="md-block" style="margin-bottom: 0">
+                    <label>教師郵箱</label>
+                    <input type="email" ng-model="teacher.email">
+                </md-input-container>
+
+                <md-input-container class="md-block" style="margin-bottom: 0">
+                    <label>密碼</label>
+                    <input type="password" id="teacher_password" ng-model="teacher.password">
+                </md-input-container>
+
+                <div style="text-align: center">
+                    <md-button ng-click="submitTeacher()" class="login-button md-raised md-primary">登入</md-button>
+                </div>
+            </div>
+
         </div>
 
-        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-          <input class="mdl-textfield__input" type="password" id="teacher_password" ng-model="teacher.password">
-          <label class="mdl-textfield__label" for="teacher_password">密碼</label>
+        <div class="login-card md-whiteframe-4dp" ng-show="studentLogin">
+            <md-button ng-click="switchLogin()" class="switch-login-button md-accent">
+                <i class="material-icons">cached</i>
+                {[{loginOption}]}
+            </md-button>
+            <p class="login-type">學生登入</p>
+            <p class="login-error">{[{studentLoginError}]}</p>
+
+            <div>
+
+                <md-input-container class="md-block" style="margin-bottom: 0">
+                    <label>學生ID</label>
+                    <input type="text" pattern="-?[0-9]*(\.[0-9]+)?" ng-model="student.schoolid">
+                </md-input-container>
+
+                <md-input-container class="md-block" style="margin-bottom: 0">
+                    <label>密碼</label>
+                    <input type="password" ng-model="student.password">
+                </md-input-container>
+
+                <div style="text-align: center">
+                    <md-button ng-click="submitStudent()" class="login-button md-raised md-primary">登入</md-button>
+                </div>
+            </div>
         </div>
-
-        <div>
-          <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" style="width:100%;margin-top:10px">
-            登入
-          </button>
-        </div>
-      </div>
-
-    </form>
-
-    <form class="mdl-shadow--2dp" ng-submit="submitStudent()" style="margin:0 auto;max-width:280px;background-color:#fff;padding-top:10px" ng-show="studentLogin">
-      <p style="padding:10px 0px 10px 20px;margin:0;font-size:18px;border-left:5px solid #3F51B5">學生登入</p>
-      <p style="margin:0;padding-left:25px;color:#F44336">{[{studentLoginError}]}</p>
-
-<div style="padding:5px 25px 15px 25px;">
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-        <input class="mdl-textfield__input" type="text" pattern="-?[0-9]*(\.[0-9]+)?" id="schoolid" ng-model="student.schoolid">
-        <label class="mdl-textfield__label" for="schoolid">學生ID</label>
-        <span class="mdl-textfield__error">學生ID由數字組成！</span>
-      </div>
-
-      <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label">
-        <input class="mdl-textfield__input" type="password" id="student_password" ng-model="student.password">
-        <label class="mdl-textfield__label" for="student_password">密碼</label>
-      </div>
-
-      <div>
-        <button type="submit" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored" style="width:100%;margin-top:10px">
-          登入
-        </button>
-      </div>
+    </div>
 </div>
-    </form>
-  </div>
-</div>
-
-{% endblock %}
+</body>
+<html>

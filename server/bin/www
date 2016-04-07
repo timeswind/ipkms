@@ -1,187 +1,97 @@
 #!/usr/bin/env node
 
 /**
-* Module dependencies.
-*/
+ * Module dependencies.
+ */
 
 var app = require('../app');
 var debug = require('debug')('_example:server');
 var http = require('http');
-var socketioJwt = require('socketio-jwt');
 var mongoose = require('mongoose');
 // *** mongoose *** //
 mongoose.connect('mongodb://localhost/nodedb');
 
-var Group = require('../models/group')
-var Chatroom = require('../models/chatroom')
-var User = require('../models/localuser')
 /**
-* Get port from environment and store in Express.
-*/
+ * Get port from environment and store in Express.
+ */
 
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
 /**
-* Create HTTP server.
-*/
+ * Create HTTP server.
+ */
 
 var server = http.createServer(app);
 var io = require('socket.io')(server);
+var chatroom  = require('../socket/chatroom')(io)
 
 /**
-* Listen on provided port, on all network interfaces.
-*/
+ * Listen on provided port, on all network interfaces.
+ */
 
 server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 
-var users = [];
-
-io
-.on('connection', socketioJwt.authorize({
-  secret: function(request, decodedToken, callback) {
-    // SECRETS[decodedToken.userId] will be used a a secret or
-    // public key for connection user.
-    console.log(decodedToken);
-    User.findById(decodedToken.id, function(err, user){
-      if (err) {
-        callback(null, SECRETS["fail"]);
-
-      } else {
-        callback(null, user.local.password);
-
-      }
-
-    })
-  },
-  handshake: false
-})).on('authenticated', function(socket) {
-  console.log('socket id is ' + socket.id);
-  //this socket is authenticated, we are good to handle more events from it.
-  console.log('hello! ' + JSON.stringify(socket.decoded_token));
-
-  users[socket.id] = {
-    userid : socket.decoded_token.id,
-    name : socket.decoded_token.name,
-    role : socket.decoded_token.role
-  }
-
-  console.log(users);
-
-  socket.on('new user', function(data) {
-    socket.join(data.roomId);
-    Chatroom.count({group: data.roomId},function(err, count){
-      if (count === 0) {
-        var chatroom =  new Chatroom()
-        chatroom.group = data.roomId
-        chatroom.save(function(err, c){
-          if (err) {
-            io.in(data.roomId).emit('join fail');
-            socket.leave(data.roomId);
-          }
-        })
-      } else {
-        //Tell all those in the room that a new user joined
-        io.in(data.roomId).emit('user joined', users[socket.id]);
-      }
-    })
-
-  });
-
-  //Listens for switch room
-  socket.on('switch room', function(data) {
-    //Handles joining and leaving rooms
-    //console.log(data);
-    socket.leave(data.oldRoom);
-    socket.join(data.newRoom);
-    io.in(data.oldRoom).emit('user left', data);
-    io.in(data.newRoom).emit('user joined', data);
-
-  });
-
-  //Listens for a new chat message
-  socket.on('new message', function(data) {
-    //Create message
-    data.userid = users[socket.id].userid;
-    data.username = users[socket.id].name;
-
-    var newMsg = {
-      sender : data.userid,
-      content : data.text,
-      img : null,
-      date : new Date()
-    };
-    //Save it to database
-    Chatroom.update({group: data.roomId}, { $push: { messages: newMsg } }, {safe: true, upsert: true}, function(err){
-      if(err) {
-        console.log("SAVE MESSAGES FAILED");
-        console.log(err);
-      }
-    })
-
-    io.in(data.roomId).emit('emit message', data);
-  });
-});
 
 /**
-* Normalize a port into a number, string, or false.
-*/
+ * Normalize a port into a number, string, or false.
+ */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+    var port = parseInt(val, 10);
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
 
-  if (port >= 0) {
-    // port number
-    return port;
-  }
+    if (port >= 0) {
+        // port number
+        return port;
+    }
 
-  return false;
+    return false;
 }
 
 /**
-* Event listener for HTTP server "error" event.
-*/
+ * Event listener for HTTP server "error" event.
+ */
 
 function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
 
-  var bind = typeof port === 'string'
-  ? 'Pipe ' + port
-  : 'Port ' + port;
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
 
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-    console.error(bind + ' requires elevated privileges');
-    process.exit(1);
-    break;
-    case 'EADDRINUSE':
-    console.error(bind + ' is already in use');
-    process.exit(1);
-    break;
-    default:
-    throw error;
-  }
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
 }
 
 /**
-* Event listener for HTTP server "listening" event.
-*/
+ * Event listener for HTTP server "listening" event.
+ */
 
 function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-  ? 'pipe ' + addr
-  : 'port ' + addr.port;
-  debug('Listening on ' + bind);
-  console.log('Listening on ' + bind);
+    var addr = server.address();
+    var bind = typeof addr === 'string'
+        ? 'pipe ' + addr
+        : 'port ' + addr.port;
+    debug('Listening on ' + bind);
+    console.log('Listening on ' + bind);
 }

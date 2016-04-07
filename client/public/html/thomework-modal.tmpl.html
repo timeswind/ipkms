@@ -1,111 +1,120 @@
 <md-dialog aria-label="{[{thomework.title}]}" layout="column" class="group-dialog">
 
-  <md-toolbar>
-    <div class="md-toolbar-tools">
-      <h2 class="group-header" style="width:100%" ng-hide="editName">
-        <span style="color: #607D8B;background-color:#fff;padding: 4px 8px;border-radius:17px;font-size:16px">{[{thomework.subjectText}]}</span>
-        {[{thomework.title}]}
-        <span style="float:right;color:#fff">
-          <i class="material-icons" ng-show="!thomework.delivery" style="float:left;margin-top:12px;margin-right:5px">build</i>
-          <i class="material-icons" ng-show="thomework.delivery" style="float:left;margin-top:12px;margin-right:5px">assignment_turned_in</i>
-          {[{thomework.deliveryText}]}
-        </span>
-      </h2>
-      <span flex></span>
-      <md-button class="md-icon-button" ng-click="cancel()">
-        <i class="material-icons">close</i>
-      </md-button>
-    </div>
-  </md-toolbar>
+    <md-toolbar>
+        <div class="md-toolbar-tools" layout="row" style="background-color: #fff; color: #212121; border-bottom: 1px solid #E0E0E0">
+            <span style="color: #fff;background-color:#607D8B;padding: 4px 8px;border-radius:17px;font-size:16px;margin-right: 8px">{[{thomework.subjectText}]}</span>
+
+            <span layout="row" style="align-items: center">
+                <span class="group-header" style="width:100%" ng-hide="editName">{[{thomework.title}]}</span>
+            </span>
+            <span flex></span>
+
+            <a layout="row" style="align-items: center;color: #3F51B5;">
+                <i class="material-icons" ng-show="!thomework.delivery">build</i>
+                <i class="material-icons" ng-show="thomework.delivery">assignment_turned_in</i>
+                {[{thomework.deliveryText}]}
+            </a>
+
+            <md-button class="md-icon-button" ng-click="cancel()" style="color:#212121;">
+                <i class="material-icons">close</i>
+            </md-button>
+        </div>
+    </md-toolbar>
 
     <md-dialog-content>
-      <md-content class="md-padding" layout="column">
-        <h2 class="md-title" style="margin:0">
-          <i class="material-icons mdtitle-icon-left">assignment</i>
-          要求
-          <md-button class="md-primary" ng-click="editRequirement = true;" style="color: #607D8B;" ng-hide="editRequirement">
-            <i class="material-icons button-icon-left">
-              edit
-            </i>
-            編輯要求
-          </md-button>
-          <md-button class="md-primary" ng-click="updateRequirement()" style="color: #E91E63;" ng-show="editRequirement">
-            <i class="material-icons button-icon-left">
-              done
-            </i>
-            完成編輯
-          </md-button>
-          <md-button class="md-primary" ng-click="editRequirement = false;" style="color: #607D8B;" ng-show="editRequirement">
-            取消
-          </md-button>
-        </h2>
-        <div class="inner-shadow-box" ng-bind-html="requirementHtml" ng-show="!editRequirement"></div>
-
-        <div ng-show="editRequirement">
-          <textarea ui-tinymce="tinymceOptions" ng-model="editableRequirement"></textarea>
-        </div>
-
-        <h2 class="md-title" style="margin:0;margin-top:10px">
-          <i class="material-icons mdtitle-icon-left">local_offer</i>
-          標籤
-          <md-button class="md-primary" ng-click="editTags = true;" style="color: #607D8B;" ng-hide="editTags">
-            <i class="material-icons button-icon-left">
-              edit
-            </i>
-            編輯標籤
-          </md-button>
-          <md-button class="md-primary" ng-click="updateTags()" style="color: #E91E63;" ng-show="editTags">
-            <i class="material-icons button-icon-left">
-              done
-            </i>
-            更新編輯
-          </md-button>
-          <md-button class="md-primary" ng-click="editTags = false;" style="color: #607D8B;" ng-show="editTags">
-            取消编辑
-          </md-button>
-        </h2>
-        <md-chips ng-model="thomework.tags" readonly="!editTags"></md-chips>
-        <form name="publishhomeworkForm">
-        <div layout="column">
-          <div>
-            <h2 class="md-title" style="margin:0;margin-top:10px">
-              <i class="material-icons mdtitle-icon-left">group_work</i>
-              <span ng-if="!thomework.delivery">選擇</span>
-              目標小組
+        <md-content class="md-padding" layout="column">
+            <h2 class="md-title" style="align-items: center;margin:0;color: #757575;" layout="row">
+                <i class="material-icons">assignment</i>
+                要求
+                <md-button class="md-primary" ng-click="editRequirement = true;" style="color: #607D8B;align-items: center;"
+                           ng-hide="editRequirement" layout="row">
+                    <i class="material-icons">
+                        edit
+                    </i>
+                    編輯要求
+                </md-button>
+                <md-button class="md-primary" ng-click="updateRequirement()" style="color: #E91E63;align-items: center;"
+                           ng-show="editRequirement" layout="row">
+                    <i class="material-icons">
+                        done
+                    </i>
+                    完成編輯
+                </md-button>
+                <md-button class="md-primary" ng-click="editRequirement = false;" style="color: #607D8B;align-items: center;"
+                           ng-show="editRequirement" layout="row">
+                    取消
+                </md-button>
             </h2>
-            <p ng-show="thomework.delivery">{[{thomeworkDetails.targetGroup.id.name}]}</p>
-            <md-select placeholder="選擇小組或者班級" ng-hide="thomework.delivery" ng-model="publishhomework.targetGroup" md-on-open="loadMyGroups()" style="margin:0" required>
-              <md-optgroup label="我的小組">
-                <md-option value="{[{group.id}]}" ng-repeat="group in groupsClasses | filter: {category: 'group' }">
-                  {[{group.name}]}
-                </md-option>
-              </md-optgroup>
-              <!-- <md-optgroup label="班級">
-              <md-option ng-value="class.name" ng-repeat="class in groupsClasses | filter: {category: 'class' }">{[{class.name}]}</md-option>
-            </md-optgroup> -->
-          </md-select>
-          </div>
-          <div ng-style="!thomework.delivery && {'text-align':'center'}">
-            <h2 class="md-title" style="margin:0;margin-top:10px">
-              <i class="material-icons mdtitle-icon-left" ng-if="thomework.delivery">insert_invitation</i>
-              <span ng-if="!thomework.delivery">選擇</span>
-              上交日期
+            <div class="inner-shadow-box" ng-bind-html="requirementHtml" ng-show="!editRequirement"></div>
+
+            <div ng-show="editRequirement">
+                <textarea ui-tinymce="tinymceOptions" ng-model="editableRequirement"></textarea>
+            </div>
+
+            <h2 class="md-title" style="align-items: center;color: #757575;" layout="row">
+                <i class="material-icons">local_offer</i>
+                標籤
+                <md-button class="md-primary" ng-click="editTags = true;" style="color: #607D8B;align-items: center;" ng-hide="editTags" layout="row">
+                    <i class="material-icons">
+                        edit
+                    </i>
+                    編輯標籤
+                </md-button>
+                <md-button class="md-primary" ng-click="updateTags()" style="color: #E91E63;align-items: center;" ng-show="editTags" layout="row">
+                    <i class="material-icons">
+                        done
+                    </i>
+                    更新編輯
+                </md-button>
+                <md-button class="md-primary" ng-click="editTags = false;" style="color: #607D8B;align-items: center;" ng-show="editTags" layout="row">
+                    取消编辑
+                </md-button>
             </h2>
-            <p ng-show="thomework.delivery">{[{thomeworkDetails.deadline | date: "MM'月'dd'日'"}]}</p>
-            <md-datepicker ng-hide="thomework.delivery"  ng-model="publishhomework.deadline" md-placeholder="選擇上交日期" required>
-            </md-datepicker>
-          </div>
+            <md-chips ng-model="thomework.tags" readonly="!editTags"></md-chips>
+            <form name="publishhomeworkForm">
+                <div layout="column">
+                    <div layout="row" style="align-items: center;">
+                        <h2 class="md-title" style="align-items: center;color: #757575;" layout="row">
+                            <i class="material-icons">group_work</i>
+                            <span ng-if="!thomework.delivery">選擇</span>
+                            目標小組
+                        </h2>
+                        <p ng-show="thomework.delivery">{[{thomeworkDetails.targetGroup.id.name}]}</p>
+                        <md-select placeholder="選擇小組或者班級" ng-hide="thomework.delivery"
+                                   ng-model="publishhomework.targetGroup" md-on-open="loadMyGroups()" style="margin-left: 16px"
+                                   required>
+                            <md-optgroup label="我的小組">
+                                <md-option value="{[{group.id}]}"
+                                           ng-repeat="group in groupsClasses | filter: {category: 'group' }">
+                                    {[{group.name}]}
+                                </md-option>
+                            </md-optgroup>
+                        </md-select>
+                    </div>
+                    <div layout="row" style="align-items: center;">
+                        <h2 class="md-title" style="align-items: center;color: #757575;" layout="row">
+                            <i class="material-icons" ng-if="thomework.delivery">insert_invitation</i>
+                            <span ng-if="!thomework.delivery">選擇</span>
+                            上交日期
+                        </h2>
+                        <p style="margin-left: 16px" ng-show="thomework.delivery">{[{thomeworkDetails.deadline | date: "MM'月'dd'日'"}]}</p>
+                        <md-datepicker ng-hide="thomework.delivery" ng-model="publishhomework.deadline"
+                                       md-placeholder="選擇上交日期" required>
+                        </md-datepicker>
+                    </div>
 
-        </div>
-        <div style="text-align:center">
-          <md-button class="md-primary md-raised" style="background-color: #607D8B;margin-top:20px" ng-click="publishSavedHomework()" ng-show="publishhomework.targetGroup" ng-disabled="publishhomeworkForm.$invalid">
-            立刻發佈
-          </md-button>
-        </div>
-      </form>
+                </div>
+                <div style="text-align:center">
+                    <md-button class="md-primary md-raised" style="background-color: #607D8B;margin-top:20px"
+                               ng-click="publishSavedHomework()" ng-show="publishhomework.targetGroup"
+                               ng-disabled="publishhomeworkForm.$invalid">
+                        立刻發佈
+                    </md-button>
+                </div>
+            </form>
 
 
-      </md-content>
+        </md-content>
     </md-dialog-content>
 
 

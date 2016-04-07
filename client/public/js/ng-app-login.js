@@ -1,61 +1,59 @@
-angular.module('ipkms')
-.controller('loginController', function($scope,$http, $window) {
-  $scope.teacher = {
-    email: '',
-    password: ''
-  }
+angular.module('login', ['ipkms', 'ipkmsService'])
+    .controller('loginController', function ($scope, $http, $window) {
+        $scope.teacher = {
+            email: '',
+            password: ''
+        }
 
-  $scope.student = {
-    schoolid: '',
-    password: ''
-  }
+        $scope.student = {
+            schoolid: '',
+            password: ''
+        }
 
-  $scope.loginOption = "學生登錄"
-  $scope.studentLogin = false;
+        $scope.loginOption = "學生登入"
+        $scope.studentLogin = false;
 
-  $scope.switchLogin = function(){
-    $scope.studentLogin = !$scope.studentLogin;
-    if($scope.studentLogin){
-      $scope.loginOption = "教師登錄"
+        $scope.switchLogin = function () {
+            $scope.studentLogin = !$scope.studentLogin;
+            if ($scope.studentLogin) {
+                $scope.loginOption = "教師登入"
 
-    }else{
-      $scope.loginOption = "學生登錄"
+            } else {
+                $scope.loginOption = "學生登入"
 
-    }
-  }
+            }
+        }
 
-  $scope.submitTeacher = function () {
-    $http
-    .post('/login', $scope.teacher)
-    .success(function (data, status, headers, config) {
-      $window.sessionStorage.token = data.token;
-      window.location = "/home"
+        $scope.submitTeacher = function () {
+            if ($scope.teacher.email && $scope.teacher.password) {
+                $http
+                    .post('/login', $scope.teacher)
+                    .success(function (data) {
+                        console.log('success')
+                        $window.sessionStorage.token = data.token;
+                        window.location = "/home"
+                    })
+                    .error(function (data) {
+
+                        $scope.teacherLoginError = "郵箱或密碼錯誤"
+                        delete $window.sessionStorage.token;
+                    });
+            }
+        };
+
+        $scope.submitStudent = function () {
+            if ($scope.student.schoolid && $scope.student.password) {
+                $http
+                    .post('/login/student', $scope.student)
+                    .success(function (data) {
+                        $window.sessionStorage.token = data.token;
+                        window.location = "/home"
+                    })
+                    .error(function (data) {
+                        $scope.studentLoginError = "學生ID或密碼錯誤"
+                        delete $window.sessionStorage.token;
+                    });
+            }
+        };
+
     })
-    .error(function (data, status, headers, config) {
-      // Erase the token if the user fails to log in
-      if (data == "fail") {
-        $scope.teacherLoginError = "郵箱或密碼錯誤"
-      }
-      delete $window.sessionStorage.token;
-      // Handle login errors here
-    });
-  };
-
-  $scope.submitStudent = function () {
-    $http
-    .post('/login/student', $scope.student)
-    .success(function (data, status, headers, config) {
-      $window.sessionStorage.token = data.token;
-      window.location = "/home"
-    })
-    .error(function (data, status, headers, config) {
-      // Erase the token if the user fails to log in
-      if (data == "fail") {
-        $scope.studentLoginError = "郵箱或密碼錯誤"
-      }
-      delete $window.sessionStorage.token;
-      // Handle login errors here
-    });
-  };
-
-})

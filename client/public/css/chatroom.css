@@ -1,0 +1,98 @@
+#messageBox {
+    background-color: #E9E2DC;
+    padding: 0 30px;
+    margin-bottom: 60px;
+    margin-top: 80px;
+}
+
+.message .sender {
+    text-decoration: none;
+    font-size: 14px;
+    color: #3F51B5
+}
+
+.message .sender:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.message .date {
+    font-size: 12px;
+    margin-left: 16px;
+    color: #8C8C8C;
+}
+
+.message-in {
+    margin: 10px 0;
+    background-color: #fff;
+    border-radius: 5px;
+    display: inline-block;
+    padding: 5px 10px;
+    max-width: 300px;
+    box-shadow: 0 1px .5px rgba(0, 0, 0, .13);
+}
+
+.message-out {
+    text-align: left;
+    margin: 10px 0;
+    background-color: #dcf8c6;
+    border-radius: 5px;
+    display: inline-block;
+    padding: 5px 10px;
+    max-width: 300px;
+    box-shadow: 0 1px .5px rgba(0, 0, 0, .13);
+}
+
+.tail-selfmsg {
+    text-align: right;
+}
+
+.message-inputs {
+    z-index: 2;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgb(243, 240, 239);
+    margin-left: 320px
+}
+
+@media screen and (max-width: 960px) {
+    .message-inputs {
+        z-index: 2;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin-left: 0;
+        background-color: rgb(243, 240, 239)
+    }
+}
+
+.timeline-marker {
+    z-index: 1;
+    width: 160px;
+    margin: 0 auto;
+    text-align: center;
+    border-radius: 5px;
+    background: #E8EAF6;
+    color: #424242;
+    box-shadow: 0 2px 3px #BDBDBD;
+    padding: 8px 0;
+}
+
+.group-list-item .name {
+    padding-left: 32px;
+}
+
+.group-list-item .unread-count {
+    background-color: #F44336;
+    color: #fff;
+    padding: 1px 6px;
+    border-radius: 11px;
+    margin-left: 16px;
+}
+
+.active-group {
+    background-color: #E0E0E0;
+}
