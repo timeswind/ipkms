@@ -17,7 +17,7 @@ angular.module('chatroom', ['ipkms', 'ipkmsService'])
         $scope.roomName = null;
         $scope.roomId = null;
 
-        socket.on('connect', function (socket) {
+        socket.on('connect', function () {
             socket.emit('authenticate', {token: userToken});
         });
 
@@ -63,9 +63,13 @@ angular.module('chatroom', ['ipkms', 'ipkmsService'])
         $scope.selectRoom = function (name, id) {
             $scope.roomName = name;
             $scope.roomId = id;
-            $scope.unreadLine[id] = [];
-            $scope.unreadLine[id] = $scope.messages[id].length - $scope.unreadCount[id];
-            $scope.unreadCount[id] = 0;
+
+            if ($scope.unreadCount[id]) {
+                $scope.unreadLine[id] = [];
+                $scope.unreadLine[id] = $scope.messages[id].length - $scope.unreadCount[id];
+                $scope.unreadCount[id] = 0;
+            }
+
             setTimeout(function () {
                 $scope.isSidenavOpen = false;
                 updateScroll()
@@ -128,6 +132,7 @@ angular.module('chatroom', ['ipkms', 'ipkmsService'])
         function catchup(roomId) {
             var apiURL = '/api/message/catchup/' + roomId;
             apiService.get(apiURL).then(function (response) {
+                // console.log(response.data)
                 $scope.messages[roomId] = [];
                 $scope.historyMessages[roomId] = [];
 

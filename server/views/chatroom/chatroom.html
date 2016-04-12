@@ -61,7 +61,7 @@
                         <div class="md-list-item-text" layout="column">
                             <div layout="row">
                                 <span class="name">{[{group.name}]}</span>
-                                <span><span class="unread-count" ng-show="unreadCount[group._id]">{[{unreadCount[group._id]}]}</span>
+                                <span><span class="unread-count" ng-show="unreadCount[group._id]">{[{unreadCount[group._id]}]}</span></span>
                             </div>
                         </div>
                     </md-list-item>
@@ -73,7 +73,7 @@
         <md-content id="scrollBox" layout="column" style="flex: 1; background-color: #E9E2DC">
             <md-toolbar class="md-whiteframe-2dp" style="position: fixed">
                 <div class="md-toolbar-tools">
-                    <md-button class="md-icon-button" ng-click="toggleLeftNav()" ng-show="isMobile">
+                    <md-button class="md-icon-button" ng-click="toggleLeftNav()">
                         <i class="material-icons">menu</i>
                     </md-button>
                     <h2 style="padding-left: 16px">
@@ -89,7 +89,7 @@
                             <a class="sender" ng-style="{'color': msg.nameColor }" href="/home/profile/{[{msg.userid}]}">{[{msg.username}]}</a>
                             <div layout="row" style="align-items: baseline">
                                 <p class="contents" style="margin:0">{[{msg.contents}]}</p>
-                                <span class="date">{[{msg.date | date:"M/d h:mm a"}]}</span>
+                                <span class="date">{[{msg.date | date:"M月d h:mm a"}]}</span>
                             </div>
                         </div>
                     </div>

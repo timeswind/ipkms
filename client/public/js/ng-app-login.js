@@ -3,14 +3,14 @@ angular.module('login', ['ipkms', 'ipkmsService'])
         $scope.teacher = {
             email: '',
             password: ''
-        }
+        };
 
         $scope.student = {
             schoolid: '',
             password: ''
-        }
+        };
 
-        $scope.loginOption = "學生登入"
+        $scope.loginOption = "學生登入";
         $scope.studentLogin = false;
 
         $scope.switchLogin = function () {
@@ -22,21 +22,23 @@ angular.module('login', ['ipkms', 'ipkmsService'])
                 $scope.loginOption = "學生登入"
 
             }
-        }
+        };
 
         $scope.submitTeacher = function () {
             if ($scope.teacher.email && $scope.teacher.password) {
                 $http
                     .post('/login', $scope.teacher)
                     .success(function (data) {
-                        console.log('success')
+
                         $window.sessionStorage.token = data.token;
                         window.location = "/home"
+                        
                     })
-                    .error(function (data) {
+                    .error(function () {
 
-                        $scope.teacherLoginError = "郵箱或密碼錯誤"
+                        $scope.teacherLoginError = "郵箱或密碼錯誤";
                         delete $window.sessionStorage.token;
+
                     });
             }
         };
@@ -49,11 +51,13 @@ angular.module('login', ['ipkms', 'ipkmsService'])
                         $window.sessionStorage.token = data.token;
                         window.location = "/home"
                     })
-                    .error(function (data) {
-                        $scope.studentLoginError = "學生ID或密碼錯誤"
+                    .error(function () {
+
+                        $scope.studentLoginError = "學生ID或密碼錯誤";
                         delete $window.sessionStorage.token;
+
                     });
             }
         };
 
-    })
+    });

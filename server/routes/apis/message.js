@@ -26,6 +26,38 @@ router.route('/catchup/:chatroom_id')
 
     });
 
+router.route('/sync/:chatroom_id/:version')
+    .get(isLoggedIn, function (req, res) {
+        /** @namespace req.params.chatroom_id */
+        /** @namespace req.params.version */
+        var roomId = req.params.chatroom_id;
+        var currentVersion = req.params.version;
+
+        Chatroom.findOne({group: roomId}, "__v").lean().exec(function (err, c) {
+
+            var difference = c.__v - currentVersion;
+            var latestVersion = c.__v;
+
+            if (difference > 0) {
+                Chatroom.findOne({group: roomId},"messages", {messages: {$slice: difference}}).populate("messages.sender", "local.name").lean().exec(function (err, chatroom) {
+                    if (chatroom) {
+                        var results = {
+                            version: latestVersion,
+                            messages: chatroom.messages
+                        };
+                        res.json(results);
+                    }
+                });
+            } else {
+                res.json([])
+            }
+
+        });
+
+
+
+    });
+
 module.exports = router;
 
 function isLoggedIn(req, res, next) {

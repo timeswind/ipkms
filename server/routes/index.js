@@ -22,7 +22,7 @@ router.post('/login', function (req, res, next) {
             return next(err);
         }
         if (!user) {
-            return res.status(401).json("login fail");
+            return res.status(401).json("FAIL");
         }
         req.logIn(user, function (err) {
             if (err) {
