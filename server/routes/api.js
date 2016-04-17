@@ -1,14 +1,13 @@
 var async = require("async");
 var express = require('express');
 var router = express.Router();
-var passport = require('passport');
 var jwt = require('jsonwebtoken');
 var tokenManager = require('../config/token_manager');
 
 var Teacher = require('../models/teacher');
 var Student = require('../models/student');
 var User = require('../models/localuser');
-var Group = require('../models/group')
+var Group = require('../models/group');
 var Thomework = require('../models/thomework');
 var Shomework = require('../models/shomework');
 
@@ -19,6 +18,7 @@ var manageAccountApiRoutes = require('./apis/manage-account.js');
 var manageQuestionApiRoutes = require('./apis/manage-question.js');
 var manageQcollectonApiRoutes = require('./apis/manage-qcollection.js');
 var manageGroupApiRoutes = require('./apis/manage-group.js');
+var manageQuickquizApiRoutes = require('./apis/manage-quickquiz.js');
 
 
 router.use(tokenManager.verifyToken, function (req, res, next) {
@@ -69,6 +69,7 @@ router.use('/manage-account', manageAccountApiRoutes);
 router.use('/manage-question', manageQuestionApiRoutes);
 router.use('/manage-qcollection', manageQcollectonApiRoutes);
 router.use('/manage-group', manageGroupApiRoutes);
+router.use('/manage-quickquiz', manageQuickquizApiRoutes);
 
 router.route('/isadmin')
     .get(function (req, res) {
@@ -79,7 +80,7 @@ router.route('/isadmin')
             var responseData = {
                 role: user.local.role,
                 id: user.id
-            }
+            };
 
             res.json(responseData);
         });
@@ -94,7 +95,7 @@ router.route('/myinfo')
             var responseData = {
                 role: user.local.role,
                 id: user.id
-            }
+            };
 
             res.json(responseData);
         });
@@ -148,11 +149,10 @@ router.route('/teacher/:user_id') //create a teacher from exist user //admin api
                 });
             } else {
                 res.send("user not exist!");
-            }
-            ;
+            };
         });
 
-    })
+    });
 
 router.route('/teacher/:user_id/:teacher_id') //DELETE single teacher using its user_id and teacher_id //admin api
 
@@ -212,52 +212,9 @@ router.route('/users/:user_id')
                         res.json({message: 'Successfully deleted user'});
                     });
             }
-
         });
     });
 
-
-router.route('/student/:student_id')  //get a student's info //user api
-    .get(isLoggedIn, function (req, res) {
-        Student.findById(req.params.student_id, function (err, student) {
-            if (err)
-                res.send(err);
-
-            res.json(student);
-        });
-    })
-    .delete(isAdmin, function (req, res) { //delete a student role from a user //admin api
-
-        Student.findById(req.params.student_id, function (err, student) {
-            if (err)
-                res.send(err);
-
-            var userid = student.user;
-
-            Student.remove({_id: req.params.student_id}, function (err) {
-                if (err)
-                    res.send(err);
-
-                User.findById(userid, function (err, user) {
-
-                    if (err)
-                        res.send(err);
-
-                    user.role = "user";
-                    user.schoolId = undefined;
-                    user.student = undefined;
-                    user.save(function (err) {
-                        if (err)
-                            res.send(err);
-
-                        res.json("Delete student and change to user role");
-                    });
-
-                });
-            });
-
-        });
-    });
 
 router.route('/students')  //get all students //admin api
     .get(isAdmin, function (req, res) {
@@ -268,48 +225,6 @@ router.route('/students')  //get all students //admin api
             res.json(students);
         });
     });
-
-// router.route('/students/multi')  //create multiple students account //admin api //not complete
-// .post(isAdmin, function(req, res) {
-//   if(req.body){
-//     var idArray = req.body['data[]'];
-//     var arrayLength = idArray.length;
-//     for (var i = 0; i < arrayLength; i++) {
-//
-//       var newUser = new User();
-//       newuser.schoolId = idArray[i];
-//       newuser.role = 'student';
-//       newuser.password = newUser.generateHash("123456"); //默认密码123456
-//       newUser.save(function(err, u) {
-//         if (err){
-//           res.send(err);
-//         }else{
-//           var student = new Student();
-//           student.user = u.id;
-//           student.name = u.name;
-//           student.schoolId = u.local.schoolId;
-//           student.save(function(err, s){
-//             User.findById(u.id, function(err, user) {
-//               user.student = s.id;
-//               user.save();
-//             });
-//           });
-//         }
-//
-//       });
-//     };
-//
-//     Student.find(function(err, students) {
-//       if (err)
-//       res.send(err);
-//
-//       res.json(students);
-//     });
-//
-//   }else{
-//     res.json({ message: 'student create failed!' });
-//   }
-// });
 
 router.route('/students/query/:query')  //query students with their name //user api
     .get(isLoggedIn, function (req, res) {
@@ -347,7 +262,7 @@ router.route('/group')
             date: Date.now(),
             event: "new group",
             text: "創建新小組﹣" + jsonData["name"]
-        }
+        };
 
 
         var newGroup = new Group();
@@ -368,7 +283,7 @@ router.route('/group')
                     } else {
                         if (t) {
                             t.teachGroups.push({
-                                group: group.id,
+                                group: group.id
                             });
 
                             t.save(function (err) {
@@ -397,7 +312,7 @@ router.route('/studentgroups') //get student's groups //student api
             res.json(groups);
         })
 
-    })
+    });
 
 router.route('/teacher/manage/homework')
     .post(isTeacher, function (req, res) { //create homework object
@@ -420,7 +335,7 @@ router.route('/teacher/manage/homework')
             async.waterfall([
                 function (callback) {
                     newThomework.save(function (err, thomework) {
-                        if (err) res.status(500).send(err)
+                        if (err) res.status(500).send(err.message);
 
                         callback(null, thomework.id)
                     })
@@ -446,7 +361,7 @@ router.route('/teacher/manage/homework')
                         date: Date.now(),
                         event: "publish homework",
                         text: "發佈了新功課 - " + homeworkJsonData.title
-                    }
+                    };
                     console.log(newLog);
                     Group.findByIdAndUpdate(homeworkJsonData.targetGroup, {
                         $push: {
@@ -471,7 +386,7 @@ router.route('/teacher/manage/homework')
         }
     });
 
-router.route('/teacher/homeworks/:option') //get teacher's groups //teacher api
+router.route('/teacher/homeworks/:option')
     .get(isTeacher, function (req, res) {
         var option = req.params.option;
         var teacher_id = req.user.teacher;
@@ -496,7 +411,7 @@ router.route('/teacher/homework/:homework_id') //get teacher's group info //teac
         Thomework.findById(homework_id, "requirement targetGroup deadline").populate('targetGroup.id', 'name').lean().exec(function (err, thomework) {
             res.json(thomework)
         })
-    })
+    });
 
 router.route('/teacher/groups/:option') //get teacher's groups //teacher api
     .get(isTeacher, function (req, res) {
@@ -504,7 +419,7 @@ router.route('/teacher/groups/:option') //get teacher's groups //teacher api
         var teacher_id = req.user.teacher;
 
         if (option == "fromtc") { //from teacher's collection
-            Teacher.findById(req.user.teacher, 'teachGroups')
+            Teacher.findById(teacher_id, 'teachGroups')
                 .populate('teachGroups.group', 'name students public.boolean')
                 .lean()
                 .exec(function (err, teachGroups) {
@@ -549,7 +464,7 @@ router.route('/teacher/group/:group_id') //get teacher's group info //teacher ap
             })
 
 
-    })
+    });
 
 router.route('/student/group/:group_id') //get teacher's group info //teacher api
     .get(isStudent, function (req, res) {
@@ -557,14 +472,18 @@ router.route('/student/group/:group_id') //get teacher's group info //teacher ap
         var poputaleQuery = [{path: "students.id", select: "name schoolId"}, {
             path: "homeworks",
             select: "title subject deadline"
-        }]
+        }];
         Group.findById(group_id, "students notice homeworks").populate(poputaleQuery)
             .exec(function (err, group) {
-                res.json(group)
+                if (err) {
+                    res.status(500).send(err.message);
+                } else {
+                    res.json(group)
+                }
             })
 
 
-    })
+    });
 
 router.route('/teacher/delete/group/:group_id') //教師刪除小組api //teacher pi
     .delete(isTeacher, function (req, res) {
@@ -582,7 +501,7 @@ router.route('/teacher/delete/group/:group_id') //教師刪除小組api //teache
                 })
             })
         })
-    })
+    });
 
 router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信息api //teacher api
     .put(isTeacher, function (req, res) {
@@ -596,7 +515,7 @@ router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信
                 date: Date.now(),
                 event: "update notice",
                 text: "發佈新小組通知：" + newNotice
-            }
+            };
 
             Group.findById(group_id, function (err, group) {
                 if (newNotice) {
@@ -638,15 +557,14 @@ router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信
         } else if (option == "members") {
             var newMembers = Object.keys(req.body)[0];
 
-            console.log(newMembers)
-
             if (newMembers) {
 
                 Group.update({"_id": group_id}, {$set: {students: JSON.parse(newMembers)}}, function (err, g) {
                     if (err) {
                         res.status(500).json("fail");
+                    } else {
+                        res.json("update group name success");
                     }
-                    res.json("update group name success");
                 });
 
             } else {
@@ -657,7 +575,7 @@ router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信
         } else {
             res.status(500).json("fail")
         }
-    })
+    });
 
 router.route('/user/info') //get teacher's group info //teacher api
     .get(function (req, res) {
@@ -673,14 +591,8 @@ router.route('/user/info') //get teacher's group info //teacher api
     });
 module.exports = router;
 
-// route middleware to make sure a user is logged in
+// 旧的session认证取消，使用新的token认证
 function isLoggedIn(req, res, next) {
-    // if user is authenticated in the session, carry on
-    // if (req.isAuthenticated())
-    // return next();
-    //
-    // // if they aren't redirect them to the home page
-    // res.json("you are not logged in");
     if (req.user) {
         return next();
     } else {
@@ -689,13 +601,6 @@ function isLoggedIn(req, res, next) {
 }
 
 function isAdmin(req, res, next) {
-    //旧的session认证取消，使用新的token认证
-    // if user is authenticated in the session, carry on
-    // if (req.isAuthenticated())
-    // if (req.user.role == "admin")
-    // return next();
-    // // if they aren't redirect them to the home page
-    // res.json("hello");
     if (req.user.role == "admin") {
         return next();
     } else {
@@ -704,12 +609,6 @@ function isAdmin(req, res, next) {
 }
 
 function isTeacher(req, res, next) {
-    //旧的session认证取消，使用新的token认证
-    // if user is authenticated in the session, carry on
-    // if (req.isAuthenticated())
-    // if (req.user.role == "teacher")
-    // return next();
-    // if they aren't redirect them to the home page
     if (req.user.role == "teacher") {
         return next();
     } else {
@@ -718,13 +617,6 @@ function isTeacher(req, res, next) {
 }
 
 function isStudent(req, res, next) {
-    //旧的session认证取消，使用新的token认证
-    // if user is authenticated in the session, carry on
-    // if (req.isAuthenticated())
-    // if (req.user.role == "student")
-    // return next();
-    // // if they aren't redirect them to the home page
-    // res.json("hello");
     if (req.user.role == "student") {
         return next();
     } else {

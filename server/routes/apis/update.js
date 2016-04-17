@@ -1,8 +1,6 @@
 var async = require("async");
 var express = require('express');
 var router = express.Router();
-var passport = require('passport');
-var jwt = require('jsonwebtoken');
 
 var Teacher = require('../../models/teacher');
 var Student = require('../../models/student');

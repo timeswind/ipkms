@@ -2,14 +2,14 @@
 
     <md-toolbar>
         <div class="md-toolbar-tools" layout="row" style="background-color: #fff; color: #212121; border-bottom: 1px solid #E0E0E0">
-            <span style="color: #fff;background-color:#607D8B;padding: 4px 8px;border-radius:17px;font-size:16px;margin-right: 8px">{[{thomework.subjectText}]}</span>
+            <span style="color: #fff;background-color:#3F51B5;padding: 4px 8px;border-radius:17px;font-size:16px;margin-right: 8px">{[{thomework.subjectText}]}</span>
 
             <span layout="row" style="align-items: center">
                 <span class="group-header" style="width:100%" ng-hide="editName">{[{thomework.title}]}</span>
             </span>
             <span flex></span>
 
-            <a layout="row" style="align-items: center;color: #3F51B5;">
+            <a layout="row" style="align-items: center;color: #E91E63;">
                 <i class="material-icons" ng-show="!thomework.delivery">build</i>
                 <i class="material-icons" ng-show="thomework.delivery">assignment_turned_in</i>
                 {[{thomework.deliveryText}]}
@@ -23,28 +23,24 @@
 
     <md-dialog-content>
         <md-content class="md-padding" layout="column">
-            <h2 class="md-title" style="align-items: center;margin:0;color: #757575;" layout="row">
+            <div style="align-items: center;color: #757575;margin-bottom: 8px" layout="row">
                 <i class="material-icons">assignment</i>
-                要求
-                <md-button class="md-primary" ng-click="editRequirement = true;" style="color: #607D8B;align-items: center;"
+                <span class="md-title">要求</span>
+                <md-button class="md-primary" ng-click="editRequirement = true;" style="color: #607D8B;margin:0 0 0 8px"
                            ng-hide="editRequirement" layout="row">
-                    <i class="material-icons">
+                    <i class="material-icons" style="font-size:20px">
                         edit
                     </i>
                     編輯要求
                 </md-button>
-                <md-button class="md-primary" ng-click="updateRequirement()" style="color: #E91E63;align-items: center;"
-                           ng-show="editRequirement" layout="row">
-                    <i class="material-icons">
-                        done
-                    </i>
-                    完成編輯
+                <md-button class="md-accent" ng-click="updateRequirement()" style="margin:0 0 0 8px;" ng-show="editRequirement">
+                    <span>更新</span>
                 </md-button>
-                <md-button class="md-primary" ng-click="editRequirement = false;" style="color: #607D8B;align-items: center;"
-                           ng-show="editRequirement" layout="row">
+                <md-button class="md-primary" ng-click="editRequirement = false;" style="color: #9E9E9E;margin:0 0 0 8px"
+                           ng-show="editRequirement">
                     取消
                 </md-button>
-            </h2>
+            </div>
             <div class="inner-shadow-box" ng-bind-html="requirementHtml" ng-show="!editRequirement"></div>
 
             <div ng-show="editRequirement">
@@ -55,7 +51,7 @@
                 <i class="material-icons">local_offer</i>
                 標籤
                 <md-button class="md-primary" ng-click="editTags = true;" style="color: #607D8B;align-items: center;" ng-hide="editTags" layout="row">
-                    <i class="material-icons">
+                    <i class="material-icons" style="font-size:20px">
                         edit
                     </i>
                     編輯標籤
@@ -66,7 +62,7 @@
                     </i>
                     更新編輯
                 </md-button>
-                <md-button class="md-primary" ng-click="editTags = false;" style="color: #607D8B;align-items: center;" ng-show="editTags" layout="row">
+                <md-button class="md-primary" ng-click="editTags = false;" style="color: #9E9E9E;" ng-show="editTags">
                     取消编辑
                 </md-button>
             </h2>

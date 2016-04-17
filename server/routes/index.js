@@ -4,9 +4,6 @@ var passport = require('passport');
 var jwt = require('jsonwebtoken');
 var tokenManager = require('../config/token_manager');
 
-// var Teacher = require('../models/teacher');
-// var User = require('../models/localuser');
-
 
 router.get('/', function (req, res) {
     res.render('index');
@@ -104,16 +101,6 @@ router.post('/login/student', function (req, res, next) {
     })(req, res, next);
 });
 
-// router.post('/signup/teacher', isAdmin, passport.authenticate('local-teacher-signup', {
-//     successRedirect: '/admin',
-//     failureRedirect: '/error'
-// }));
-//
-// router.post('/signup/user', isAdmin, passport.authenticate('local-signup', {
-//     successRedirect: '/admin',
-//     failureRedirect: '/error'
-// }));
-
 router.get('/chatroom', isLoggedIn, function (req, res) {
     res.render('chatroom/chatroom', {user: req.user});
 });
@@ -128,6 +115,16 @@ router.get('/admin', isAdmin, function (req, res) {
 
     res.render('admin/index');
 
+});
+
+router.get('/quickquiz',isStudent, function (req, res) {
+    console.log(req.query);
+    // @params req.query.id the quickquizId
+    if (req.query && req.query.id) {
+        res.render('quickquiz/index')
+    } else {
+        res.send('params missing')
+    }
 });
 
 module.exports = router;
@@ -148,6 +145,15 @@ function isAdmin(req, res, next) {
     // if user is authenticated in the session, carry on
     if (req.isAuthenticated())
         if (req.user.local.role == "admin")
+            return next();
+    // if they aren't redirect them to the home page
+    res.redirect('/home');
+}
+
+function isStudent(req, res, next) {
+    // if user is authenticated in the session, carry on
+    if (req.isAuthenticated())
+        if (req.user.local.role == "student")
             return next();
     // if they aren't redirect them to the home page
     res.redirect('/home');

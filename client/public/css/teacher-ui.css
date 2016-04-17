@@ -68,13 +68,16 @@ body {
 }
 
 .group-dialog .md-toolbar-tools {
-    background-color: #607D8B;
+    background-color: #fff;
+    color: #212121;
+    border-bottom: 1px solid #eee;
 }
 
 .homework-dialog .md-toolbar-tools {
     background-color: #fff;
     color: #212121;
     padding-left: 24px;
+    border-bottom: 1px solid #eee;
 }
 
 .card-add-button {
@@ -157,7 +160,7 @@ body {
 .inner-shadow-box {
     padding: 10px;
     border-radius: 5px;
-    background: #ECEFF1;
+    background: #eeeeee;
 }
 
 .mdtitle-icon-left {

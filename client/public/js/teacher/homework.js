@@ -115,8 +115,8 @@ angular.module('teacherManageHomework', ['ipkms', 'ipkmsService', 'ui.tinymce'])
             language: 'zh_TW',
             menubar: false,
             statusbar: false,
-            toolbar: 'undo redo | bold italic | bullist numlist'
-            // plugins: 'insertMath'
+            toolbar: 'undo redo | bold italic | bullist numlist',
+            content_css : '/css/editor-content.css'
         };
 
         $scope.loadMyGroups = function () {
@@ -179,7 +179,8 @@ angular.module('teacherManageHomework', ['ipkms', 'ipkmsService', 'ui.tinymce'])
             language: 'zh_TW',
             menubar: false,
             statusbar: false,
-            toolbar: 'undo redo | bold italic | bullist numlist'
+            toolbar: 'undo redo | bold italic | bullist numlist',
+            content_css : '/css/editor-content.css'
         };
 
         function getThomeworkDetails() {

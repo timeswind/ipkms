@@ -8,7 +8,7 @@ var Group = require('../../models/group');
 
 router.route('/teacher/groups')
     .get(isTeacher, function (req, res) {
-        var teacher_id = req.user.teacher
+        var teacher_id = req.user.teacher;
         Group.find({'public.owner': teacher_id}, 'name students public.boolean').lean().exec(function (err, groups) {
             if (err) {
                 res.status(500).send(err.message)
@@ -19,11 +19,11 @@ router.route('/teacher/groups')
                 res.json(groups)
             }
         })
-    })
+    });
 
 router.route('/teacher/groups/:group_id')
     .delete(isTeacher, function (req, res) {
-        var group_id = req.params.group_id
+        var group_id = req.params.group_id;
 
         Group.findOneAndRemove({_id: group_id}, {teacher_id: req.user.teacher}, function (err) {
             if (err) {
@@ -32,7 +32,7 @@ router.route('/teacher/groups/:group_id')
                 res.send('Delete group success !')
             }
         })
-    })
+    });
 
 router.route('/public/groups')
     .get(isTeacher, function (req, res) {
@@ -46,18 +46,9 @@ router.route('/public/groups')
                 res.json(groups)
             }
         })
-    })
+    });
 
 module.exports = router;
-
-function isLoggedIn(req, res, next) {
-
-    if (req.user) {
-        return next();
-    } else {
-        res.status(401);
-    }
-}
 
 function isAdmin(req, res, next) {
 

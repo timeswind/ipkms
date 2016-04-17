@@ -52,7 +52,7 @@ router.route('/students')
       })
     }
   })
-})
+});
 
 router.route('/students/:student_id')
 .get(isAdmin, function(req, res) {

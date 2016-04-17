@@ -56,6 +56,7 @@ exports = module.exports = function (io) {
         socket.on('new message', function (data) {
             data.userid = users[socket.id].userid;
             data.username = users[socket.id].name;
+            data.role = users[socket.id].role;
             data.nameColor = users[socket.id].nameColor;
             data.date = new Date();
 

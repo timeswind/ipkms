@@ -5,9 +5,9 @@ angular.module('teacherManageGroups', ['ipkms', 'ipkmsService'])
         $scope.myGroups = [];
         $scope.bTt = function (b) {
             if (b === true) {
-                return "公開小組";
+                return "公開";
             } else {
-                return "私人小組";
+                return "私人";
             }
         }
         var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'));

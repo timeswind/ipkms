@@ -10,8 +10,7 @@ var passport = require('passport');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var mongoose = require('mongoose');
-// *** mongoose *** //
-// mongoose.connect('mongodb://localhost/nodedb');
+
 require('./auth/local')(passport);
 
 // *** routes *** //
@@ -23,7 +22,7 @@ var homeRoutes = require('./routes/home.js');
 // *** express instance *** //
 var app = express();
 app.use(session({
-  secret: 'keyboard cat',
+  secret: 'super ipkms',
   store: new MongoStore({ mongooseConnection: mongoose.connection }),
   resave: true,
   saveUninitialized: true

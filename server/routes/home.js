@@ -6,7 +6,7 @@ var path = require('path');
 router.get('/', isLoggedIn, function (req, res) {
     var user = req.user;
     if (user) {
-        role = req.user.local.role;
+        var role = user.local.role;
         if (role === "teacher") {
             res.redirect('/home/teacher');
         } else if (role === "admin") {
@@ -71,16 +71,6 @@ function isLoggedIn(req, res, next) {
         // if they aren't redirect them to the home page
         res.redirect('/');
     }
-}
-
-function isAdmin(req, res, next) {
-
-    // if user is authenticated in the session, carry on
-    if (req.isAuthenticated())
-        if (req.user.local.role == "admin")
-            return next();
-    // if they aren't redirect them to the home page
-    res.redirect('/');
 }
 
 function isTeacher(req, res, next) {

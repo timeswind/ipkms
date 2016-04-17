@@ -8,7 +8,7 @@ var qcollectionSchema = mongoose.Schema({
   public: Boolean,//是否公开
   aveDifficulty: Number,
   createdBy: { type: ObjectId, ref: 'User' },
-  questions: [{ type: ObjectId, ref: 'Question' }],
+  questions: [{ type: ObjectId, ref: 'Question', index: true }],
   created_at: Date,
   updated_at: Date
 

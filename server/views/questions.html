@@ -55,7 +55,7 @@
               <!-- <h5>搜索結果</h5> -->
               <h5 style="padding-left:16px">最新入庫</h5>
               <div id="question-preview-container" class="mdl-grid">
-                <div class="mdl-cell mdl-cell--4-col question-preview-card" ng-repeat="lq in latestQuestions"  ng-init="$last ? renderQuestionCard() : angular.noop()">
+                <div class="mdl-cell mdl-cell--4-col question-preview-card" ng-repeat="lq in latestQuestions"  ng-init="$last ? renderQuestions() : angular.noop()">
                   <div class="wrapper">
                   <a class="subject-title">{[{idToName(lq.subject)}]}</a>
                   <a>{[{lq.type}]}</a>

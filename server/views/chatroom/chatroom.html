@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="//cdn.bootcss.com/material-design-icons/2.2.0/iconfont/material-icons.css">
 
     <link rel="stylesheet" href="/css/chatroom.css">
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 
 <body>
@@ -45,7 +46,13 @@
                 <md-list flex>
                     <div class="user-box" layout="column" style="align-items: center">
                         <span class="name">{{user.local.name}}</span>
+                        {% if user.local.role === 'teacher' %}
+                        <span class="role">教師</span>
+                        {% elseif user.local.role === 'student' %}
+                        <span class="role">學生</span>
+                        {% else %}
                         <span class="role">{{user.local.role}}</span>
+                        {% endif %}
                         <div layout="row">
                             <md-button layout="row" class="profile" onclick="window.location.href = '/home/profile' "><i
                                     class="material-icons">account_box</i> 個人資料
@@ -128,64 +135,3 @@
 
 </div>
 </body>
-
-
-<!--<body>-->
-<!--<div ng-app="chatroom" ng-controller="chatroomController">-->
-<!--&lt;!&ndash; The drawer is always open in large screens. The header is always shown,-->
-<!--even in small screens. &ndash;&gt;-->
-<!--<div class="mdl-layout mdl-js-layout mdl-layout&#45;&#45;fixed-drawer-->
-<!--mdl-layout&#45;&#45;fixed-header">-->
-<!--<header class="mdl-layout__header">-->
-<!--<div class="mdl-layout__header-row">-->
-<!--<span class="mdl-layout-title">小組聊天室</span>-->
-<!--<div class="mdl-layout-spacer">-->
-<!--</div>-->
-<!--<div class="mdl-textfield mdl-js-textfield mdl-textfield&#45;&#45;expandable-->
-<!--mdl-textfield&#45;&#45;floating-label mdl-textfield&#45;&#45;align-right">-->
-<!--&lt;!&ndash; <label class="mdl-button mdl-js-button mdl-button&#45;&#45;icon"-->
-<!--for="fixed-header-drawer-exp">-->
-<!--<i class="material-icons">search</i>-->
-<!--</label> &ndash;&gt;-->
-<!--<div class="mdl-textfield__expandable-holder">-->
-<!--<input class="mdl-textfield__input" type="text" name="sample"-->
-<!--id="fixed-header-drawer-exp">-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-<!--</header>-->
-<!--<div class="mdl-layout__drawer" ng-cloak>-->
-<!--<span class="mdl-layout-title">{{user.local.name}}</span>-->
-<!--<nav class="mdl-navigation">-->
-<!--<a class="mdl-navigation__link" ng-repeat="group in myGroups" ng-click="selectRooom(group._id)">{[{group.name}]}</a>-->
-<!--</nav>-->
-<!--</div>-->
-
-<!--<main id="messageBox" class="mdl-layout__content"-->
-<!--style="background-color:#E9E2DC;padding:0 30px;margin-bottom:60px">-->
-<!--<div style="margin-bottom:80px">-->
-<!--<div ng-repeat="msg in messages[roomId]" ng-class="{'tail-selfmsg': selfMessage(msg.userid)}" ng-cloak>-->
-<!--<div ng-class="{'message-in': !selfMessage(msg.userid), 'message-out':selfMessage(msg.userid)}">-->
-<!--<a>{[{msg.username}]}</a>-->
-<!--<p style="margin:0">{[{msg.contents}]}</p>-->
-<!--</div>-->
-<!--</div>-->
-<!--</div>-->
-
-<!--<div class="message-inputs" layout="row">-->
-
-<!--<div style="margin:0 20px;flex:1 1 auto">-->
-<!--<input ng-model="msg.content"-->
-<!--style="width: 100%;height: 20px;border: none;padding: 10px;margin-top: 10px;border-radius:5px"-->
-<!--placeholder="輸入信息" ng-keypress="listenForEnter($event)"/>-->
-<!--</div>-->
-<!--<md-button ng-click="sendMessage()" class="md-icon-button" style="margin:10px 20px">-->
-<!--<i class="material-icons" style="color:#9E9E9E">send</i>-->
-<!--</md-button>-->
-<!--</div>-->
-<!--</main>-->
-<!--</div>-->
-
-
-<!--</div>-->
-<!--</body>-->
