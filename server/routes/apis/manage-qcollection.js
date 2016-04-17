@@ -56,25 +56,98 @@ router.route('/delete/single')
 //获取用户自己创建的题集
 router.route('/mine')
     .get(isLoggedIn, function (req, res) {
-        Qcollection.find({createdBy: req.user.id}, 'name subject public').sort({_id: -1}).exec(function (err, qcollections) {
-            if (err) {
-                res.send(err);
+        var sort = -1;
+
+        if (req.query.sort && req.query.sort === '0') {
+            sort = 1;
+        }
+
+        if (req.query && req.query.page) {
+            // @params page is the last item's unique ID to determine the page, !!!not the number of the page!!!
+            var page = req.query.page;
+
+            if (sort === 1) {
+                Qcollection.find({
+                    createdBy: req.user.id,
+                    "_id": {$gt: page}
+                }, 'name subject public').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.json(qcollections);
+                    }
+                });
             } else {
-                res.json(qcollections);
+                Qcollection.find({
+                    createdBy: req.user.id,
+                    "_id": {$lt: page}
+                }, 'name subject public').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.json(qcollections);
+                    }
+                });
             }
-        });
+
+        } else {
+            Qcollection.find({createdBy: req.user.id}, 'name subject public').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    res.json(qcollections);
+                }
+            });
+        }
     });
 
 //获取所有公开题集
 router.route('/all')
     .get(isLoggedIn, function (req, res) {
-        Qcollection.find({public: true}, 'name subject public createdBy aveDifficulty').populate('createdBy', 'local.name').exec(function (err, qcollections) {
-            if (err) {
-                res.send(err);
+        var sort = -1;
+
+        if (req.query.sort && req.query.sort === '0') {
+            sort = 1;
+        }
+
+        if (req.query && req.query.page) {
+            // @params page is the last item's unique ID to determine the page, !!!not the number of the page!!!
+            var page = req.query.page;
+
+            if (sort === 1) {
+                Qcollection.find({
+                    public: true,
+                    "_id": {$gt: page}
+                }, 'name subject public createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.json(qcollections);
+                    }
+                });
             } else {
-                res.json(qcollections);
+                Qcollection.find({
+                    public: true,
+                    "_id": {$lt: page}
+                }, 'name subject public createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.json(qcollections);
+                    }
+                });
             }
-        });
+
+        } else {
+            Qcollection.find({public: true}, 'name subject public createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    res.json(qcollections);
+                }
+            });
+        }
+
     });
 
 //获取题集的详细内容
@@ -134,8 +207,8 @@ router.route('/add-question')
 
             Qcollection.findByIdAndUpdate(
                 qcollection_id,
-                { $addToSet: { "questions": question_id } },
-                { safe: true, upsert: true, new: true },
+                {$addToSet: {"questions": question_id}},
+                {safe: true, upsert: true, new: true},
                 function (err) {
                     if (err) {
                         res.status(500).send(err.message)
@@ -179,7 +252,7 @@ router.route('/teacher/query/name')
 
         var name = req.body.name;
         var type = req.body.type;
-        
+
         if (type === 'mine') {
             Qcollection.find({
                 'name': new RegExp(name, 'i'),

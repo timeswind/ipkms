@@ -91,10 +91,10 @@ router.route('/delete/single')
     .delete(isTeacher, function (req, res) {
         var question_id = req.body.question_id;
         if (question_id) {
-            Question.findById(question_id, 'createdBy' ,function (err, q) {
+            Question.findById(question_id, 'createdBy', function (err, q) {
                 if (q.createdBy == req.user.id) {
 
-                    q.remove(function(err) {
+                    q.remove(function (err) {
                         if (err) {
                             res.status(500).send(err.message)
                         } else {
@@ -114,25 +114,90 @@ router.route('/delete/single')
 //获取用户自己创建的题目
 router.route('/mine')
     .get(isTeacher, function (req, res) {
-        Question.find({createdBy: req.user.id}, 'context tags subject difficulty type').exec(function (err, questions) {
-            if (err) {
-                res.send(err);
+        var sort = -1;
+
+        if (req.query.sort && req.query.sort === '0') {
+            sort = 1;
+        }
+
+        if (req.query && req.query.page) {
+            // @params page is the last item's unique ID to determine the page, !!!not the number of the page!!!
+            var page = req.query.page;
+
+            if (sort === 1) {
+                Question.find({
+                    createdBy: req.user.id,
+                    "_id": {$gt: page}
+                }, 'context tags subject difficulty type').sort({"_id": sort}).exec(function (err, questions) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.json(questions);
+                    }
+                });
             } else {
-                res.json(questions);
+                Question.find({
+                    createdBy: req.user.id,
+                    "_id": {$lt: page}
+                }, 'context tags subject difficulty type').sort({"_id": sort}).exec(function (err, questions) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.json(questions);
+                    }
+                });
             }
-        });
+        } else {
+            Question.find({createdBy: req.user.id}, 'context tags subject difficulty type').sort({"_id": sort}).exec(function (err, questions) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    res.json(questions);
+                }
+            });
+        }
     });
 
 //获取所有题目
 router.route('/all')
     .get(isTeacher, function (req, res) {
-        Question.find({}, 'context tags subject difficulty type').exec(function (err, questions) {
-            if (err) {
-                res.send(err);
+        var sort = -1;
+
+        if (req.query.sort && req.query.sort === '0') {
+            sort = 1;
+        }
+
+        if (req.query && req.query.page) {
+            // @params page is the last item's unique ID to determine the page, !!!not the number of the page!!!
+            var page = req.query.page;
+
+            if (sort === 1) {
+                Question.find({"_id": {$gt: page}}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.json(questions);
+                    }
+                });
             } else {
-                res.json(questions);
+                Question.find({"_id": {$lt: page}}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                    if (err) {
+                        res.send(err);
+                    } else {
+                        res.json(questions);
+                    }
+                });
             }
-        });
+
+        } else {
+            Question.find({}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    res.json(questions);
+                }
+            });
+        }
     });
 
 //根据标签进行搜索题目
