@@ -7,7 +7,7 @@ var thomeworkSchema = mongoose.Schema({
   delivery : Boolean, //teacher could pre-draft the homework and send the homework in the specific time
   teacher : { type: ObjectId, ref: 'Teacher' },
   subject : String, // math, english, chinese
-  tags: [String],
+  tags: {type: [String], index: true},
   title : String, //home work title,such as math eqution practice
   requirement : String,
   targetGroup :  {

@@ -11,7 +11,6 @@ var groupSchema = mongoose.Schema({
         owner: {type: ObjectId, ref: 'Teacher'}
     },
     students: [{
-        _id: false,
         id: {type: ObjectId, ref: 'Student'}
     }],
     teachers: [{type: ObjectId, ref: 'Teacher'}],
@@ -20,7 +19,6 @@ var groupSchema = mongoose.Schema({
         updated_at: {type: Date}  //公告发布、更新时间
     },
     logs: [{
-        _id: false,
         writeBy: {type: ObjectId, ref: 'User'},
         date: {type: Date},
         event: String,
@@ -31,8 +29,8 @@ var groupSchema = mongoose.Schema({
 });
 
 groupSchema.pre('findOneAndRemove', function (next) {
-    var group_id = this._conditions._id
-    var teacher_id = this.options.teacher_id
+    var group_id = this._conditions._id;
+    var teacher_id = this.options.teacher_id;
     mongoose.model('Group', groupSchema).findById(group_id, function (err, group) {
         if (group) {
             if (group.public.owner == teacher_id) {
@@ -43,7 +41,6 @@ groupSchema.pre('findOneAndRemove', function (next) {
         } else {
             next(new Error("Something went wrong !"));
         }
-
     })
 })
 // create the model for users and expose it to our app

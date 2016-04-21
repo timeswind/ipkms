@@ -7,7 +7,7 @@ var User = require('../../models/localuser');
 var Question = require('../../models/question');
 
 //创建新题目
-router.route('/add')
+router.route('/questions')
     .post(isTeacher, function (req, res) {
         if (req.body) {
             var jsonData = req.body;
@@ -36,26 +36,47 @@ router.route('/add')
         } else {
             res.status(400);
         }
-    })
-
-//获取最近发布的10个题目
-router.route('/latest')
-    .get(isTeacher, function (req, res) {
-        Question.find({}, 'context tags subject difficulty type').sort({_id: -1}).limit(10).exec(function (err, questions) {
-            if (err) {
-                res.send(err);
-            } else {
-                res.json(questions);
-            }
-        });
     });
 
-//获取一个题目的详细信息
+router.route('/question/:question_id')
+    .get(isLoggedIn, function (req, res) {
+        if (req.params && req.params.question_id) {
+            var question_id = req.params.question_id;
+            Question.findById(question_id, 'createdBy context tags subject difficulty type choices updated_at').lean().exec(function (err, question) {
+                if (err) {
+                    res.send(err);
+                } else {
+
+                    if (question.createdBy == req.user.id) {
+                        question.createdBy = 'self'
+                    }
+
+                    res.json(question);
+                }
+            });
+        } else {
+            res.status(400);
+        }
+    })
+    .put(isTeacher, function (req, res) {
+        if (req.params && req.params.question_id && req.body) {
+
+            Question.findOneAndUpdate({_id: req.params.question_id}, {$set: req.body}, {user_id: req.user.id}, function (err, question) {
+                if (err) {
+                    res.status(500).send(err.message);
+                } else {
+                    res.json('success');
+                }
+            });
+
+        }
+    });
+
 router.route('/detail')
     .get(isLoggedIn, function (req, res) {
         if (req.query.question_id) {
             var question_id = req.query.question_id;
-            Question.findById(question_id, 'context tags subject difficulty type choices').exec(function (err, question) {
+            Question.findById(question_id, 'context tags subject difficulty type choices updated_at').exec(function (err, question) {
                 if (err) {
                     res.send(err);
                 } else {
@@ -128,7 +149,7 @@ router.route('/mine')
                 Question.find({
                     createdBy: req.user.id,
                     "_id": {$gt: page}
-                }, 'context tags subject difficulty type').sort({"_id": sort}).exec(function (err, questions) {
+                }, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
                     if (err) {
                         res.send(err);
                     } else {
@@ -139,7 +160,7 @@ router.route('/mine')
                 Question.find({
                     createdBy: req.user.id,
                     "_id": {$lt: page}
-                }, 'context tags subject difficulty type').sort({"_id": sort}).exec(function (err, questions) {
+                }, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
                     if (err) {
                         res.send(err);
                     } else {
@@ -148,7 +169,7 @@ router.route('/mine')
                 });
             }
         } else {
-            Question.find({createdBy: req.user.id}, 'context tags subject difficulty type').sort({"_id": sort}).exec(function (err, questions) {
+            Question.find({createdBy: req.user.id}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
                 if (err) {
                     res.send(err);
                 } else {

@@ -4,11 +4,9 @@ angular.module('ipkmsService', [])
         this.get = function (apiURL) {
             var request = {
                 url: apiURL,
-                method: "GET",
+                method: "GET"
             }
             return $http(request).then(function (response) {
-                return response
-            }, function (response) {
                 return response
             })
         }
@@ -16,7 +14,7 @@ angular.module('ipkmsService', [])
         this.delete = function (apiURL) {
             var request = {
                 url: apiURL,
-                method: "DELETE",
+                method: "DELETE"
             }
             return $http(request).then(function (response) {
                 return response

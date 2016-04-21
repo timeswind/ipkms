@@ -4,6 +4,7 @@ var express = require('express');
 var router = express.Router();
 
 var Quickquiz = require('../../models/quickquiz');
+var Quizsample = require('../../models/quizsample');
 var Qcollection = require('../../models/qcollection');
 
 router.route('/teacher/quickquizs')
@@ -31,7 +32,6 @@ router.route('/teacher/quickquizs')
 
                 async.waterfall([
                     function (callback) {
-                        //noinspection JSUnresolvedFunction
                         Qcollection.findById(qcollection_id, function (err, Qcollection) {
                             if (err) {
                                 callback(err);
@@ -40,7 +40,6 @@ router.route('/teacher/quickquizs')
                                 callback(null, questionIdArray);
                             }
                         });
-
                     },
                     function (questionIdArray, callback) {
                         var newQuickquiz = new Quickquiz();
@@ -81,19 +80,35 @@ router.route('/teacher/quickquizs')
 
 router.route('/student/quickquiz')
     .get(isStudent, function (req, res) {
-
         if (req.query && req.query.id) {
             var quickquiz_id = req.query.id;
+            var student_id = req.user.student;
 
-            Quickquiz.findById(quickquiz_id, 'title finished time questions').populate('questions', 'context type choices').lean().exec(function (err, quickquiz) {
+            Quizsample.findOne({quickquiz: quickquiz_id, student: student_id}, function (err, quizsample) {
                 if (err) {
-                    res.status(500).send(err.message)
+                    res.status(500).json(err.message)
                 } else {
-                    res.json(quickquiz)
+                    if (quizsample) {
+                        res.json(quizsample)
+                    } else {
+                        Quickquiz.findById(quickquiz_id, 'title finished time questions').populate('questions', 'context type choices').lean().exec(function (err, quickquiz) {
+                            if (err) {
+                                res.status(500).send(err.message)
+                            } else {
+                                if (quickquiz && quickquiz.finished && finished === true) {
+                                    res.status(403).json('finished')
+                                } else if (quickquiz) {
+                                    res.json(quickquiz)
+                                } else {
+                                    res.status(404).json('not found')
+                                }
+                            }
+                        })
+                    }
                 }
-            })
+            });
         } else {
-            res.status(403)
+            res.status(403).send('params wrong')
         }
 
     })
@@ -105,14 +120,29 @@ router.route('/student/quickquiz')
 
             async.waterfall([
                 function (callback) {
+                    Quizsample.count({quickquiz: quickquiz_id, student: student_id}, function (err, count) {
+                        if (err) {
+                            callback(err)
+                        } else {
+                            if (count === 0) {
+                                callback(null)
+                            } else {
+                                callback({message: 'already handin'})
+                            }
+                        }
+                    });
+                },
+                function (callback) {
                     Quickquiz.findById(quickquiz_id, 'questions').populate('questions', 'type answer').lean().exec(function (err, quickquiz) {
                         if (err) {
                             callback(err)
                         } else {
-                            if (quickquiz.questions) {
+                            if (quickquiz && quickquiz.questions) {
                                 callback(null, quickquiz.questions)
+                            } else if (quickquiz && quickquiz.questions && quickquiz.questions.length === 0) {
+                                callback({message: 'Quickquiz do not contain questions'})
                             } else {
-                                callback({message: 'Quickquiz doesn t contain questions'})
+                                callback({message: 'Quickquiz not found'})
                             }
                         }
                     });
@@ -158,19 +188,30 @@ router.route('/student/quickquiz')
 
                 },
                 function (results, callback) {
-                    var sample = {
-                        student: student_id,
-                        answers: studentAnswers,
-                        accuracy: results.checkAnswersRestults,
-                        time: null
-                    };
-                    Quickquiz.findByIdAndUpdate(quickquiz_id, {$push: {samples: sample}}, {'new': true}, function (err) {
+
+                    var newSample = new Quizsample();
+
+                    newSample.quickquiz = quickquiz_id;
+                    newSample.student = student_id;
+                    newSample.answers = studentAnswers;
+                    newSample.results = results.checkAnswersRestults;
+                    newSample.time = null;
+                    newSample.finishTime = new Date();
+
+                    newSample.save(function (err, sample) {
                         if (err) {
                             callback(err)
                         } else {
-                            callback(null, results)
+                            Quickquiz.findByIdAndUpdate(quickquiz_id, {$addToSet: {samples: sample}}, function (err) {
+                                if (err) {
+                                    callback(err)
+                                } else {
+                                    callback(null, results)
+                                }
+                            });
                         }
                     });
+
                 }
             ], function (err, results) {
                 if (err) {

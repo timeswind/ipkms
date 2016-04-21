@@ -2,13 +2,22 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
 
     .controller('mainController', function ($rootScope, $scope, apiService) {
 
+        $scope.errorCard = {
+            message: null
+        };
+
+        $scope.resultCard = {
+            results: null
+        };
+
         $scope.quickquizId = null;
-        $scope.quickquiz = [];
+        $scope.quickquiz = null;
         $scope.answers = [];
         $scope.finishedQuestionsCount = 0;
 
         $scope.rights = [];
         $scope.wrongs = [];
+        $scope.blanks = [];
         $scope.exceptions = [];
 
         $scope.submitted = false;
@@ -27,21 +36,33 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
 
             var apiURL = '/api/manage-quickquiz/student/quickquiz' + '?id=' + id;
             apiService.get(apiURL).then(function (response) {
-                if (response.data) {
-                    $scope.quickquiz = response.data;
+                if (response.status === '401') {
+                    console.log('user is not student, have no permission to do the quickquiz');
+                    $scope.errorCard.message = 'You have no permission to do this quick quiz!'
+                } else if (response.data) {
                     if (response.data.questions) {
-                        for (i = 0; i < response.data.questions.length; i++) {
+                        $scope.quickquiz = response.data;
+                        for (var i = 0; i < response.data.questions.length; i++) {
                             $scope.answers.push(null)
                         }
+                    } else if (response.data.finishTime) {
+                        $scope.resultCard.results = response.data;
+                        console.log('receive the result of the quickquiz')
+                    } else if (response.data === 'finished') {
+                        console.log('小测已经结束');
+                        $scope.errorCard.message = '小测已经结束!'
+                    } else if (response.data === 'params wrong') {
+                        console.log('小测已经结束');
+                        $scope.errorCard.message = '参数传入错误'
                     }
-                    console.log(response.data)
                 } else {
-                    console.log('empty response data')
+                    console.log('empty response data');
+                    $scope.errorCard.message = '好像出了一些问题:('
                 }
             }, function (response) {
-                console.log(response.data)
+                $scope.errorCard.message = response.data
             })
-        };
+        }
 
         function getUrlVars() {
             var vars = [], hash;
@@ -86,17 +107,24 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
 
                 var apiURL = '/api/manage-quickquiz/student/quickquiz';
                 apiService.postJSON(apiURL, data).then(function (response) {
+                    console.log(response.data);
                     $scope.submitted = true;
-                    if (response.data) {
-                        console.log(response.data);
+                    if (response.data && response.data.checkAnswersRestults && response.data.correctAnswers) {
                         $scope.rights = response.data.checkAnswersRestults.right;
                         $scope.wrongs = response.data.checkAnswersRestults.wrong;
+                        $scope.blanks = response.data.checkAnswersRestults.blank;
                         $scope.correctAnswers = response.data.correctAnswers;
+                    } else if (!response.data) {
+                        $scope.errorCard.message = '未知错误: 没有收到批改结果'
                     } else {
-                        console.log('empty response data')
+                        $scope.errorCard.message = '未知错误: 批改結果不完整'
                     }
                 }, function (response) {
-                    console.log(response.data)
+                    if (response.data === 'already handin') {
+                        $scope.errorCard.message = '你已经提交过了!'
+                    } else {
+                        $scope.errorCard.message = '未知错误:' + JSON.parse(response.data)
+                    }
                 })
             }
 
@@ -127,7 +155,7 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
         }
 
 
-        function countfinishedQuestions () {
+        function countfinishedQuestions() {
             var count = 0;
             for (i = 0; i < $scope.answers.length; i++) {
                 if ($scope.answers[i] !== null) {
@@ -135,7 +163,7 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
                 }
             }
 
-            setTimeout(function() {
+            setTimeout(function () {
                 $scope.finishedQuestionsCount = count;
                 $scope.$apply();
             }, 0);

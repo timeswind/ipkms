@@ -13,7 +13,7 @@ var questionSchema = mongoose.Schema({
         mc: Number,
         long: String
     },
-    tags: [String],
+    tags: {type: [String], index: true},
     difficulty: Number, //难度系数1-5
     tips: String,
     accuracy: {
@@ -41,8 +41,29 @@ questionSchema.pre('save', function (next) {
     next();
 });
 
+questionSchema.pre('findOneAndUpdate', function (next) {
+    var question_id = this._conditions._id;
+
+    if (this.options && this.options.user_id) {
+        var user_id = this.options.user_id;
+        mongoose.model('Question', questionSchema).findById(question_id, function (err, question) {
+            if (question) {
+                if (question.createdBy == user_id) {
+                    next();
+                } else {
+                    next(new Error("Permission denied !"));
+                }
+            } else {
+                next(new Error("Something went wrong !"));
+            }
+        })
+    } else {
+        next();
+    }
+
+});
+
 questionSchema.pre('remove', function (next) {
-    console.log('triger pre move');
     this.model('Qcollection').update(
         {questions: this._id},
         {$pull: {questions: this._id}},

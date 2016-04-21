@@ -8,21 +8,17 @@ var quickquizSchema = mongoose.Schema({
     createdBy: { type: ObjectId, ref: 'Teacher' },
     questions: [{ type: ObjectId, ref: 'Question' }],
     time: Number, // minutes as unit
-    samples: [{
-        student: { type: ObjectId, ref: 'Student' },
-        answers: [Number], //a,b,c,d,a,b,c,d
-        accuracy: {
-            right: [Number], //question index in qcollection
-            wrong: [Number], //question index in qcollection
-            blank: [Number], //question index in qcollection
-            exception: [Number] //handle bad question such as those doesn't have a answer or long question
-        },
-        time: String //精确的做题时间
-    }],
-    results: {
-        accuracy: Number, //overall accurace unit is percentage
-        samplesCount: Number
+    samples: [{ type: ObjectId, ref: 'Quizsample', index: true}],
+    analysis: {
+        averageScore: Number,
+        accuracy: [Number], //题目的由正确率从高到低排序
+        rank: [{
+            name: String,
+            score: Number
+        }]
     },
+    startTime: Date,
+    finishTime: Date,
     finished: Boolean
 
 });
