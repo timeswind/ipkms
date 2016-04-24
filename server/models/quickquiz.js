@@ -6,9 +6,10 @@ var quickquizSchema = mongoose.Schema({
 
     title: String,
     createdBy: { type: ObjectId, ref: 'Teacher' },
-    questions: [{ type: ObjectId, ref: 'Question' }],
+    questions: [{ type: ObjectId, ref: 'Question', index: true }],
     time: Number, // minutes as unit
-    samples: [{ type: ObjectId, ref: 'Quizsample', index: true}],
+    students: [{ type: ObjectId, ref: 'Student', index: true }],
+    samples: [{ type: ObjectId, ref: 'Quizsample', index: true }],
     analysis: {
         averageScore: Number,
         accuracy: [Number], //题目的由正确率从高到低排序

@@ -25,11 +25,22 @@ router.route('/teacher/groups/:group_id')
     .delete(isTeacher, function (req, res) {
         var group_id = req.params.group_id;
 
-        Group.findOneAndRemove({_id: group_id}, {teacher_id: req.user.teacher}, function (err) {
+        Group.findById(group_id, function (err, group) {
             if (err) {
                 res.status(500).send(err.message)
             } else {
-                res.send('Delete group success !')
+
+                if (group && group.public.owner == req.user.teacher) {
+                    group.remove(function(err) {
+                        if (err) {
+                            res.status(500).send(err.message)
+                        } else {
+                            res.send('Delete group success !')
+                        }
+                    });
+                } else {
+                    res.status(401).send('permission denied!')
+                }
             }
         })
     });

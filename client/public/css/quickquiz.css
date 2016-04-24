@@ -6,7 +6,14 @@
 #quickquiz-sheet .wrapper {
     max-width: 800px;
     margin: 0 auto;
-    background: #ffffff;
+}
+
+.quiz-title {
+    padding:16px;
+    background: #fff;
+    margin-bottom: 8px;
+    border: 1px solid #BDBDBD;
+    border-radius: 5px;
 }
 
 .question-card {
@@ -15,6 +22,8 @@
     margin: 8px 0;
     border-radius: 3px;
     align-items: flex-start;
+    border: 1px solid #BDBDBD;
+    border-radius: 5px;
 }
 
 .index-label {
@@ -68,4 +77,32 @@
 
 .choice-label {
     padding-right: 16px;
+}
+
+.error-card {
+    margin-top: 8px;
+    padding:16px;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid #BDBDBD;
+    border-radius: 5px;
+}
+.error-card .error-message {
+    color: #E91E63;
+    font-size: 20px;
+}
+
+.results-card {
+    margin:8px 0;
+    background: #ffffff;
+    border: 1px solid #BDBDBD;
+    border-radius: 5px;
+}
+
+.results-card .md-title {
+    padding: 16px 16px 4px 16px
+}
+
+.results-card .subtitle {
+    text-align: center;
 }

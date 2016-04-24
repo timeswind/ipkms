@@ -54,7 +54,7 @@ router.use(tokenManager.verifyToken, function (req, res, next) {
         // if there is no token
         // return an error
         return res.status(401).send({
-            success: false,
+            authorize: false,
             message: '认证失败'
         });
 

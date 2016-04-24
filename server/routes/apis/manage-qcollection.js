@@ -257,22 +257,40 @@ router.route('/teacher/query/name')
             Qcollection.find({
                 'name': new RegExp(name, 'i'),
                 'createdBy': req.user.id
-            }, 'name subject public createdBy aveDifficulty').exec(function (err, qcollections) {
+            }, 'name subject public createdBy aveDifficulty questions').lean().exec(function (err, qcollections) {
                 if (err) {
                     res.send(err);
                 } else {
-                    res.json(qcollections);
+                    if (qcollections) {
+                        for (var i = 0;i<qcollections.length;i++) {
+                            if (qcollections[i].questions) {
+                                qcollections[i].questions = qcollections[i].questions.length;
+                            }
+                        }
+                        res.json(qcollections);
+                    } else {
+                        res.json({});
+                    }
                 }
             });
         } else {
             Qcollection.find({
                 'name': new RegExp(name, 'i'),
                 'public': true
-            }, 'name subject public createdBy aveDifficulty').exec(function (err, qcollections) {
+            }, 'name subject public createdBy aveDifficulty questions').lean().exec(function (err, qcollections) {
                 if (err) {
                     res.send(err);
                 } else {
-                    res.json(qcollections);
+                    if (qcollections) {
+                        for (var i = 0;i<qcollections.length;i++) {
+                            if (qcollections[i].questions) {
+                                qcollections[i].questions = qcollections[i].questions.length;
+                            }
+                        }
+                        res.json(qcollections);
+                    } else {
+                        res.json({});
+                    }
                 }
             });
         }

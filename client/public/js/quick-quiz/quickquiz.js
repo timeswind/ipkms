@@ -20,7 +20,7 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
         $scope.blanks = [];
         $scope.exceptions = [];
 
-        $scope.submitted = false;
+        $scope.submitted = true;
 
         $scope.correctAnswers = [];
 
@@ -41,28 +41,51 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
                     $scope.errorCard.message = 'You have no permission to do this quick quiz!'
                 } else if (response.data) {
                     if (response.data.questions) {
+                        $scope.submitted = false;
                         $scope.quickquiz = response.data;
                         for (var i = 0; i < response.data.questions.length; i++) {
                             $scope.answers.push(null)
                         }
                     } else if (response.data.finishTime) {
                         $scope.resultCard.results = response.data;
+                        $scope.answers = response.data.answers;
                         console.log('receive the result of the quickquiz')
                     } else if (response.data === 'finished') {
                         console.log('小测已经结束');
-                        $scope.errorCard.message = '小测已经结束!'
-                    } else if (response.data === 'params wrong') {
-                        console.log('小测已经结束');
-                        $scope.errorCard.message = '参数传入错误'
+                        $scope.errorCard.message = '小測已經結束!'
                     }
                 } else {
                     console.log('empty response data');
                     $scope.errorCard.message = '好像出了一些问题:('
                 }
             }, function (response) {
-                $scope.errorCard.message = response.data
+                if (response.data.finishTime) {
+                    $scope.resultCard.results = response.data;
+                    $scope.answers = response.data.answers;
+                    console.log('receive the result of the quickquiz')
+                } else if (response.data === 'finished') {
+                    console.log('小测已经结束');
+                    $scope.errorCard.message = '小測已經結束!'
+                } else {
+                    $scope.errorCard.message = '什麼也沒有找到:('
+                }
             })
         }
+
+        $scope.getQuestions = function () {
+            if (!$scope.quickquiz) {
+                var id = $scope.quickquizId;
+                var apiURL = '/api/manage-quickquiz/student/quickquiz/questions' + '?id=' + id;
+                apiService.get(apiURL).then(function (response) {
+                    $scope.quickquiz = response.data;
+                    $scope.correctAnswers = response.data.correctAnswers;
+                }, function (response) {
+                    if (response.data === 'permission denied') {
+                        $scope.errorCard.message = '未參與過該小測'
+                    }
+                })
+            }
+        };
 
         function getUrlVars() {
             var vars = [], hash;

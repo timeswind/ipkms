@@ -14,7 +14,7 @@ var studentSchema = mongoose.Schema({
   },
   graduate: Boolean, //是否毕业
   grade: Number,
-  class : String,
+  class: String,
   pic: String,
   shomeworks : { type: ObjectId, ref: 'Shomework' }
 

@@ -10,14 +10,50 @@ var Qcollection = require('../../models/qcollection');
 router.route('/teacher/quickquizs')
     .get(isTeacher, function (req, res) {
         var teacher_id = req.user.teacher;
+        var sort = -1;
 
-        Quickquiz.find({createdBy: teacher_id}, 'title finished time').lean().exec(function (err, quickquizs) {
-            if (err) {
-                res.status(500).send(err.message)
+        if (req.query.sort && req.query.sort === '0') {
+            sort = 1;
+        }
+
+        if (req.query && req.query.page) {
+            // @params page is the last item's unique ID to determine the page, !!!not the number of the page!!!
+            var page = req.query.page;
+
+            if (sort === 1) {
+                Quickquiz.find({
+                    createdBy: teacher_id,
+                    "_id": {$gt: page}
+                }, 'title finished time startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
+                    if (err) {
+                        res.status(500).send(err.message)
+                    } else {
+                        res.json(quickquizs)
+                    }
+                })
             } else {
-                res.json(quickquizs)
+                Quickquiz.find({
+                    createdBy: teacher_id,
+                    "_id": {$lt: page}
+                }, 'title finished time startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
+                    if (err) {
+                        res.status(500).send(err.message)
+                    } else {
+                        res.json(quickquizs)
+                    }
+                })
             }
-        })
+
+        } else {
+            Quickquiz.find({createdBy: teacher_id}, 'title finished time startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
+                if (err) {
+                    res.status(500).send(err.message)
+                } else {
+                    res.json(quickquizs)
+                }
+            })
+        }
+
 
     })
     .post(isTeacher, function (req, res) {
@@ -48,6 +84,7 @@ router.route('/teacher/quickquizs')
                         newQuickquiz.time = time;
                         newQuickquiz.questions = questionIdArray;
                         newQuickquiz.finished = false;
+                        newQuickquiz.startTime = new Date();
 
                         newQuickquiz.save(function (err, quickquiz) {
                             if (err) {
@@ -78,6 +115,89 @@ router.route('/teacher/quickquizs')
 
     });
 
+router.route('/teacher/quickquiz')
+    .get(isTeacher, function (req, res) {
+        if (req.query && req.query.id) {
+            var quickquiz_id = req.query.id;
+            Quickquiz.findById(quickquiz_id).populate('students', 'name').lean().exec(function (err, quickquiz) {
+                if (err) {
+                    res.status(500).send(err.message)
+                } else {
+                    if (quickquiz && quickquiz.questions) {
+                        quickquiz.questions = quickquiz.questions.length;
+                        res.json(quickquiz)
+                    } else {
+                        res.json(quickquiz)
+                    }
+                }
+            })
+        } else {
+            res.status(403).send('params missing')
+        }
+    });
+
+router.route('/teacher/quickquiz/end')
+    .post(isTeacher, function (req, res) {
+        // @params quickquiz_id the quiz the teacher wants to end
+        var teacher_id = req.user.teacher;
+        /** @namespace req.body.quickquiz_id */
+        if (req.body && req.body.quickquiz_id) {
+            var quickquiz_id = req.body.quickquiz_id;
+            Quickquiz.findById(quickquiz_id, function (err, quickquiz) {
+                if (err) {
+                    res.send(err.message)
+                } else {
+                    if (quickquiz && !quickquiz.finished && quickquiz.createdBy && quickquiz.createdBy == teacher_id) {
+                        quickquiz.finished = true;
+                        quickquiz.finishTime = new Date();
+                        quickquiz.save();
+                        res.send('success');
+                    } else {
+                        res.status(403).send('End quickquiz fail!')
+                    }
+                }
+            })
+        } else {
+            res.status(403).send('params missing')
+        }
+    });
+
+router.route('/student/quickquiz/questions')
+    .get(isStudent, function (req, res) {
+        if (req.query && req.query.id) {
+            var quickquiz_id = req.query.id;
+            var student_id = req.user.student;
+
+            Quickquiz.findById(quickquiz_id, 'title time questions students').populate('questions', 'context type choices answer').lean().exec(function (err, quickquiz) {
+                if (err) {
+                    res.status(500).send(err.message)
+                } else {
+                    if (JSON.parse(JSON.stringify(quickquiz.students)).indexOf(student_id) >= 0) {
+                        var correctAnswers = [];
+
+                        for (var i = 0; i < quickquiz.questions.length; i++) {
+                            if (quickquiz.questions[i].type === 'mc') {
+                                correctAnswers.push(quickquiz.questions[i].answer.mc);
+                            } else if (quickquiz.questions[i].type === 'long') {
+                                correctAnswers.push(null);
+                            }
+                        }
+
+                        quickquiz.correctAnswers = correctAnswers;
+
+                        res.json(quickquiz)
+                    } else {
+                        res.status(403).send('permission denied')
+                    }
+                }
+            })
+
+        } else {
+            res.status(403).send('params wrong')
+        }
+
+    })
+
 router.route('/student/quickquiz')
     .get(isStudent, function (req, res) {
         if (req.query && req.query.id) {
@@ -95,10 +215,16 @@ router.route('/student/quickquiz')
                             if (err) {
                                 res.status(500).send(err.message)
                             } else {
-                                if (quickquiz && quickquiz.finished && finished === true) {
+                                if (quickquiz && quickquiz.finished && quickquiz.finished === true) {
                                     res.status(403).json('finished')
                                 } else if (quickquiz) {
-                                    res.json(quickquiz)
+                                    Quickquiz.update({_id: quickquiz_id}, {$addToSet: {students: student_id}}, function (err) {
+                                        if (err) {
+                                            res.status(500).send(err.message)
+                                        } else {
+                                            res.json(quickquiz)
+                                        }
+                                    })
                                 } else {
                                     res.status(404).json('not found')
                                 }

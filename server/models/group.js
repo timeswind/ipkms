@@ -28,20 +28,14 @@ var groupSchema = mongoose.Schema({
 
 });
 
-groupSchema.pre('findOneAndRemove', function (next) {
-    var group_id = this._conditions._id;
-    var teacher_id = this.options.teacher_id;
-    mongoose.model('Group', groupSchema).findById(group_id, function (err, group) {
-        if (group) {
-            if (group.public.owner == teacher_id) {
-                next()
-            } else {
-                next(new Error("Permission denied !"));
-            }
+groupSchema.pre('remove', function (next) {
+    this.model('Chatroom').find({group: this._id}).remove(function (err) {
+        if (err) {
+            next(err)
         } else {
-            next(new Error("Something went wrong !"));
+            next()
         }
     })
-})
+});
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Group', groupSchema);
