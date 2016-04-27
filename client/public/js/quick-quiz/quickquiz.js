@@ -24,6 +24,9 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
 
         $scope.correctAnswers = [];
 
+        $scope.preDoQuiz = false;
+        $scope.gettingQuestions = false;
+
 
         if (getUrlVars()["id"]) {
             $scope.quickquizId = getUrlVars()["id"];
@@ -34,17 +37,26 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
 
         function getQuickquiz(id) {
 
-            var apiURL = '/api/manage-quickquiz/student/quickquiz' + '?id=' + id;
+            var apiURL = '/api/manage-quickquiz/quickquiz' + '?id=' + id;
             apiService.get(apiURL).then(function (response) {
                 if (response.status === '401') {
                     console.log('user is not student, have no permission to do the quickquiz');
                     $scope.errorCard.message = 'You have no permission to do this quick quiz!'
                 } else if (response.data) {
                     if (response.data.questions) {
-                        $scope.submitted = false;
-                        $scope.quickquiz = response.data;
-                        for (var i = 0; i < response.data.questions.length; i++) {
-                            $scope.answers.push(null)
+                        if (response.data.reqRole === 'teacher') {
+                            $scope.quickquiz = response.data;
+                            for (var i = 0; i < response.data.questions.length; i++) {
+                                $scope.answers.push(null)
+                            }
+                            $scope.correctAnswers = response.data.correctAnswers;
+                        } else if (response.data.reqRole === 'student') {
+                            $scope.preDoQuiz = true;
+                            $scope.submitted = false;
+                            $scope.quickquiz = response.data;
+                            for (var j = 0; j < response.data.questions.length; j++) {
+                                $scope.answers.push(null)
+                            }
                         }
                     } else if (response.data.finishTime) {
                         $scope.resultCard.results = response.data;
@@ -72,11 +84,17 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
             })
         }
 
+        $scope.startQuickQuiz = function () {
+            $scope.preDoQuiz = false
+        };
+
         $scope.getQuestions = function () {
             if (!$scope.quickquiz) {
+                $scope.gettingQuestions = true;
                 var id = $scope.quickquizId;
                 var apiURL = '/api/manage-quickquiz/student/quickquiz/questions' + '?id=' + id;
                 apiService.get(apiURL).then(function (response) {
+                    $scope.gettingQuestions = false;
                     $scope.quickquiz = response.data;
                     $scope.correctAnswers = response.data.correctAnswers;
                 }, function (response) {
@@ -115,7 +133,11 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
 
         $scope.answerOnChoose = function (index, pos) {
             if (!$scope.submitted) {
-                $scope.answers[index] = pos;
+                if ($scope.answers[index] === pos) {
+                    $scope.answers[index] = null;
+                } else {
+                    $scope.answers[index] = pos;
+                }
                 countfinishedQuestions();
             }
         };
@@ -175,7 +197,7 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
 
         $scope.showWrong = function (index, choose) {
             return $scope.checkWrong(index) && $scope.checkChoose(index, choose)
-        }
+        };
 
 
         function countfinishedQuestions() {

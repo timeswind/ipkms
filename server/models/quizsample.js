@@ -14,6 +14,7 @@ var quizsampleSchema = mongoose.Schema({
         exception: [Number] //handle bad question such as those doesn't have a answer or long question
     },
     time: String, //精确的做题时间
+    startTime: Date,
     finishTime: Date
 
 });

@@ -149,7 +149,8 @@ router.route('/teacher/:user_id') //create a teacher from exist user //admin api
                 });
             } else {
                 res.send("user not exist!");
-            };
+            }
+            ;
         });
 
     });
@@ -454,10 +455,11 @@ router.route('/teacher/groups/:option') //get teacher's groups //teacher api
 router.route('/teacher/group/:group_id') //get teacher's group info //teacher api
     .get(isTeacher, function (req, res) {
         var group_id = req.params.group_id;
-        var poputaleQuery = [{path: "students.id", select: "name schoolId"}, {
-            path: "logs.writeBy",
-            select: "local.name"
-        }, {path: "homeworks", select: "title subject deadline"}]
+        var poputaleQuery = [
+            {path: "students.id", select: "name schoolId"},
+            {path: "logs.writeBy", select: "local.name"},
+            {path: "homeworks", select: "title subject deadline"}
+        ];
         Group.findById(group_id, "students notice logs homeworks").populate(poputaleQuery)
             .exec(function (err, group) {
                 res.json(group)

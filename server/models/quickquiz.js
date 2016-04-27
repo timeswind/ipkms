@@ -5,17 +5,30 @@ var ObjectId = mongoose.Schema.ObjectId;
 var quickquizSchema = mongoose.Schema({
 
     title: String,
-    createdBy: { type: ObjectId, ref: 'Teacher' },
-    questions: [{ type: ObjectId, ref: 'Question', index: true }],
+    createdBy: {type: ObjectId, ref: 'Teacher'},
+    questions: [{type: ObjectId, ref: 'Question', index: true}],
     time: Number, // minutes as unit
-    students: [{ type: ObjectId, ref: 'Student', index: true }],
-    samples: [{ type: ObjectId, ref: 'Quizsample', index: true }],
+    students: [{type: ObjectId, ref: 'Student', index: true}],
+    samples: [{type: ObjectId, ref: 'Quizsample', index: true}],
     analysis: {
-        averageScore: Number,
-        accuracy: [Number], //题目的由正确率从高到低排序
+        average: {
+            right: Number,
+            score: Number,
+            time: Number
+        },
+        percentages: {
+            rights: [Number], //题目的正确率, 按順序排列
+            wrongs: [Number],
+            blanks: [Number]
+        },
+        tags: {
+          weakest: [String],
+          strongest: [String]
+        },
         rank: [{
             name: String,
-            score: Number
+            score: Number,
+            time: Number
         }]
     },
     startTime: Date,

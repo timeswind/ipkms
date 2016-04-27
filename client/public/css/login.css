@@ -25,6 +25,7 @@ body {
 .switch-login-button {
     float: right;
     display: flex;
+    align-items: center;
 }
 
 .switch-login-button > i {
@@ -38,7 +39,7 @@ body {
     text-align: center;
 }
 
-.login-card > div {
+.login-card  .form-body {
     padding: 5px 25px 15px 25px;
 }
 

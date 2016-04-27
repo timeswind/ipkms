@@ -31,13 +31,15 @@
         <h1 class="logo md-display-3">iPkms</h1>
 
         <div class="login-card md-whiteframe-4dp" ng-show="!studentLogin">
-            <md-button class="switch-login-button md-accent" ng-click="switchLogin()">
-                <i class="material-icons">cached</i>
-                {[{loginOption}]}
-            </md-button>
+            <div class="switch-login-button" layout="row">
+                <md-button class="md-accent" ng-click="switchLogin()">
+                    <span>{[{loginOption}]}</span>
+                </md-button>
+            </div>
+
             <p class="login-type">教師登入</p>
             <p class="login-error">{[{teacherLoginError}]}</p>
-            <div>
+            <div class="form-body">
 
                 <md-input-container class="md-block" style="margin-bottom: 0">
                     <label>教師郵箱</label>
@@ -57,14 +59,15 @@
         </div>
 
         <div class="login-card md-whiteframe-4dp" ng-show="studentLogin">
-            <md-button ng-click="switchLogin()" class="switch-login-button md-accent">
-                <i class="material-icons">cached</i>
-                {[{loginOption}]}
-            </md-button>
+            <div class="switch-login-button" layout="row">
+                <md-button class="md-accent" ng-click="switchLogin()">
+                    <span>{[{loginOption}]}</span>
+                </md-button>
+            </div>
             <p class="login-type">學生登入</p>
             <p class="login-error">{[{studentLoginError}]}</p>
 
-            <div>
+            <div class="form-body">
 
                 <md-input-container class="md-block" style="margin-bottom: 0">
                     <label>學生ID</label>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html style="height: 100%;background: #eeeeee;">
+<html style="height: 100%; background-color: #fafafa">
 <head>
     <meta charset="utf-8">
     <title>Quizkquiz</title>
@@ -39,7 +39,7 @@
 
     <div layout="column" layout-fill style="height: 100%;">
 
-        <md-content id="questions" flex style="background: #eeeeee;">
+        <md-content id="questions" flex style="background: #fafafa;">
 
             <div class="wrapper">
                 <div class="error-card"
@@ -66,30 +66,42 @@
                         <span class="subtitle grid-3" layout="column">正確率<span>{[{resultCard.results.results.right.length * 100 / (resultCard.results.answers.length - resultCard.results.results.exception.length)}]} %</span></span>
 
                     </div>
-
-                    <span ng-click="getQuestions()"
-                          style="text-align: center;padding: 16px 0;color: #2196F3;cursor: pointer;outline: none;">查閱我的試卷</span>
+                    <span ng-click="getQuestions()" layout="column"
+                          style="text-align: center;padding: 16px 0;color: #2196F3;cursor: pointer;outline: none;align-items: center;">
+                        查閱我的試卷
+                          <md-progress-circular ng-if="gettingQuestions" class="md-hue-2" md-diameter="20px"></md-progress-circular>
+                    </span>
 
 
                 </div>
 
-                <div ng-show="quickquiz" style="background: #eeeeee;">
+                <div class="quiz-paper" ng-show="quickquiz">
 
-                    <div class="quiz-title">
-                        <h3>
-                            <span>{[{quickquiz.title}]}</span>
-                        </h3>
+                    <div class="mask" ng-show="preDoQuiz">
+                        <div class="start-quiz-modal">
+                            <p>即將開始測驗</p>
+                            <p>測驗時間{[{quickquiz.time}]}分鐘</p>
+                            <md-button class="md-primary md-raised" ng-click="startQuickQuiz()">開始</md-button>
+                        </div>
+                    </div>
+
+                    <div class="quiz-title" layout="column">
+                        <div layout="row" style="align-items: baseline;">
+                            <h3>{[{quickquiz.title}]}</h3>
+                            <span class="time">{[{quickquiz.time}]}分鐘</span>
+                        </div>
+                        <span class="author">出卷人: {[{quickquiz.createdBy.name}]}</span>
                     </div>
 
 
-                    <md-list style="background: #eeeeee;padding: 0">
+                    <md-list style="padding: 0">
                         <md-list-item class="question-card"
                                       ng-repeat="question in quickquiz.questions track by question._id"
                                       layout="column" ng-init="$last ? renderQuestions() : angular.noop()"
                                       style="padding: 0">
                             <div layout="row" style="align-items: baseline">
                                 <span class="index-label">{[{ $index + 1 }]}</span>
-                                <div class="md-title question-content" ng-bind-html="question.context | unsafe"></div>
+                                <div class="md-title" ng-bind-html="question.context | unsafe"></div>
                             </div>
                             <div class="choices" layout="column" style="width: 100%">
                                 <div layout="row">
@@ -124,12 +136,12 @@
                         </md-list-item>
                     </md-list>
 
-                    <div layout="column" style="align-items: center;" ng-hide="submitted">
+                    <div class="end-check-card" layout="column" ng-hide="submitted">
                         <div layout="row">
                             <span style="margin-right: 16px">已做: <span ng-bind="finishedQuestionsCount"></span> 題</span>
                             <span>未做: <span ng-bind="answers.length - finishedQuestionsCount"></span> 題</span>
                         </div>
-                        <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px auto">上交
+                        <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px 0 0 0">上交
                         </md-button>
                     </div>
 
