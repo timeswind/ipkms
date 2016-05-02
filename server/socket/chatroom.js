@@ -8,7 +8,7 @@ exports = module.exports = function (io) {
 
     var users = [];
 
-    io.on('connection', socketioJwt.authorize({
+    io.of('/chatroom').on('connection', socketioJwt.authorize({
             secret: function (request, decodedToken, callback) {
                 User.findById(decodedToken.id, function (err, user) {
                     if (err) {
@@ -42,12 +42,12 @@ exports = module.exports = function (io) {
                         chatroom.group = data.roomId;
                         chatroom.save(function (err) {
                             if (err) {
-                                io.in(data.roomId).emit('join fail');
+                                io.of('/chatroom').in(data.roomId).emit('join fail');
                                 socket.leave(data.roomId);
                             }
                         })
                     } else {
-                        io.in(data.roomId).emit('user joined', users[socket.id]);
+                        io.of('/chatroom').in(data.roomId).emit('user joined', users[socket.id]);
                     }
                 })
             }
@@ -68,7 +68,7 @@ exports = module.exports = function (io) {
             };
 
             //broadcast to subscriber
-            io.in(data.roomId).emit('emit message', data);
+            io.of('/chatroom').in(data.roomId).emit('emit message', data);
 
             //Save it to database
             Chatroom.update({group: data.roomId},

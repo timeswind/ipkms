@@ -17,7 +17,7 @@
     <script type="text/javascript" src="/js/ng-app.js"></script>
     <script type="text/javascript" src="/js/ng-chatroom.js"></script>
     <script type="text/javascript" src="/js/service/ipkms-service.js"></script>
-    <script type="text/javascript" src="/js/service/chatroom.js"></script>
+    <script type="text/javascript" src="/js/service/socket/chatroom.js"></script>
 
 
     <!-- Angular Material Library -->
@@ -80,7 +80,7 @@
         <md-content id="scrollBox" layout="column" style="flex: 1; background-color: #E9E2DC">
             <md-toolbar class="md-whiteframe-2dp" style="position: fixed">
                 <div class="md-toolbar-tools">
-                    <md-button class="md-icon-button" ng-click="toggleLeftNav()">
+                    <md-button class="md-icon-button menu-button" ng-click="toggleLeftNav()">
                         <i class="material-icons">menu</i>
                     </md-button>
                     <h2 style="padding-left: 16px">

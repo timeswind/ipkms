@@ -181,19 +181,8 @@ router.route('/student/quickquiz/questions')
                 if (err) {
                     res.status(500).send(err.message)
                 } else {
-                    if (JSON.parse(JSON.stringify(quickquiz.students)).indexOf(student_id) >= 0) {
-                        var correctAnswers = [];
-
-                        for (var i = 0; i < quickquiz.questions.length; i++) {
-                            if (quickquiz.questions[i].type === 'mc') {
-                                correctAnswers.push(quickquiz.questions[i].answer.mc);
-                            } else if (quickquiz.questions[i].type === 'long') {
-                                correctAnswers.push(null);
-                            }
-                        }
-
-                        quickquiz.correctAnswers = correctAnswers;
-
+                    if (JSON.parse(JSON.stringify(quickquiz.students)).indexOf(student_id) > -1) {
+                        delete quickquiz.students;
                         res.json(quickquiz)
                     } else {
                         res.status(403).send('permission denied')

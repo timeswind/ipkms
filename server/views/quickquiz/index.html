@@ -19,9 +19,11 @@
     <script type="text/javascript" src="/bower_components/angular-katex/angular-katex.js"></script>
 
     <!-- Main config file-->
+    <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="/js/ng-app.js"></script>
     <script type="text/javascript" src="/js/service/ipkms-service.js"></script>
     <script type="text/javascript" src="/js/quick-quiz/quickquiz.js"></script>
+    <script type="text/javascript" src="/js/service/socket/quickquiz.js"></script>
 
 
     <!-- Angular Material Library -->
@@ -141,8 +143,7 @@
                             <span style="margin-right: 16px">已做: <span ng-bind="finishedQuestionsCount"></span> 題</span>
                             <span>未做: <span ng-bind="answers.length - finishedQuestionsCount"></span> 題</span>
                         </div>
-                        <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px 0 0 0">上交
-                        </md-button>
+                        <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px 0 0 0" ng-disabled="submitted">上交</md-button>
                     </div>
 
                 </div>

@@ -1,6 +1,6 @@
 angular.module('chatroom')
 .factory('socket', function ($rootScope) {
-  var socket = io.connect({reconnection: false});
+  var socket = io('/chatroom').connect({reconnection: false});
   return {
     on: function (eventName, callback) {
       socket.on(eventName, function () {

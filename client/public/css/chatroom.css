@@ -57,6 +57,11 @@
     margin-left: 320px
 }
 
+.menu-button {
+    display: none;
+}
+
+
 @media screen and (max-width: 960px) {
     .message-inputs {
         z-index: 2;
@@ -66,6 +71,9 @@
         right: 0;
         margin-left: 0;
         background-color: rgb(243, 240, 239)
+    }
+    .menu-button {
+        display: block;
     }
 }
 
