@@ -4,8 +4,8 @@ var ObjectId = mongoose.Schema.ObjectId;
 // define the schema for our user model
 var quickquizSchema = mongoose.Schema({
 
-    title: String,
-    createdBy: {type: ObjectId, ref: 'Teacher'},
+    title: { type: String, index: true },
+    createdBy: {type: ObjectId, ref: 'Teacher', index: true},
     questions: [{type: ObjectId, ref: 'Question', index: true}],
     time: Number, // minutes as unit
     students: [{type: ObjectId, ref: 'Student', index: true}],

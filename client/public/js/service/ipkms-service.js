@@ -1,6 +1,5 @@
 angular.module('ipkmsService', [])
     .service('apiService', function ($http) {
-
         this.get = function (apiURL) {
             var request = {
                 url: apiURL,
@@ -11,10 +10,12 @@ angular.module('ipkmsService', [])
             })
         }
 
-        this.delete = function (apiURL) {
+        this.delete = function (apiURL, data) {
             var request = {
                 url: apiURL,
-                method: "DELETE"
+                method: "DELETE",
+                data: data,
+                headers: {'Content-Type': 'application/json'}
             }
             return $http(request).then(function (response) {
                 return response
@@ -62,7 +63,7 @@ angular.module('ipkmsService', [])
                 url: apiURL,
                 method: "PUT",
                 data: data,
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                headers: {'Content-Type': 'application/json'}
             }
             return $http(request).then(function (response) {
                 return response

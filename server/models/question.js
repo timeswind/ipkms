@@ -4,17 +4,17 @@ var ObjectId = mongoose.Schema.ObjectId;
 // define the schema for our user model
 var questionSchema = mongoose.Schema({
 
-    createdBy: {type: ObjectId, ref: 'User'},
-    type: String, //mc or long question
-    subject: String,
+    createdBy: { type: ObjectId, ref: 'User', index: true },
+    type: { type: String, index: true }, // mc / reading /...
+    subject: { type: String, index: true },
     context: String,
     choices: [String], //a b c d 选项
     answer: {
         mc: Number,
-        long: String
+        sets: [Number]
     },
-    tags: {type: [String], index: true},
-    difficulty: Number, //难度系数1-5
+    tags: [{ type: String, index: true }],
+    difficulty: { type: Number, index: true }, //难度系数1-5
     tips: String,
     accuracy: {
         correct: Number,

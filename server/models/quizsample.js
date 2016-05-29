@@ -5,7 +5,7 @@ var ObjectId = mongoose.Schema.ObjectId;
 var quizsampleSchema = mongoose.Schema({
 
     quickquiz: {type: ObjectId, ref: 'Quickquiz'},
-    student: {type: ObjectId, ref: 'Student'},
+    student: {type: ObjectId, ref: 'Student', index: true},
     answers: [Number], //a,b,c,d,a,b,c,d
     results: {
         right: [Number], //question index in qcollection

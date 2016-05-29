@@ -10,7 +10,6 @@ body {
 }
 
 .group-dialog, .homework-dialog {
-    margin: 0 auto;
     width: 800px;
 }
 

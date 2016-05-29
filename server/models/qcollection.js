@@ -3,10 +3,10 @@ var ObjectId = mongoose.Schema.ObjectId;
 
 var qcollectionSchema = mongoose.Schema({
 
-    name: String,
-    subject: String,
-    public: Boolean,//是否公开
-    aveDifficulty: Number,
+    name: {type: String, index: true},
+    subject: {type: String, index: true},
+    public: {type: Boolean, index: true},
+    aveDifficulty: {type: Number, index: true},
     createdBy: {type: ObjectId, ref: 'User'},
     questions: [{type: ObjectId, ref: 'Question', index: true}],
     created_at: Date,

@@ -4,17 +4,15 @@ var ObjectId = mongoose.Schema.ObjectId;
 // define the schema for our user model
 var thomeworkSchema = mongoose.Schema({
 
-  delivery : Boolean, //teacher could pre-draft the homework and send the homework in the specific time
-  teacher : { type: ObjectId, ref: 'Teacher' },
-  subject : String, // math, english, chinese
-  tags: {type: [String], index: true},
-  title : String, //home work title,such as math eqution practice
-  requirement : String,
-  targetGroup :  {
-    id: { type: ObjectId, ref: 'Group' }, //the group contain the students
-    submit : [{ type: ObjectId, ref: 'Student' }], //studentID who submitted the homework
-  },
-  deadline : Date // indicate the time that the students need to submit the homework.
+  title: {type: String, index: true}, //home work title,such as math eqution practice
+  delivery: {type: Boolean, index: true}, //teacher could pre-draft the homework and send the homework in the specific time
+  teacher: {type: ObjectId, ref: 'Teacher', index: true},
+  subject: {type: String, index: true}, // math, english, chinese
+  tags: [{type: String, index: true}],
+  requirement: String,
+  group: {type: ObjectId, ref: 'Group', index: true},
+  submitted: { type: [ObjectId], ref: 'Student', index: true},
+  deadline: Date // indicate the time that the students need to submit the homework.
 
 });
 

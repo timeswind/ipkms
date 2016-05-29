@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var express = require('express');
 var router = express.Router();
 
@@ -7,83 +8,187 @@ var Student = require('../../models/student');
 var Group = require('../../models/group');
 
 router.route('/teacher/groups')
-    .get(isTeacher, function (req, res) {
-        var teacher_id = req.user.teacher;
-        Group.find({'public.owner': teacher_id}, 'name students public.boolean').lean().exec(function (err, groups) {
-            if (err) {
-                res.status(500).send(err.message)
-            } else {
-                for (i = 0; i < groups.length; i++) {
-                    groups[i].students = groups[i].students.length
-                }
-                res.json(groups)
-            }
-        })
-    });
+.get(isTeacher, function (req, res) {
+  var teacher_id = req.user.teacher;
+  Group.find({'owner': teacher_id}, 'name students public').lean().exec(function (err, groups) {
+    if (err) {
+      res.status(500).send(err.message)
+    } else {
+      for (i = 0; i < groups.length; i++) {
+        groups[i].students = groups[i].students.length
+      }
+      res.json(groups)
+    }
+  })
+})
+.post(isTeacher, function (req, res) {  //teacher create a student group  //teacher api
+  var data = req.body
+  var requiredParams = ['name', 'public', 'students']
+  if (_.isObject(req.body) && _.every(requiredParams, _.partial(_.has, data)) && _.isArray(data.students)) {
 
-router.route('/teacher/groups/:group_id')
-    .delete(isTeacher, function (req, res) {
-        var group_id = req.params.group_id;
+    var newGroup = new Group()
+    newGroup.name = data.name
+    newGroup.owner = req.user.teacher
+    newGroup.public = data.public
+    newGroup.students = data.students
+
+    newGroup.save(function (err, group) {
+      if (err) {
+        res.send(err);
+      } else {
+        res.send('success');
+      }
+    });
+  } else {
+    res.status(403)
+  }
+
+});
+
+router.route('/teacher/group/:group_id')
+.get(isTeacher, function (req, res) {
+  var group_id = req.params.group_id;
+  Group.findById(group_id, 'name notice students public').populate('students', 'name').lean().exec(function (err, group) {
+    if (err) {
+      console.log(err)
+      res.status(500)
+    } else {
+      res.json(group)
+    }
+  })
+
+})
+.delete(isTeacher, function (req, res) {
+  var group_id = req.params.group_id;
+
+  Group.findById(group_id, function (err, group) {
+    if (err) {
+      res.status(500).send(err.message)
+    } else {
+      if (group && group.owner == req.user.teacher) {
+        group.remove(function (err) {
+          if (err) {
+            res.status(500).send(err.message)
+          } else {
+            res.send('Delete group success !')
+          }
+        });
+      } else {
+        res.status(400).send('permission denied!')
+      }
+    }
+  })
+});
+
+router.route('/update/teacher/:group_id/:option')
+.put(isTeacher, function (req, res) {
+  var group_id = req.params.group_id;
+  var option = req.params.option;
+  var data = req.body
+
+  if (_.isObject(data)) {
+    if (option === "notice") {
+      if (_.has(data, 'text')) {
+        var newNotice = data.text
 
         Group.findById(group_id, function (err, group) {
-            if (err) {
-                res.status(500).send(err.message)
-            } else {
-
-                if (group && group.public.owner == req.user.teacher) {
-                    group.remove(function(err) {
-                        if (err) {
-                            res.status(500).send(err.message)
-                        } else {
-                            res.send('Delete group success !')
-                        }
-                    });
-                } else {
-                    res.status(401).send('permission denied!')
-                }
-            }
+          if (newNotice.trim() !== '') {
+            group.notice.text = newNotice;
+            group.save(function (err) {
+              if (err) {
+                res.send(err.message)
+              } else {
+                res.send("success");
+              }
+            });
+          } else {
+            group.notice.text = " ";
+            group.save(function (err) {
+              if (err) {
+                res.send(err.message)
+              } else {
+                res.send("success");
+              }
+            });
+          }
         })
-    });
+      } else {
+        res.status(500).send('expect param to be a String')
+      }
+    } else if (option === "name") {
+      if (_.has(data, 'name')) {
+        var newName = data.name
+        Group.findById(group_id, function (err, group) {
+          if (newName) {
+            group.name = newName;
+            group.save(function (err) {
+              if (err) {
+                res.send(err.message)
+              } else {
+                res.send("success");
+              }
+            });
+          } else {
+            res.status(500).send('The name you entered is empty');
+          }
+        })
+      }
+    } else if (option == "members") {
+      var updatedMembers = _.uniq(data)
+      Group.update({"_id": group_id}, {$set: {students: updatedMembers}}, function (err, g) {
+        if (err) {
+          res.status(500).json(err.message);
+        } else {
+          res.json("update group name success");
+        }
+      });
+    } else {
+      res.status(500).send('option wrong')
+    }
+  } else {
+    res.status(500).send('params wrong')
+  }
+});
 
 router.route('/public/groups')
-    .get(isTeacher, function (req, res) {
-        Group.find({'public.boolean': true}, 'name students public.boolean').lean().exec(function (err, groups) {
-            if (err) {
-                res.status(500).send(err.message)
-            } else {
-                for (i = 0; i < groups.length; i++) {
-                    groups[i].students = groups[i].students.length
-                }
-                res.json(groups)
-            }
-        })
-    });
+.get(isTeacher, function (req, res) {
+  Group.find({'public': true}, 'name students public').lean().exec(function (err, groups) {
+    if (err) {
+      res.status(500).send(err.message)
+    } else {
+      for (i = 0; i < groups.length; i++) {
+        groups[i].students = groups[i].students.length
+      }
+      res.json(groups)
+    }
+  })
+});
 
 module.exports = router;
 
 function isAdmin(req, res, next) {
 
-    if (req.user.role == "admin") {
-        return next();
-    } else {
-        res.status(401);
-    }
+  if (req.user.role == "admin") {
+    return next();
+  } else {
+    res.status(401);
+  }
 }
 
 function isTeacher(req, res, next) {
 
-    if (req.user.role == "teacher") {
-        return next();
-    } else {
-        res.status(401);
-    }
+  if (req.user.role == "teacher") {
+    return next();
+  } else {
+    res.status(401);
+  }
 }
 
 function isStudent(req, res, next) {
 
-    if (req.user.role == "student") {
-        return next();
-    } else {
-        res.status(401);
-    }
+  if (req.user.role == "student") {
+    return next();
+  } else {
+    res.status(401);
+  }
 }

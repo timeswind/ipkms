@@ -4,7 +4,7 @@ var ObjectId = mongoose.Schema.ObjectId;
 // define the schema for our user model
 var chatroomSchema = mongoose.Schema({
 
-    group: {type: ObjectId, ref: "Group"},
+    group: {type: ObjectId, ref: "Group", index: true},
     messages: [{
         sender: {type: ObjectId, ref: "User"},
         content: String,
