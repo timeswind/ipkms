@@ -3,7 +3,9 @@ var router = express.Router();
 var passport = require('passport');
 var jwt = require('jsonwebtoken');
 var tokenManager = require('../config/token_manager');
+var _ = require('lodash');
 
+var Student = require('../models/student');
 
 router.get('/', function (req, res) {
     res.render('index');
@@ -27,6 +29,7 @@ router.post('/login', function (req, res, next) {
             }
 
             var payload;
+            var token;
             var userRole = req.user.local.role;
 
             if (userRole == "teacher") {
@@ -36,30 +39,58 @@ router.post('/login', function (req, res, next) {
                     email: user.local.email,
                     teacher: user.local.teacher,
                     role: "teacher"
-                }
+                };
+                //user has authenticated correctly thus we create a JWT token
+                token = jwt.sign(payload, user.local.password, {
+                    expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+                });
+
+                return res.json({token: token});
             } else if (userRole == "student") {
+                var student_name = _.get(user.local, 'name', null);
                 payload = {
                     id: user._id,
-                    name: user.local.name,
+                    name: student_name,
                     schoolid: user.local.schoolId,
                     student: user.local.student,
                     role: "student"
+                };
+                if (!student_name) {
+                    Student.findById(user.local.student).lean().exec(function (err, student) {
+                        if (err) {
+                            return res.status(500).send(err.message)
+                        } else {
+                            payload.name = student.name;
+                            var token = jwt.sign(payload, user.local.password, {
+                                expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+                            });
+
+                            return res.json({token: token});
+                        }
+                    })
+                } else {
+                    token = jwt.sign(payload, user.local.password, {
+                        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+                    });
+
+                    return res.json({token: token});
                 }
+
             } else {
                 payload = {
                     id: user._id,
                     name: user.local.name,
                     email: user.local.email,
                     role: user.local.role
-                }
+                };
+                //user has authenticated correctly thus we create a JWT token
+                token = jwt.sign(payload, user.local.password, {
+                    expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+                });
+
+                return res.json({token: token});
             }
 
-            //user has authenticated correctly thus we create a JWT token
-            var token = jwt.sign(payload, user.local.password, {
-                expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
-            });
-
-            return res.json({token: token});
         });
     })(req, res, next);
 });
@@ -79,24 +110,38 @@ router.post('/login/student', function (req, res, next) {
 
             var payload;
             var userRole = req.user.local.role;
-
+            var student_name = _.get(user.local, 'name', null);
+            payload = {
+                id: user._id,
+                name: student_name,
+                schoolid: user.local.schoolId,
+                student: user.local.student,
+                role: "student"
+            };
             if (userRole == "student") {
-                payload = {
-                    id: user._id,
-                    name: user.local.name,
-                    schoolid: user.local.schoolId,
-                    student: user.local.student,
-                    role: "student"
+                if (!student_name) {
+                    Student.findById(user.local.student).lean().exec(function (err, student) {
+                        if (err) {
+                            return res.status(500).send(err.message)
+                        } else {
+                            payload.name = student.name;
+                            var token = jwt.sign(payload, user.local.password, {
+                                expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+                            });
+
+                            return res.json({token: token});
+                        }
+                    })
+                } else {
+                    token = jwt.sign(payload, user.local.password, {
+                        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+                    });
+
+                    return res.json({token: token});
                 }
             } else {
                 return res.status(401).json("this is not a student account");
             }
-
-            var token = jwt.sign(payload, user.local.password, {
-                expiresIn: tokenManager.TOKEN_EXPIRATION_SEC
-            });
-
-            return res.json({token: token});
         });
     })(req, res, next);
 });

@@ -4,21 +4,22 @@ var ObjectId = mongoose.Schema.ObjectId;
 // define the schema for our user model
 var questionSchema = mongoose.Schema({
 
-    createdBy: { type: ObjectId, ref: 'User', index: true },
-    type: { type: String, index: true }, // mc / reading /...
-    subject: { type: String, index: true },
+    createdBy: {type: ObjectId, ref: 'User', index: true},
+    type: {type: String, index: true}, // mc / reading /...
+    subject: {type: String, index: true},
     context: String,
     choices: [String], //a b c d 选项
     answer: {
         mc: Number,
         sets: [Number]
     },
-    tags: [{ type: String, index: true }],
-    difficulty: { type: Number, index: true }, //难度系数1-5
+    tags: {type: [String], index: true},
+    difficulty: {type: Number, index: true}, // 难度系数1-5
     tips: String,
-    accuracy: {
-        correct: Number,
-        wrong: Number
+    statistic: {
+        right: Number,
+        wrong: Number,
+        blank: Number
     },
     created_at: Date,
     updated_at: Date
@@ -63,14 +64,14 @@ questionSchema.pre('findOneAndUpdate', function (next) {
 
 });
 
-questionSchema.pre('remove', function (next) {
-    this.model('Qcollection').update(
-        {questions: this._id},
-        {$pull: {questions: this._id}},
-        {multi: true},
-        next
-    );
-});
+// questionSchema.pre('remove', function (next) {
+//     this.model('Qcollection').update(
+//         {questions: this._id},
+//         {$pull: {questions: this._id}},
+//         {multi: true},
+//         next
+//     );
+// });
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Question', questionSchema);

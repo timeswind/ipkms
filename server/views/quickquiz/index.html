@@ -37,7 +37,7 @@
 </head>
 
 <body id="quickquiz-sheet">
-<div ng-app="quickquiz" ng-controller="mainController" style="height: 100%;">
+<div ng-app="quickquiz" ng-controller="MainController" style="height: 100%;">
 
     <div layout="column" layout-fill style="height: 100%;">
 
@@ -45,33 +45,37 @@
 
             <div class="wrapper">
                 <div class="error-card"
-                     ng-show="errorCard.message !== null && errorCard.message.trim() !== ''">
-                    <p class="error-message">{[{errorCard.message}]}</p>
+                     ng-show="errorMessage !== null && errorMessage.trim() !== ''">
+                    <p class="error-message">{[{errorMessage}]}</p>
                 </div>
 
                 <div layout="column" class="results-card"
-                     ng-show="resultCard.results !== null && resultCard.results.trim() !== ''">
+                     ng-show="resultCard !== null && resultCard.trim() !== ''">
 
                     <span class="md-title">小測結果</span>
-                    <span style="padding: 0 16px 16px 16px;color: #999;">上交時間<span>{[{resultCard.results.finishTime | date : 'MM月dd日 hh:mm a'}]}</span></span>
+                    <span style="padding: 0 16px 16px 16px;color: #999;">上交時間<span>{[{resultCard.finishTime | date : 'MM月dd日 hh:mm a'}]}</span></span>
 
 
                     <div class="grids">
                         <span class="subtitle grid-3" layout="column">
                             總題數
-                           <span>{[{resultCard.results.answers.length}]}</span>
+                           <span>{[{resultCard.answers.length}]}</span>
                         </span>
-                        <span class="subtitle grid-3" layout="column">正確<span>{[{resultCard.results.results.right.length}]}</span></span>
-                        <span class="subtitle grid-3" layout="column">錯誤<span>{[{resultCard.results.results.wrong.length}]}</span></span>
-                        <span class="subtitle grid-3" layout="column">留空<span>{[{resultCard.results.results.blank.length}]}</span></span>
-                        <span class="subtitle grid-3" layout="column">例外/其他<span>{[{resultCard.results.results.exception.length}]}</span></span>
-                        <span class="subtitle grid-3" layout="column">正確率<span>{[{resultCard.results.results.right.length * 100 / (resultCard.results.answers.length - resultCard.results.results.exception.length)}]} %</span></span>
+                        <span class="subtitle grid-3"
+                              layout="column">正確<span>{[{resultCard.results.right.length}]}</span></span>
+                        <span class="subtitle grid-3"
+                              layout="column">錯誤<span>{[{resultCard.results.wrong.length}]}</span></span>
+                        <span class="subtitle grid-3"
+                              layout="column">留空<span>{[{resultCard.results.blank.length}]}</span></span>
+                        <span class="subtitle grid-3" layout="column">例外/其他<span>{[{resultCard.results.exception.length}]}</span></span>
+                        <span class="subtitle grid-3" layout="column">正確率<span>{[{resultCard.results.right.length * 100 / (resultCard.answers.length - resultCard.results.exception.length)}]} %</span></span>
 
                     </div>
                     <span ng-click="getQuestions()" layout="column"
                           style="text-align: center;padding: 16px 0;color: #2196F3;cursor: pointer;outline: none;align-items: center;">
                         查閱我的試卷
-                          <md-progress-circular ng-if="gettingQuestions" class="md-hue-2" md-diameter="20px"></md-progress-circular>
+                          <md-progress-circular md-mode='indeterminate' ng-if="gettingQuestions" class="md-hue-2"
+                                                md-diameter="20px"></md-progress-circular>
                     </span>
 
 
@@ -99,51 +103,60 @@
                     <md-list style="padding: 0">
                         <md-list-item class="question-card"
                                       ng-repeat="question in quickquiz.questions track by question._id"
-                                      layout="column" ng-init="$last ? renderQuestions() : angular.noop()"
+                                      ng-init="$last ? renderQuestions() : angular.noop()"
                                       style="padding: 0">
-                            <div layout="row" style="align-items: baseline">
-                                <span class="index-label">{[{ $index + 1 }]}</span>
-                                <div class="md-title" ng-bind-html="question.context | unsafe"></div>
-                            </div>
-                            <div class="choices" layout="column" style="width: 100%">
-                                <div layout="row">
-                                    <div class="choice choice-a"
-                                         ng-class="{'choose': checkChoose($index, 0), 'right': showRight($index, 0), 'wrong': showWrong($index, 0)}"
-                                         flex="50" layout="row" ng-click="answerOnChoose($index, 0)">
-                                        <span class="choice-label">A</span>
-                                        <div ng-bind-html="question.choices[0] | unsafe"></div>
+                            <div layout="column" style="flex: 1 100%" ng-if="isObject(question)">
+                                <div layout="row" style="align-items: baseline">
+                                    <span class="index-label">{[{ $index + 1 }]}</span>
+                                    <div class="md-title" ng-bind-html="question.context | unsafe"></div>
+                                </div>
+                                <div class="choices" layout="column" style="width: 100%"
+                                     ng-class="{'chooseable': !submitted}">
+                                    <div layout="row">
+                                        <div class="choice choice-a"
+                                             ng-class="{'choose': checkChoose($index, 0), 'right': showRight($index, 0), 'wrong': showWrong($index, 0)}"
+                                             flex="50" layout="row" ng-click="answerOnChoose($index, 0)">
+                                            <span class="choice-label">A</span>
+                                            <div ng-bind-html="question.choices[0] | unsafe"></div>
+                                        </div>
+                                        <div class="choice choice-b"
+                                             ng-class="{'choose': checkChoose($index, 1), 'right': showRight($index, 1), 'wrong': showWrong($index, 1)}"
+                                             flex="50" layout="row" ng-click="answerOnChoose($index, 1)">
+                                            <span class="choice-label">B</span>
+                                            <div ng-bind-html="question.choices[1] | unsafe"></div>
+                                        </div>
                                     </div>
-                                    <div class="choice choice-b"
-                                         ng-class="{'choose': checkChoose($index, 1), 'right': showRight($index, 1), 'wrong': showWrong($index, 1)}"
-                                         flex="50" layout="row" ng-click="answerOnChoose($index, 1)">
-                                        <span class="choice-label">B</span>
-                                        <div ng-bind-html="question.choices[1] | unsafe"></div>
+                                    <div layout="row">
+                                        <div class="choice choice-c"
+                                             ng-class="{'choose': checkChoose($index, 2), 'right': showRight($index, 2), 'wrong': showWrong($index, 2)}"
+                                             flex="50" layout="row" ng-click="answerOnChoose($index, 2)">
+                                            <span class="choice-label">C</span>
+                                            <div ng-bind-html="question.choices[2] | unsafe"></div>
+                                        </div>
+                                        <div class="choice choice-d"
+                                             ng-class="{'choose': checkChoose($index, 3), 'right': showRight($index, 3), 'wrong': showWrong($index, 3)}"
+                                             flex="50" layout="row" ng-click="answerOnChoose($index, 3)">
+                                            <span class="choice-label">D</span>
+                                            <div ng-bind-html="question.choices[3] | unsafe"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div layout="row">
-                                    <div class="choice choice-c"
-                                         ng-class="{'choose': checkChoose($index, 2), 'right': showRight($index, 2), 'wrong': showWrong($index, 2)}"
-                                         flex="50" layout="row" ng-click="answerOnChoose($index, 2)">
-                                        <span class="choice-label">C</span>
-                                        <div ng-bind-html="question.choices[2] | unsafe"></div>
-                                    </div>
-                                    <div class="choice choice-d"
-                                         ng-class="{'choose': checkChoose($index, 3), 'right': showRight($index, 3), 'wrong': showWrong($index, 3)}"
-                                         flex="50" layout="row" ng-click="answerOnChoose($index, 3)">
-                                        <span class="choice-label">D</span>
-                                        <div ng-bind-html="question.choices[3] | unsafe"></div>
-                                    </div>
-                                </div>
                             </div>
+                            <div ng-if="!isObject(question)" layout="column">
+                                <span style="padding: 16px;font-size: 20px;color: #9E9E9E;">{[{$index + 1}]}. 該題目已被刪除</span>
+                            </div>
+
                         </md-list-item>
                     </md-list>
 
                     <div class="end-check-card" layout="column" ng-hide="submitted">
                         <div layout="row">
-                            <span style="margin-right: 16px">已做: <span ng-bind="finishedQuestionsCount"></span> 題</span>
+                            <span style="margin-right: 16px">已做: {[{finishedQuestionsCount}]}</span> 題</span>
                             <span>未做: <span ng-bind="answers.length - finishedQuestionsCount"></span> 題</span>
                         </div>
-                        <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px 0 0 0" ng-disabled="submitted">上交</md-button>
+                        <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px 0 0 0"
+                                   ng-disabled="submitted">上交
+                        </md-button>
                     </div>
 
                 </div>

@@ -5,6 +5,7 @@ var qcollectionSchema = mongoose.Schema({
 
     name: {type: String, index: true},
     subject: {type: String, index: true},
+    description: String,
     public: {type: Boolean, index: true},
     aveDifficulty: {type: Number, index: true},
     createdBy: {type: ObjectId, ref: 'User'},

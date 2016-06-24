@@ -1,13 +1,16 @@
 var socketioJwt = require('socketio-jwt');
+var _ = require('lodash');
 var User = require('../models/localuser');
 var Student = require('../models/student');
 var Teacher = require('../models/teacher');
 var Quickquiz = require('../models/quickquiz');
+var Quizsample = require('../models/quizsample');
 
 
 exports = module.exports = function (io) {
 
     var users = {};
+    var teachers = {};
 
     io.of('/quickquiz').on('connection', socketioJwt.authorize({
         secret: function (request, decodedToken, callback) {
@@ -28,6 +31,11 @@ exports = module.exports = function (io) {
         if (socket.decoded_token.teacher) {
             users[socket.id] = {
                 teacher: socket.decoded_token.teacher,
+                name: socket.decoded_token.name,
+                quickquiz: ''
+            };
+            teachers[socket.id] = {
+                id: socket.decoded_token.teacher,
                 name: socket.decoded_token.name,
                 quickquiz: ''
             };
@@ -69,6 +77,7 @@ exports = module.exports = function (io) {
                         io.of('/quickquiz').in(quickquizId).to(socket.id).emit('joined');
 
                         if (users[socket.id].teacher) {
+                            teachers[socket.id].quickquiz = quickquizId;
                             // 為教師發送當前在進行quizkquiz的學生列表
                             var students = []; // array of student ids
                             for (var key in users) {
@@ -81,8 +90,12 @@ exports = module.exports = function (io) {
                                 }
                             }
                             io.of('/quickquiz').in(quickquizId).to(socket.id).emit('student list', students);
-                        } else if (users[socket.id].student){
-                            io.of('/quickquiz').in(quickquizId).emit('student joined', users[socket.id].student);
+                        } else if (users[socket.id].student) {
+                            var response = {
+                                name: users[socket.id].name,
+                                id: users[socket.id].student
+                            };
+                            io.of('/quickquiz').in(quickquizId).emit('student joined', response);
                         }
 
                     } else {
@@ -109,18 +122,67 @@ exports = module.exports = function (io) {
             delete users[socket.id];
         });
 
+        socket.on('question on fill', function (data) {
+            var modifiedData = {
+                id: users[socket.id].student,
+                type: data.type,
+                answer: data.answer,
+                answers: data.answers
+            };
+
+            var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
+            console.log(teachers_socket_ids)
+            io.of('/quickquiz').in(data.quickquizId).to(teachers_socket_ids).emit('question on fill', modifiedData);
+        });
+
+        socket.on('request observe', function (data) {
+            var student_id = data.student_id;
+            var student_socket_id = getSocketId(users, 'student', student_id);
+            var modifiedData = {
+                teacher_id: teachers[socket.id].id
+            };
+            io.of('/quickquiz').in(data.quickquizId).to(student_socket_id).emit('request observe', modifiedData);
+        });
+
+        socket.on('response observe', function (data) {
+            var request_teacher_socket_id = getSocketId(users, 'teacher', data.teacher_id);
+            var modifiedData = {
+                answers: data.answers
+            };
+            io.of('/quickquiz').in(data.quickquizId).to(request_teacher_socket_id).emit('response observe', modifiedData);
+        });
 
         socket.on('disconnect', function () {
 
             if (users[socket.id] && users[socket.id].quickquiz !== '' && users[socket.id].student) {
+                console.log("student leaved");
                 io.of('/quickquiz').in(users[socket.id].quickquiz).emit('student leaved', users[socket.id].student);
+            } else if (_.has(users[socket.id], 'teacher')) {
+                console.log("teacher leaved")
+                delete teachers[socket.id]
             }
             socket.disconnect();
 
             delete users[socket.id];
-            console.log("user leaved")
         });
     });
 
-
 };
+
+function getSocketId(users, role, id) {
+    if (role === 'student') {
+        return _.findKey(users, function (user) {
+            return user.student === id
+        })
+    } else if (role === 'teacher') {
+        return _.findKey(users, function (user) {
+            return user.teacher === id
+        })
+    }
+}
+
+function getTeachersSocketIds(teachers, quickquiz_id) {
+    return _.keys(_.filter(teachers, function (teacher) {
+        return teacher.quickquiz === quickquiz_id
+    }))
+}

@@ -4,7 +4,7 @@ var ObjectId = mongoose.Schema.ObjectId;
 // define the schema for our user model
 var quizsampleSchema = mongoose.Schema({
 
-    quickquiz: {type: ObjectId, ref: 'Quickquiz'},
+    quickquiz: {type: ObjectId, ref: 'Quickquiz', index: true},
     student: {type: ObjectId, ref: 'Student', index: true},
     answers: [Number], //a,b,c,d,a,b,c,d
     results: {
@@ -13,7 +13,6 @@ var quizsampleSchema = mongoose.Schema({
         blank: [Number], //question index in qcollection
         exception: [Number] //handle bad question such as those doesn't have a answer or long question
     },
-    time: String, //精确的做题时间
     startTime: Date,
     finishTime: Date
 

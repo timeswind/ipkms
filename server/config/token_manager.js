@@ -32,11 +32,7 @@ exports.verifyToken = function (req, res, next) {
         message: '认证失败'
       });
     }
-
-    //  else {
-    //   console.log('No Token Send To Node Redis')
-    // }
-
+  
   };
 
   exports.expireToken = function(req) {

@@ -114,8 +114,11 @@
 .choice {
     padding: 16px;
     align-items: baseline;
-    cursor: pointer;
     outline: none;
+}
+
+.chooseable {
+    cursor: pointer;
 }
 
 .choice-a {
