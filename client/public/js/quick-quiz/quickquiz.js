@@ -1,4 +1,4 @@
-angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
+angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService', 'katex'])
 
     .controller('MainController', function ($rootScope, $scope, apiService, socket) {
 
@@ -27,8 +27,6 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
             authenticated: false,
             joined: false
         };
-
-        $scope.finishedQuestionsCount = 0
 
         if (getUrlVars()["id"]) {
             $scope.quickquizId = getUrlVars()["id"];
@@ -116,7 +114,7 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
                     console.log('小测已经结束');
                     $scope.errorMessage = '小測已經結束!'
                 } else {
-                    $scope.errorMessage = '什麼也沒有找到:('
+                    $scope.errorMessage = '什麼也沒有找到'
                 }
             })
         }
@@ -129,7 +127,11 @@ angular.module('quickquiz', ['ipkms', 'ipkmsService', 'katex'])
             apiService.postJSON(apiURL, data).then(function (response) {
                 $scope.preDoQuiz = false;
                 if ($scope.socket.authenticated && $scope.socket.joined) {
-                    socket.emit('start doing', {quickquizId: $scope.quickquizId});
+                    var data = {
+                        quickquizId: $scope.quickquizId,
+                        quizsampleId: response.data
+                    };
+                    socket.emit('start doing', data);
                 }
             }, function (response) {
                 // err handle

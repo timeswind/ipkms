@@ -44,6 +44,7 @@ exports = module.exports = function (io) {
                 student: socket.decoded_token.student,
                 name: socket.decoded_token.name,
                 quickquiz: '',
+                quizsample: '',
                 status: ''
             };
         }
@@ -74,7 +75,7 @@ exports = module.exports = function (io) {
 
                         console.log('user join success');
 
-                        io.of('/quickquiz').in(quickquizId).to(socket.id).emit('joined');
+                        io.of('/quickquiz').to(socket.id).emit('joined');
 
                         if (users[socket.id].teacher) {
                             teachers[socket.id].quickquiz = quickquizId;
@@ -89,7 +90,7 @@ exports = module.exports = function (io) {
                                     students.push(student)
                                 }
                             }
-                            io.of('/quickquiz').in(quickquizId).to(socket.id).emit('student list', students);
+                            io.of('/quickquiz').to(socket.id).emit('student list', students);
                         } else if (users[socket.id].student) {
                             var response = {
                                 name: users[socket.id].name,
@@ -109,30 +110,34 @@ exports = module.exports = function (io) {
 
         socket.on('start doing', function (data) {
             users[socket.id].status = 'doing';
-            io.of('/quickquiz').in(data.quickquizId).emit('start doing', users[socket.id].student);
+            users[socket.id].quizsample = data.quizsampleId;
+            var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
+            io.of('/quickquiz').to(teachers_socket_ids).emit('start doing', users[socket.id]);
         });
 
         socket.on('finish doing', function (data) {
             users[socket.id].status = 'finish';
-            io.of('/quickquiz').in(data.quickquizId).emit('finish doing', users[socket.id].student);
+            var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
+            io.of('/quickquiz').to(teachers_socket_ids).emit('finish doing', users[socket.id].student);
         });
 
         socket.on('student leave', function (data) {
-            io.of('/quickquiz').in(data.quickquizId).emit('student leaved', users[socket.id].student);
+            var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
+            io.of('/quickquiz').to(teachers_socket_ids).emit('student leaved', users[socket.id].student);
             delete users[socket.id];
         });
 
         socket.on('question on fill', function (data) {
             var modifiedData = {
-                id: users[socket.id].student,
+                student_id: users[socket.id].student,
                 type: data.type,
                 answer: data.answer,
                 answers: data.answers
             };
 
             var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
-            console.log(teachers_socket_ids)
-            io.of('/quickquiz').in(data.quickquizId).to(teachers_socket_ids).emit('question on fill', modifiedData);
+            console.log(teachers_socket_ids);
+            io.of('/quickquiz').to(teachers_socket_ids).emit('question on fill', modifiedData);
         });
 
         socket.on('request observe', function (data) {
@@ -141,7 +146,7 @@ exports = module.exports = function (io) {
             var modifiedData = {
                 teacher_id: teachers[socket.id].id
             };
-            io.of('/quickquiz').in(data.quickquizId).to(student_socket_id).emit('request observe', modifiedData);
+            io.of('/quickquiz').to(student_socket_id).emit('request observe', modifiedData);
         });
 
         socket.on('response observe', function (data) {
@@ -149,20 +154,20 @@ exports = module.exports = function (io) {
             var modifiedData = {
                 answers: data.answers
             };
-            io.of('/quickquiz').in(data.quickquizId).to(request_teacher_socket_id).emit('response observe', modifiedData);
+            io.of('/quickquiz').to(request_teacher_socket_id).emit('response observe', modifiedData);
         });
 
         socket.on('disconnect', function () {
 
             if (users[socket.id] && users[socket.id].quickquiz !== '' && users[socket.id].student) {
                 console.log("student leaved");
-                io.of('/quickquiz').in(users[socket.id].quickquiz).emit('student leaved', users[socket.id].student);
+                var teachers_socket_ids = getTeachersSocketIds(teachers, users[socket.id].quickquiz);
+                io.of('/quickquiz').to(teachers_socket_ids).emit('student leaved', users[socket.id].student);
             } else if (_.has(users[socket.id], 'teacher')) {
-                console.log("teacher leaved")
+                console.log("teacher leaved");
                 delete teachers[socket.id]
             }
             socket.disconnect();
-
             delete users[socket.id];
         });
     });
@@ -182,7 +187,7 @@ function getSocketId(users, role, id) {
 }
 
 function getTeachersSocketIds(teachers, quickquiz_id) {
-    return _.keys(_.filter(teachers, function (teacher) {
+    return _.keys(_.pickBy(teachers, function (teacher) {
         return teacher.quickquiz === quickquiz_id
     }))
 }

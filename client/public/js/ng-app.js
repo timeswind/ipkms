@@ -1,4 +1,4 @@
-angular.module('ipkms', ['ngMaterial', 'ngMessages'])
+angular.module('ipkmsMain', ['ngMaterial', 'ngMessages'])
     .config(function ($interpolateProvider, $httpProvider) {
 
         $interpolateProvider.startSymbol('{[{');
@@ -24,7 +24,7 @@ angular.module('ipkms', ['ngMaterial', 'ngMessages'])
                 return response || $q.when(response);
             },
             responseError: function(rejection) {
-                if (rejection.status === 401) {
+                if (rejection.status === 401 && rejection.data.authorize === false) {
                     console.log("Response Error 401", rejection);
                     window.location = '/'
                 }

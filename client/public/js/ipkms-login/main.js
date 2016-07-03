@@ -1,5 +1,5 @@
-angular.module('login', ['ipkms', 'ipkmsService'])
-    .controller('loginController', function ($scope, $http, $window) {
+angular.module('login', ['ipkmsMain'])
+    .controller('LoginController', function ($scope, $http, $window) {
 
         $scope.teacher = {
             email: '',
@@ -17,6 +17,16 @@ angular.module('login', ['ipkms', 'ipkmsService'])
         $scope.studentLogin = false;
 
         $scope.switchLogin = function () {
+            $scope.LoginError = '';
+            $scope.teacher = {
+                email: '',
+                password: ''
+            };
+
+            $scope.student = {
+                schoolid: '',
+                password: ''
+            };
             $scope.studentLogin = !$scope.studentLogin;
             if ($scope.studentLogin) {
                 $scope.loginOption = "教師登入";
@@ -29,6 +39,8 @@ angular.module('login', ['ipkms', 'ipkmsService'])
         };
 
         $scope.login = function () {
+            delete $window.sessionStorage.token;
+
             if ($scope.studentLogin) {
                 if ($scope.student.schoolid && $scope.student.password) {
                     $http
@@ -39,8 +51,8 @@ angular.module('login', ['ipkms', 'ipkmsService'])
                         })
                         .error(function () {
 
+                            $scope.student.password = '';
                             $scope.LoginError = "學生ID或密碼錯誤";
-                            delete $window.sessionStorage.token;
 
                         });
                 }
@@ -56,8 +68,8 @@ angular.module('login', ['ipkms', 'ipkmsService'])
                         })
                         .error(function () {
 
+                            $scope.teacher.password = '';
                             $scope.LoginError = "郵箱或密碼錯誤";
-                            delete $window.sessionStorage.token;
 
                         });
                 }

@@ -56,7 +56,7 @@ router.route('/qcollection')
          * @param {string} req.body.description
          */
 
-        var requiredParams = ['name', 'public', 'subject', 'description'];
+        var requiredParams = ['name', 'public', 'subject'];
         var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
 
         if (paramsComplete) {
@@ -69,8 +69,9 @@ router.route('/qcollection')
                 newQcollection.name = req.body.name;
                 newQcollection.public = req.body.public;
                 newQcollection.subject = req.body.subject;
-                newQcollection.description = req.body.description;
-
+                if (_.has(req.body, 'description')) {
+                    newQcollection.description = req.body.description;
+                }
                 newQcollection.save(function (err, qc) {
                     if (err) {
                         res.send(err.message);

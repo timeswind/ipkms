@@ -1,4 +1,4 @@
-angular.module('teacherHome', ['ipkms', 'ipkmsService'])
+angular.module('teacherHome', ['ipkmsMain', 'ipkmsService'])
 
     .controller('homeController', function ($scope) {
 

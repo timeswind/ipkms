@@ -1,4 +1,4 @@
-angular.module('ipkms')
+angular.module('ipkmsMain')
 .controller('questionsController', function($scope, apiService, subjectsService, $sce) {
   $scope.templates =
   [ { name: 'template1.html', url: '/html/newhomeworkform.tmpl.html'},

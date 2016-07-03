@@ -30,14 +30,14 @@
     <script src="/bower_components/angular-material/angular-material.min.js"></script>
 
     <!-- <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"> -->
-    <link rel="stylesheet" href="//cdn.bootcss.com/material-design-icons/2.2.0/iconfont/material-icons.css">
+    <link rel="stylesheet" href="/static/material-icons/material-icons.css">
 
     <link rel="stylesheet" href="/css/quickquiz.css">
     <link rel="stylesheet" href="/css/grids.css">
 </head>
 
 <body id="quickquiz-sheet">
-<div ng-app="quickquiz" ng-controller="MainController" style="height: 100%;">
+<div ng-app="ipkms.quickquiz" ng-controller="MainController" style="height: 100%;">
 
     <div layout="column" layout-fill style="height: 100%;">
 
@@ -151,7 +151,7 @@
 
                     <div class="end-check-card" layout="column" ng-hide="submitted">
                         <div layout="row">
-                            <span style="margin-right: 16px">已做: {[{finishedQuestionsCount}]}</span> 題</span>
+                            <span style="margin-right: 16px">已做: <span ng-bind="finishedQuestionsCount"></span>題</span>
                             <span>未做: <span ng-bind="answers.length - finishedQuestionsCount"></span> 題</span>
                         </div>
                         <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px 0 0 0"

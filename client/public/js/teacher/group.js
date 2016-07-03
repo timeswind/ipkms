@@ -1,6 +1,6 @@
-angular.module('teacherManageGroups', ['ipkms', 'ipkmsService'])
+angular.module('ipkms.teacherManageGroups', ['ipkmsMain', 'ipkmsService'])
 
-.controller('groupsManageController', function ($rootScope, $scope, $http, $mdDialog, $mdMedia, apiService, generalService) {
+.controller('GroupsManageController', function ($rootScope, $scope, $http, $mdDialog, $mdMedia, apiService, generalService) {
   getMyGroups();
   $scope.myGroups = [];
   $scope.bTt = function (b) {

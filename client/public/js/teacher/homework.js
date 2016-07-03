@@ -1,6 +1,6 @@
-angular.module('teacherManageHomework', ['ipkms', 'ipkmsService', 'ui.tinymce'])
+angular.module('ipkms.teacherManageHomework', ['ipkmsMain', 'ipkmsService', 'ui.tinymce'])
 
-.controller('homeworksManageController', function ($rootScope, $scope, $http, $mdDialog, $mdMedia, apiService, homeworkService, generalService) {
+.controller('HomeworksManageController', function ($rootScope, $scope, $http, $mdDialog, $mdMedia, apiService, homeworkService, generalService) {
   getMyThomeworks();
   var useFullScreen = ($mdMedia('sm') || $mdMedia('xs'));
   $scope.showNewHomeworkForm = function (ev) {

@@ -1,4 +1,4 @@
-angular.module('quickquiz')
+angular.module('ipkms.quickquiz')
     .factory('socket', function ($rootScope) {
         var socket = io('/quickquiz').connect({reconnection: false});
         return {

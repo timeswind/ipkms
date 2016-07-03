@@ -8,7 +8,7 @@ var quickquizSchema = mongoose.Schema({
     questions: [{type: ObjectId, ref: 'Question', index: true}],
     time: Number, // in minute
     students: [{type: ObjectId, ref: 'Student', index: true}],
-    samples: [{type: ObjectId, ref: 'Quizsample', index: true}],
+    samples: [{type: ObjectId, ref: 'Quizsample'}],
     analysis: {
         average: {
             right: Number, //平均正确题数

@@ -1,4 +1,4 @@
-angular.module('ipkms')
+angular.module('ipkmsMain')
 
 .controller('groupController', function($scope, $http, $mdDialog, $mdMedia, apiService) {
   getMyGroups();

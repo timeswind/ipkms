@@ -1,5 +1,5 @@
-angular.module('chatroom', ['ipkms', 'ipkmsService'])
-    .controller('chatroomController', function ($scope, $http, $window, $mdSidenav, apiService, socket) {
+angular.module('ipkms.chatroom', ['ipkmsMain', 'ipkmsService'])
+    .controller('ChatroomController', function ($scope, $http, $window, $mdSidenav, apiService, socket) {
         var userToken = $window.sessionStorage.token;
         $scope.authentication = false;
         $scope.ifGetGroupList = false;

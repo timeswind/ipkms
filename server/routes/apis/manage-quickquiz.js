@@ -167,58 +167,164 @@ router.route('/teacher/quickquiz/end')
          * @param {string} req.body.quickquiz_id
          */
         var teacher_id = req.user.teacher;
-        if (_.has(req.body, 'quickquiz_id')) {
-            Quickquiz.findById(req.body.quickquiz_id, function (err, quickquiz) {
-                if (err) {
-                    res.send(err.message)
-                } else {
-                    if (!_.get(quickquiz, 'finished', true) && _.get(quickquiz, 'createdBy', null) == teacher_id) {
 
-                        Quizsample.find({"_id": {'$in': _.get(quickquiz, 'samples', [])}}).lean().exec(function (err, quizsamples) {
-                            if (quizsamples) {
-                                var totalCorrectCount = 0;
-                                var totalTimeCost = 0; //in millisecond
-
-                                _.forEach(quizsamples, function (quizsample) {
-                                    totalCorrectCount += quizsample.results.right.length;
-                                    if (_.has(quizsample, 'startTime') && _.has(quizsample, 'finishTime')) {
-                                        totalTimeCost += Math.abs(quizsample.startTime - quizsample.finishTime);
-                                    } else if (_.has(quizsample, 'finishTime')) {
-                                        totalTimeCost += Math.abs(quickquiz.startTime - quizsample.finishTime);
-                                    }
-                                });
-
-                                let aveCorrectCount = totalCorrectCount / quizsamples.length;
-                                let aveTimeCost = totalTimeCost / quizsamples.length;
-
-                                console.log(aveCorrectCount);
-                                console.log(aveTimeCost);
-
-                                quickquiz.finished = true;
-                                quickquiz.analysis.average.right = aveCorrectCount;
-                                quickquiz.analysis.average.time = aveTimeCost;
-                                quickquiz.finishTime = new Date();
-                                quickquiz.save();
-                                res.send('success');
+        async.waterfall([
+            function (callback) {
+                if (_.has(req.body, 'quickquiz_id')) {
+                    Quickquiz.findById(req.body.quickquiz_id).lean().exec(function (err, quickquiz) {
+                        if (err) {
+                            callback(err)
+                        } else {
+                            if (!_.get(quickquiz, 'finished', true) && _.get(quickquiz, 'createdBy', null) == teacher_id) {
+                                callback(null, quickquiz)
                             } else {
-                                quickquiz.finished = true;
-                                quickquiz.analysis.average.right = 0;
-                                quickquiz.analysis.average.time = 0;
-                                quickquiz.finishTime = new Date();
-                                quickquiz.save();
-                                res.send('success');
+                                callback({message: 'quickquiz has not finish or permission denied'});
                             }
+                        }
 
-                        });
-
-                    } else {
-                        res.status(403).send('End quickquiz fail!')
-                    }
+                    })
+                } else {
+                    callback({message: 'params missing'});
                 }
-            })
-        } else {
-            res.status(403).send('params missing')
-        }
+            },
+            function (quickquiz, callback) {
+                var analysis = {
+                    quickquiz_id: quickquiz._id,
+                    average: {
+                        right: 0,
+                        time: 0
+                    },
+                    rank: [],
+                    finishTime: new Date()
+                };
+                Quizsample.find({"_id": {'$in': _.get(quickquiz, 'samples', [])}}).lean().exec(function (err, quizSamples) {
+                    if (quizSamples) {
+                        var totalCorrectCount = 0;
+                        var totalTimeCost = 0; //in millisecond
+
+                        analysis.rank = _.chain(quizSamples)
+                            .map(function (sample) {
+                                var id = sample._id;
+                                var timeCost = null;
+                                var rightCount = sample.results.right;
+                                totalCorrectCount += rightCount;
+
+                                if (_.has(sample, 'startTime') && _.has(sample, 'finishTime')) {
+                                    timeCost = Math.abs(sample.startTime - sample.finishTime);
+                                    totalTimeCost += timeCost
+                                }
+
+                                return {id: id, score: rightCount, timeCost: timeCost}
+                            })
+                            .sortBy('score');
+
+                        // _.forEach(quizSamples, function (quizSample) {
+                        //     totalCorrectCount += quizSample.results.right.length;
+                        //     if (_.has(quizSample, 'startTime') && _.has(quizSample, 'finishTime')) {
+                        //         totalTimeCost += Math.abs(quizSample.startTime - quizSample.finishTime);
+                        //     } else if (_.has(quizSample, 'finishTime')) {
+                        //         totalTimeCost += Math.abs(quickquiz.startTime - quizSample.finishTime);
+                        //     }
+                        // });
+
+                        let aveCorrectCount = totalCorrectCount / quizSamples.length;
+                        let aveTimeCost = totalTimeCost / quizSamples.length;
+
+                        console.log('aveCorrectCount --> ' + aveCorrectCount);
+                        console.log('aveTimeCost --> ' + aveTimeCost);
+
+                        analysis.average.right = aveCorrectCount;
+                        analysis.average.time = aveTimeCost;
+                        callback(null, analysis)
+                    } else {
+                        analysis.average.right = aveCorrectCount;
+                        analysis.average.time = aveTimeCost;
+                        callback(null, analysis)
+                    }
+
+                });
+            },
+            function (analysis, callback) {
+                // arg1 now equals 'three'
+                Quickquiz.find({'_id': analysis.quickquiz_id}, function (err, quickquiz) {
+                    if (err) {
+                        callback(err)
+                    } else {
+                        quickquiz.finished = true;
+                        quickquiz.finishTime = analysis.finishTime;
+                        quickquiz.analysis.average.right = analysis.average.right;
+                        quickquiz.analysis.average.time = analysis.average.time;
+                        quickquiz.analysis.rank = analysis.rank;
+                        quickquiz.save(err, function () {
+                            if (err) {
+                                callback(err)
+                            } else {
+                                callback(null, 'success')
+                            }
+                        })
+                    }
+                })
+            }
+        ], function (err, result) {
+            if (err) {
+                res.status(500).send(err.message)
+            } else {
+                res.send(result)
+            }
+        });
+
+        // if (_.has(req.body, 'quickquiz_id')) {
+        //     Quickquiz.findById(req.body.quickquiz_id, function (err, quickquiz) {
+        //         if (err) {
+        //             res.send(err.message)
+        //         } else {
+        //             if (!_.get(quickquiz, 'finished', true) && _.get(quickquiz, 'createdBy', null) == teacher_id) {
+        //
+        //                 Quizsample.find({"_id": {'$in': _.get(quickquiz, 'samples', [])}}).lean().exec(function (err, quizSamples) {
+        //                     if (quizSamples) {
+        //                         var totalCorrectCount = 0;
+        //                         var totalTimeCost = 0; //in millisecond
+        //
+        //                         _.forEach(quizSamples, function (quizSample) {
+        //                             totalCorrectCount += quizSample.results.right.length;
+        //                             if (_.has(quizSample, 'startTime') && _.has(quizSample, 'finishTime')) {
+        //                                 totalTimeCost += Math.abs(quizSample.startTime - quizSample.finishTime);
+        //                             } else if (_.has(quizSample, 'finishTime')) {
+        //                                 totalTimeCost += Math.abs(quickquiz.startTime - quizSample.finishTime);
+        //                             }
+        //                         });
+        //
+        //                         let aveCorrectCount = totalCorrectCount / quizSamples.length;
+        //                         let aveTimeCost = totalTimeCost / quizSamples.length;
+        //
+        //                         console.log(aveCorrectCount);
+        //                         console.log(aveTimeCost);
+        //
+        //                         quickquiz.finished = true;
+        //                         quickquiz.analysis.average.right = aveCorrectCount;
+        //                         quickquiz.analysis.average.time = aveTimeCost;
+        //                         quickquiz.finishTime = new Date();
+        //                         quickquiz.save();
+        //                         res.send('success');
+        //                     } else {
+        //                         quickquiz.finished = true;
+        //                         quickquiz.analysis.average.right = 0;
+        //                         quickquiz.analysis.average.time = 0;
+        //                         quickquiz.finishTime = new Date();
+        //                         quickquiz.save();
+        //                         res.send('success');
+        //                     }
+        //
+        //                 });
+        //
+        //             } else {
+        //                 res.status(403).send('End quickquiz fail!')
+        //             }
+        //         }
+        //     })
+        // } else {
+        //     res.status(403).send('params missing')
+        // }
     });
 
 router.route('/student/quickquiz/start')
@@ -246,7 +352,7 @@ router.route('/student/quickquiz/start')
                                     if (err) {
                                         res.status(500).send(err.message)
                                     } else {
-                                        res.send('start quickquiz')
+                                        res.send(sample._id)
                                     }
                                 });
                             }
@@ -322,7 +428,10 @@ router.route('/quickquiz')
 
                 var student_id = req.user.student;
 
-                Quizsample.findOne({quickquiz: quickquiz_id, student: student_id}, function (err, quizsample) {
+                Quizsample.findOne({
+                    quickquiz: quickquiz_id,
+                    student: student_id
+                }).lean().exec(function (err, quizsample) {
                     if (err) {
                         res.status(500).json(err.message)
                     } else {
@@ -338,7 +447,7 @@ router.route('/quickquiz')
                                     res.status(500).send(err.message)
                                 } else {
                                     if (_.get(quickquiz, 'finished', false)) {
-                                        res.status(403).json('finished')
+                                        res.status(403).send('finished')
                                     } else if (quickquiz) {
                                         Quickquiz.update({_id: quickquiz_id}, {$addToSet: {students: student_id}}, function (err) {
                                             if (err) {
@@ -565,51 +674,89 @@ router.route('/quickquiz')
                     console.log(checkAnswersRestults);
 
                     // 为该测验记录每一题的答题情况
-                    if (analysis !== null) {
-                        for (var i = 0; i < checkAnswersRestults.right.length; i++) {
-                            var questionIndex = checkAnswersRestults.right[i];
+                    if (_.has(analysis, 'questions')) {
 
-                            if (_.isArray(analysis.questions[questionIndex])) {
-                                analysis.questions[questionIndex][0]++
+                        _.forEach(checkAnswersRestults.right, function (question_index) {
+                            if (_.isArray(analysis.questions[question_index])) {
+                                analysis.questions[question_index][0]++
                             } else {
-                                analysis.questions[questionIndex] = [0, 0, 0, 0];
-                                analysis.questions[questionIndex][0]++
+                                analysis.questions[question_index] = [0, 0, 0, 0];
+                                analysis.questions[question_index][0]++
                             }
+                        });
 
-                        }
-
-                        for (var i = 0; i < checkAnswersRestults.wrong.length; i++) {
-                            var questionIndex = checkAnswersRestults.wrong[i];
-
-                            if (_.isArray(analysis.questions[questionIndex])) {
-                                analysis.questions[questionIndex][1]++
+                        _.forEach(checkAnswersRestults.wrong, function (question_index) {
+                            if (_.isArray(analysis.questions[question_index])) {
+                                analysis.questions[question_index][1]++
                             } else {
-                                analysis.questions[questionIndex] = [0, 0, 0, 0];
-                                analysis.questions[questionIndex][1]++
+                                analysis.questions[question_index] = [0, 0, 0, 0];
+                                analysis.questions[question_index][1]++
                             }
+                        });
 
-                        }
-
-                        for (var i = 0; i < checkAnswersRestults.blank.length; i++) {
-                            var questionIndex = checkAnswersRestults.blank[i];
-                            if (_.isArray(analysis.questions[questionIndex])) {
-                                analysis.questions[questionIndex][2]++
+                        _.forEach(checkAnswersRestults.blank, function (question_index) {
+                            if (_.isArray(analysis.questions[question_index])) {
+                                analysis.questions[question_index][2]++
                             } else {
-                                analysis.questions[questionIndex] = [0, 0, 0, 0];
-                                analysis.questions[questionIndex][2]++
+                                analysis.questions[question_index] = [0, 0, 0, 0];
+                                analysis.questions[question_index][2]++
                             }
-                        }
+                        });
 
-
-                        for (var i = 0; i < checkAnswersRestults.exception.length; i++) {
-                            var questionIndex = checkAnswersRestults.exception[i];
-                            if (_.isArray(analysis.questions[questionIndex])) {
-                                analysis.questions[questionIndex][3]++
+                        _.forEach(checkAnswersRestults.exception, function (question_index) {
+                            if (_.isArray(analysis.questions[question_index])) {
+                                analysis.questions[question_index][3]++
                             } else {
-                                analysis.questions[questionIndex] = [0, 0, 0, 0];
-                                analysis.questions[questionIndex][3]++
+                                analysis.questions[question_index] = [0, 0, 0, 0];
+                                analysis.questions[question_index][3]++
                             }
-                        }
+                        });
+                        // var questionIndex;
+
+                        // for (var i = 0; i < checkAnswersRestults.right.length; i++) {
+                        //     questionIndex = checkAnswersRestults.right[i];
+                        //
+                        //     if (_.isArray(analysis.questions[questionIndex])) {
+                        //         analysis.questions[questionIndex][0]++
+                        //     } else {
+                        //         analysis.questions[questionIndex] = [0, 0, 0, 0];
+                        //         analysis.questions[questionIndex][0]++
+                        //     }
+                        //
+                        // }
+
+                        // for (var i = 0; i < checkAnswersRestults.wrong.length; i++) {
+                        //     questionIndex = checkAnswersRestults.wrong[i];
+                        //
+                        //     if (_.isArray(analysis.questions[questionIndex])) {
+                        //         analysis.questions[questionIndex][1]++
+                        //     } else {
+                        //         analysis.questions[questionIndex] = [0, 0, 0, 0];
+                        //         analysis.questions[questionIndex][1]++
+                        //     }
+                        //
+                        // }
+                        //
+                        // for (var i = 0; i < checkAnswersRestults.blank.length; i++) {
+                        //     questionIndex = checkAnswersRestults.blank[i];
+                        //     if (_.isArray(analysis.questions[questionIndex])) {
+                        //         analysis.questions[questionIndex][2]++
+                        //     } else {
+                        //         analysis.questions[questionIndex] = [0, 0, 0, 0];
+                        //         analysis.questions[questionIndex][2]++
+                        //     }
+                        // }
+                        //
+                        //
+                        // for (var i = 0; i < checkAnswersRestults.exception.length; i++) {
+                        //     questionIndex = checkAnswersRestults.exception[i];
+                        //     if (_.isArray(analysis.questions[questionIndex])) {
+                        //         analysis.questions[questionIndex][3]++
+                        //     } else {
+                        //         analysis.questions[questionIndex] = [0, 0, 0, 0];
+                        //         analysis.questions[questionIndex][3]++
+                        //     }
+                        // }
                     }
 
                     console.log(analysis);

@@ -1,4 +1,4 @@
-angular.module('ipkms')
+angular.module('ipkmsMain')
 .directive('teacherSideDrawer', function() {
   return {
     templateUrl: '/html/teacher-side-drawer.html'
