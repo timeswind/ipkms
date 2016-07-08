@@ -6,7 +6,103 @@ var User = require('../../models/localuser');
 var Question = require('../../models/question');
 
 //创建新题目
-router.route('/questions')
+router.route('/questions/:option')
+    .get(isTeacher, function (req, res) {
+        /**
+         * @param {string} req.params.option
+         */
+        /**
+         * @param {string} req.query.sort - sorting by publish date
+         */
+        /**
+         * @param {string} req.query.page - the last question's ID, in order to query the following questions
+         */
+        if (_.has(req.params, 'option')) {
+            var option = req.params.option;
+            var sort = -1;
+            var page = null;
+            if (option === 'mine') {
+
+                if (_.get(req.query, 'sort', false) === '1') {
+                    sort = 1;
+                }
+
+                if (_.has(req.query, 'page')) {
+                    page = req.query.page;
+
+                    if (sort === 1) {
+                        Question.find({
+                            createdBy: req.user.id,
+                            "_id": {$gt: page}
+                        }, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                            if (err) {
+                                res.status(500).send(err.message);
+                            } else {
+                                res.json(questions);
+                            }
+                        });
+                    } else {
+                        Question.find({
+                            createdBy: req.user.id,
+                            "_id": {$lt: page}
+                        }, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                            if (err) {
+                                res.status(500).send(err.message);
+                            } else {
+                                res.json(questions);
+                            }
+                        });
+                    }
+                } else {
+                    Question.find({createdBy: req.user.id}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                        if (err) {
+                            res.status(500).send(err.message);
+                        } else {
+                            res.json(questions);
+                        }
+                    });
+                }
+            } else if (option === 'all') {
+
+                if (_.get(req.query, 'sort', false) === '1') {
+                    sort = 1;
+                }
+
+                if (_.has(req.query, 'page')) {
+                    page = req.query.page;
+
+                    if (sort === 1) {
+                        Question.find({"_id": {$gt: page}}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                            if (err) {
+                                res.status(500).send(err.message);
+                            } else {
+                                res.json(questions);
+                            }
+                        });
+                    } else {
+                        Question.find({"_id": {$lt: page}}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                            if (err) {
+                                res.status(500).send(err.message);
+                            } else {
+                                res.json(questions);
+                            }
+                        });
+                    }
+
+                } else {
+                    Question.find({}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+                        if (err) {
+                            res.status(500).send(err.message);
+                        } else {
+                            res.json(questions);
+                        }
+                    });
+                }
+            }
+        } else {
+            res.status(500).send('params missing')
+        }
+    })
     .post(isTeacher, function (req, res) {
 
         /**
@@ -83,7 +179,6 @@ router.route('/question/:question_id') //get question's detail without answer
                         question.createdBy = 'self';
                         res.json(question)
                     } else {
-                        question.createdBy = 'unknown';
                         User.findById(question.createdBy, 'local.name').lean().exec(function (err, user) {
                             if (err) {
                                 res.json(question)
@@ -291,18 +386,46 @@ router.route('/query')
          * @param {array} req.body.tags - array of tags which used to query the questions that has the tags
          */
         /**
+         * @param {array} req.body.difficulty -  { min: , max: }
+         */
+        /**
          * @param {string} req.body.content
          */
-        if (_.has(req.body, 'tags') && _.isArray(req.body.tags)) {
-            Question.find({tags: {$in: req.body.tags}}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
-                if (err) {
-                    res.status(500).send(err.message);
-                } else {
-                    res.json(questions);
-                }
-            });
+        /**
+         * @param {string} req.body.options
+         */
+        var checkParams = _.has(req.body, 'tags') && _.isArray(req.body.tags) && _.has(req.body, 'difficulty.min') && _.has(req.body, 'difficulty.max') && _.inRange(req.body.difficulty.min, 1, 6) && _.inRange(req.body.difficulty.max, 1, 6);
+        if (checkParams) {
+
+            var tags = req.body.tags;
+            var difficulty = [];
+
+            for (var i = req.body.difficulty.min; i < (req.body.difficulty.max + 1); i++) {
+                difficulty.push(i)
+            }
+            console.log(req.body)
+
+            console.log(difficulty)
+
+            if (_.get(req.body, 'options.matchAny', false)) {
+                Question.find({$or:[{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
+                    if (err) {
+                        res.status(500).send(err.message);
+                    } else {
+                        res.json(questions);
+                    }
+                });
+            } else {
+                Question.find({$and:[{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
+                    if (err) {
+                        res.status(500).send(err.message);
+                    } else {
+                        res.json(questions);
+                    }
+                });
+            }   
         } else {
-            res.status(400)
+            res.status(400).send('bad params')
         }
     });
 

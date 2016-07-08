@@ -190,23 +190,21 @@ router.route('/teacher/quickquiz/end')
             function (quickquiz, callback) {
                 var analysis = {
                     quickquiz_id: quickquiz._id,
-                    average: {
-                        right: 0,
-                        time: 0
-                    },
+                    aveRight: 0,
+                    aveTime: 0,
                     rank: [],
                     finishTime: new Date()
                 };
                 Quizsample.find({"_id": {'$in': _.get(quickquiz, 'samples', [])}}).lean().exec(function (err, quizSamples) {
-                    if (quizSamples) {
+                    if (quizSamples && quizSamples.length > 0) {
                         var totalCorrectCount = 0;
                         var totalTimeCost = 0; //in millisecond
 
-                        analysis.rank = _.chain(quizSamples)
+                        analysis.rank = _(quizSamples).chain()
                             .map(function (sample) {
                                 var id = sample._id;
                                 var timeCost = null;
-                                var rightCount = sample.results.right;
+                                var rightCount = sample.results.right.length;
                                 totalCorrectCount += rightCount;
 
                                 if (_.has(sample, 'startTime') && _.has(sample, 'finishTime')) {
@@ -216,54 +214,50 @@ router.route('/teacher/quickquiz/end')
 
                                 return {id: id, score: rightCount, timeCost: timeCost}
                             })
-                            .sortBy('score');
+                            .sortBy('score')
+                            .reverse();
 
-                        // _.forEach(quizSamples, function (quizSample) {
-                        //     totalCorrectCount += quizSample.results.right.length;
-                        //     if (_.has(quizSample, 'startTime') && _.has(quizSample, 'finishTime')) {
-                        //         totalTimeCost += Math.abs(quizSample.startTime - quizSample.finishTime);
-                        //     } else if (_.has(quizSample, 'finishTime')) {
-                        //         totalTimeCost += Math.abs(quickquiz.startTime - quizSample.finishTime);
-                        //     }
-                        // });
+                        var aveCorrectCount = 0, aveTimeCost = 0;
 
-                        let aveCorrectCount = totalCorrectCount / quizSamples.length;
-                        let aveTimeCost = totalTimeCost / quizSamples.length;
+                        if (totalTimeCost > 0) {
+                            aveTimeCost = totalTimeCost / quizSamples.length;
+                        }
+
+                        if (totalCorrectCount > 0) {
+                            aveCorrectCount = totalCorrectCount / quizSamples.length;
+                        }
 
                         console.log('aveCorrectCount --> ' + aveCorrectCount);
                         console.log('aveTimeCost --> ' + aveTimeCost);
 
-                        analysis.average.right = aveCorrectCount;
-                        analysis.average.time = aveTimeCost;
+                        analysis.aveRight = aveCorrectCount;
+                        analysis.aveTime = aveTimeCost;
                         callback(null, analysis)
                     } else {
-                        analysis.average.right = aveCorrectCount;
-                        analysis.average.time = aveTimeCost;
+                        analysis.aveRight = 0;
+                        analysis.aveTime = 0;
                         callback(null, analysis)
                     }
 
                 });
             },
             function (analysis, callback) {
-                // arg1 now equals 'three'
-                Quickquiz.find({'_id': analysis.quickquiz_id}, function (err, quickquiz) {
-                    if (err) {
-                        callback(err)
-                    } else {
-                        quickquiz.finished = true;
-                        quickquiz.finishTime = analysis.finishTime;
-                        quickquiz.analysis.average.right = analysis.average.right;
-                        quickquiz.analysis.average.time = analysis.average.time;
-                        quickquiz.analysis.rank = analysis.rank;
-                        quickquiz.save(err, function () {
-                            if (err) {
-                                callback(err)
-                            } else {
-                                callback(null, 'success')
-                            }
-                        })
-                    }
-                })
+                Quickquiz.findOneAndUpdate({'_id': analysis.quickquiz_id},
+                    {
+                        $set: {
+                            'finished': true,
+                            'finishTime': analysis.finishTime,
+                            'analysis.rank': analysis.rank,
+                            'analysis.aveRight': analysis.aveRight,
+                            'analysis.aveTime': analysis.aveTime
+                        }
+                    }, function (err) {
+                        if (err) {
+                            callback(err)
+                        } else {
+                            callback(null, 'success')
+                        }
+                    })
             }
         ], function (err, result) {
             if (err) {
@@ -449,7 +443,7 @@ router.route('/quickquiz')
                                     if (_.get(quickquiz, 'finished', false)) {
                                         res.status(403).send('finished')
                                     } else if (quickquiz) {
-                                        Quickquiz.update({_id: quickquiz_id}, {$addToSet: {students: student_id}}, function (err) {
+                                        Quickquiz.findOneAndUpdate({_id: quickquiz_id}, {$addToSet: {students: student_id}}, function (err) {
                                             if (err) {
                                                 res.status(500).send(err.message)
                                             } else {
@@ -711,52 +705,6 @@ router.route('/quickquiz')
                                 analysis.questions[question_index][3]++
                             }
                         });
-                        // var questionIndex;
-
-                        // for (var i = 0; i < checkAnswersRestults.right.length; i++) {
-                        //     questionIndex = checkAnswersRestults.right[i];
-                        //
-                        //     if (_.isArray(analysis.questions[questionIndex])) {
-                        //         analysis.questions[questionIndex][0]++
-                        //     } else {
-                        //         analysis.questions[questionIndex] = [0, 0, 0, 0];
-                        //         analysis.questions[questionIndex][0]++
-                        //     }
-                        //
-                        // }
-
-                        // for (var i = 0; i < checkAnswersRestults.wrong.length; i++) {
-                        //     questionIndex = checkAnswersRestults.wrong[i];
-                        //
-                        //     if (_.isArray(analysis.questions[questionIndex])) {
-                        //         analysis.questions[questionIndex][1]++
-                        //     } else {
-                        //         analysis.questions[questionIndex] = [0, 0, 0, 0];
-                        //         analysis.questions[questionIndex][1]++
-                        //     }
-                        //
-                        // }
-                        //
-                        // for (var i = 0; i < checkAnswersRestults.blank.length; i++) {
-                        //     questionIndex = checkAnswersRestults.blank[i];
-                        //     if (_.isArray(analysis.questions[questionIndex])) {
-                        //         analysis.questions[questionIndex][2]++
-                        //     } else {
-                        //         analysis.questions[questionIndex] = [0, 0, 0, 0];
-                        //         analysis.questions[questionIndex][2]++
-                        //     }
-                        // }
-                        //
-                        //
-                        // for (var i = 0; i < checkAnswersRestults.exception.length; i++) {
-                        //     questionIndex = checkAnswersRestults.exception[i];
-                        //     if (_.isArray(analysis.questions[questionIndex])) {
-                        //         analysis.questions[questionIndex][3]++
-                        //     } else {
-                        //         analysis.questions[questionIndex] = [0, 0, 0, 0];
-                        //         analysis.questions[questionIndex][3]++
-                        //     }
-                        // }
                     }
 
                     console.log(analysis);
@@ -766,7 +714,7 @@ router.route('/quickquiz')
                         checkAnswersRestults: checkAnswersRestults
                     };
 
-                    Quickquiz.update({'_id': quickquiz_id}, {'$set': {'analysis.questions': analysis.questions}}, function (err) {
+                    Quickquiz.findOneAndUpdate({'_id': quickquiz_id}, {'$set': {'analysis.questions': analysis.questions}}, function (err) {
                         if (err) {
                             // !! need error handle !!
                             callback(null, results)
@@ -839,6 +787,29 @@ router.route('/quickquiz')
 
         } else {
             res.status(403)
+        }
+    })
+    .delete(isTeacher, function (req, res) {
+        var checkParams = _.has(req.body, 'quickquiz_id');
+        if (checkParams) {
+            let quickquiz_id = req.body.quickquiz_id;
+            Quickquiz.findOne({'_id': quickquiz_id}, function (err, quickquiz) {
+                if (err) {
+                    res.status(500).send(err.message)
+                } else {
+                    if (quickquiz.createdBy == req.user.teacher) {
+                        quickquiz.remove(function (err) {
+                            if (err) {
+                                res.status(500).send(err.message)
+                            } else {
+                                res.send('success')
+                            }
+                        })
+                    } else {
+                        res.status(400).send('permission denied')
+                    }
+                }
+            })
         }
     });
 

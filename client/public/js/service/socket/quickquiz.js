@@ -1,7 +1,10 @@
 angular.module('ipkms.quickquiz')
     .factory('socket', function ($rootScope) {
-        var socket = io('/quickquiz').connect({reconnection: false});
+        var socket = null;
         return {
+            connect: function () {
+                socket = io('/quickquiz').connect({reconnection: false});
+            },
             on: function (eventName, callback) {
                 socket.on(eventName, function () {
                     var args = arguments;

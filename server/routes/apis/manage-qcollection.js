@@ -111,6 +111,29 @@ router.route('/qcollection')
 
 
 router.route('/qcollection/question')
+    .post(isLoggedIn, function (req, res) {
+        var checkParams = _.has(req.body, 'qcollection_id') && _.has(req.body, 'question_id');
+        if (checkParams) {
+
+            var qcollection_id = req.body.qcollection_id;
+            var question_id = req.body.question_id;
+
+            Qcollection.findByIdAndUpdate(
+                qcollection_id,
+                {$addToSet: {"questions": question_id}},
+                {safe: true, upsert: true, new: true},
+                function (err) {
+                    if (err) {
+                        res.status(500).send(err.message)
+                    } else {
+                        res.send("success");
+                    }
+                }
+            );
+        } else {
+            res.status(400).send('bad params');
+        }
+    })
     .delete(isLoggedIn, function (req, res) {
         if (req.body && req.body.qcollection_id && req.body.question_id) {
 
@@ -134,7 +157,7 @@ router.route('/qcollection/question')
     });
 
 //获取用户自己创建的题集
-router.route('/mine')
+router.route('/qcollections/mine')
     .get(isLoggedIn, function (req, res) {
         /**
          * @param {string} req.query.sort - sorting by publish date
@@ -187,7 +210,7 @@ router.route('/mine')
     });
 
 //获取所有公开题集
-router.route('/all')
+router.route('/qcollections/all')
     .get(isLoggedIn, function (req, res) {
         /**
          * @param {string} req.query.sort - sorting by publish date

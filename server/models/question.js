@@ -17,9 +17,9 @@ var questionSchema = mongoose.Schema({
     difficulty: {type: Number, index: true}, // 难度系数1-5
     tips: String,
     statistic: {
-        right: Number,
-        wrong: Number,
-        blank: Number
+        right: { type: Number, default: 0 },
+        wrong: { type: Number, default: 0 },
+        blank: { type: Number, default: 0 }
     },
     created_at: Date,
     updated_at: Date

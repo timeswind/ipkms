@@ -10,15 +10,11 @@ var quickquizSchema = mongoose.Schema({
     students: [{type: ObjectId, ref: 'Student', index: true}],
     samples: [{type: ObjectId, ref: 'Quizsample'}],
     analysis: {
-        average: {
-            right: Number, //平均正确题数
-            time: Number   //平均耗时
-        },
+        aveRight: {type: Number, default: null},
+        aveTime: {type: Number, default: null},
         questions: [], // [rightCount, wrongCount, blankCount, exceptionCount]
-        tags: {
-            weakest: [String],
-            strongest: [String]
-        },
+        weakTags: [String],
+        strongTags: [String],
         rank: [{
             name: String,
             id: ObjectId,

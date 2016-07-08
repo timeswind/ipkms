@@ -35,39 +35,39 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService', 'katex'])
             console.log('no params')
         }
 
-        socket.on('connect', function () {
-            if (getUrlVars()["id"]) {
-                socket.emit('authenticate', {token: window.sessionStorage.token});
-            }
-        });
+        function lisenForSockets() {
+            socket.on('connect', function () {
+                if (getUrlVars()["id"]) {
+                    socket.emit('authenticate', {token: window.sessionStorage.token});
+                }
+            });
 
-
-        socket.on('authenticated', function () {
-            $scope.socket.authenticated = true;
-            var data = {
-                quickquizId: $scope.quickquizId
-            };
-            if ($scope.preDoQuiz === false && !$scope.submitted) {
-                data['status'] = 'doing'
-            }
-            socket.emit('user join', data)
-        });
-
-        socket.on('joined', function () {
-            $scope.socket.joined = true;
-        });
-
-        socket.on('request observe', function (data) {
-            if (data.teacher_id) {
-                var teacher_id = data.teacher_id;
-                var respondData = {
-                    teacher_id: teacher_id,
-                    answers: $scope.answers
+            socket.on('authenticated', function () {
+                $scope.socket.authenticated = true;
+                var data = {
+                    quickquizId: $scope.quickquizId
                 };
-                socket.emit('response observe', respondData)
-            }
-        });
+                if ($scope.preDoQuiz === false && !$scope.submitted) {
+                    data['status'] = 'doing'
+                }
+                socket.emit('user join', data)
+            });
 
+            socket.on('joined', function () {
+                $scope.socket.joined = true;
+            });
+
+            socket.on('request observe', function (data) {
+                if (data.teacher_id) {
+                    var teacher_id = data.teacher_id;
+                    var respondData = {
+                        teacher_id: teacher_id,
+                        answers: $scope.answers
+                    };
+                    socket.emit('response observe', respondData)
+                }
+            });
+        }
 
         function getQuickquiz(id) {
 
@@ -85,6 +85,8 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService', 'katex'])
                             }
                             $scope.correctAnswers = response.data.correctAnswers;
                         } else if (response.data.reqRole === 'student') {
+                            socket.connect();
+                            lisenForSockets();
                             $scope.preDoQuiz = true;
                             $scope.submitted = false;
                             $scope.quickquiz = response.data;
