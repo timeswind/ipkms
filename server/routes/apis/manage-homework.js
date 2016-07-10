@@ -62,9 +62,9 @@ router.route('/teacher/homeworks')
         }
     })
     .delete(isTeacher, function (req, res) {
-        var data = req.body
-        var teacher_id = req.user.teacher
-        var requiredParam = 'thomework_id'
+        var data = req.body;
+        var teacher_id = req.user.teacher;
+        var requiredParam = 'thomework_id';
         if (teacher_id && _.has(data, requiredParam)) {
             Thomework.findById(data.thomework_id, function (err, homework) {
                 if (err) {

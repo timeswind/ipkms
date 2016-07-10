@@ -8,10 +8,7 @@ var Teacher = require('../models/teacher');
 var Student = require('../models/student');
 var User = require('../models/localuser');
 var Group = require('../models/group');
-var Thomework = require('../models/thomework');
 
-var updateApiRoutes = require('./apis/update.js');
-var deleteApiRoutes = require('./apis/delete.js');
 var messageApiRoutes = require('./apis/message.js');
 var manageAccountApiRoutes = require('./apis/manage-account.js');
 var manageQuestionApiRoutes = require('./apis/manage-question.js');
@@ -64,8 +61,6 @@ router.use(tokenManager.verifyToken, function (req, res, next) {
 
 });
 
-router.use('/update', updateApiRoutes); //-->apis/update.js //seperate api file
-router.use('/delete', deleteApiRoutes);
 router.use('/message', messageApiRoutes);
 router.use('/manage-account', manageAccountApiRoutes);
 router.use('/manage-question', manageQuestionApiRoutes);
@@ -175,7 +170,7 @@ router.route('/teacher/:user_id/:teacher_id') //DELETE single teacher using its 
                     if (err)
                         res.send(err);
 
-                    res.json("Delete teacher and change to user role");
+                    res.send("Delete teacher and change to user role");
                 });
 
             });
@@ -262,163 +257,12 @@ router.route('/studentgroups') //get student's groups //student api
 
     });
 
-router.route('/teacher/manage/homework')
-    .post(isTeacher, function (req, res) { //create homework object
-
-        var teacher_id = req.user.teacher;
-        var homeworkJsonData = JSON.parse(Object.keys(req.body)[0]);
-        console.log("teacherid is" + teacher_id);
-        if (homeworkJsonData && teacher_id) {
-            var newThomework = new Thomework();
-
-            newThomework.delivery = homeworkJsonData.delivery;
-            newThomework.title = homeworkJsonData.title;
-            newThomework.teacher = teacher_id;
-            newThomework.requirement = homeworkJsonData.requirement;
-            newThomework.tags = homeworkJsonData.tags;
-            newThomework.subject = homeworkJsonData.subject;
-            newThomework.targetGroup.id = homeworkJsonData.targetGroup;
-            newThomework.deadline = homeworkJsonData.deadline;
-
-            async.waterfall([
-                function (callback) {
-                    newThomework.save(function (err, thomework) {
-                        if (err) res.status(500).send(err.message);
-
-                        callback(null, thomework.id)
-                    })
-                },
-                function (thomeworkId, callback) {
-                    var newLog = {
-                        writeBy: req.user.id,
-                        date: Date.now(),
-                        event: "publish homework",
-                        text: "發佈了新功課 - " + homeworkJsonData.title
-                    };
-                    console.log(newLog);
-                    Group.findByIdAndUpdate(homeworkJsonData.targetGroup, {$push: {logs: newLog}}, {
-                        safe: true,
-                        upsert: true
-                    }, function (err) {
-                        if (err) {
-                            throw err;
-                        }
-                        callback(null)
-                    })
-                }
-            ], function (err) {
-                if (err) return next(err);
-                res.json("create thomework success");
-            })
-
-        } else {
-            res.status(403).json("create thomework fail")
-        }
-    });
-
-router.route('/teacher/homeworks')
-    .get(isTeacher, function (req, res) {
-        var teacher_id = req.user.teacher;
-
-        Thomework.find({teacher: teacher_id}, 'name delivery subject title tags').sort({_id: -1}).lean().exec(function (err, thomeworks) {
-            if (err) {
-                console.log(err)
-            } else {
-                res.json(thomeworks)
-            }
-        })
-    })
-
-router.route('/teacher/homework/:homework_id') //get teacher's group info //teacher api
-    .get(isTeacher, function (req, res) {
-        var homework_id = req.params.homework_id;
-        Thomework.findById(homework_id, "requirement targetGroup deadline").populate('targetGroup.id', 'name').lean().exec(function (err, thomework) {
-            res.json(thomework)
-        })
-    });
-
-
-
-router.route('/teacher/update/group/:group_id/:option')  //教師更新小組信息api //teacher api
-    .put(isTeacher, function (req, res) {
-        var group_id = req.params.group_id;
-        var option = req.params.option;
-
-        if (option == "notice") {
-            var newNotice = Object.keys(req.body)[0];
-            var newLog = {
-                writeBy: req.user.id,
-                date: Date.now(),
-                event: "update notice",
-                text: "發佈新小組通知：" + newNotice
-            };
-
-            Group.findById(group_id, function (err, group) {
-                if (newNotice) {
-                    group.notice.text = newNotice;
-                    group.logs.push(newLog);
-                    group.save(function (err) {
-                        if (err)
-                            res.send(err);
-
-                        res.json("update notice success");
-                    });
-                } else {
-                    group.notice.text = " ";
-                    group.save(function (err) {
-                        if (err)
-                            res.send(err);
-
-                        res.json("update notice success");
-                    });
-                }
-            })
-        } else if (option == "name") {
-            var newName = Object.keys(req.body)[0];
-
-            Group.findById(group_id, function (err, group) {
-                if (newName) {
-                    group.name = newName;
-                    group.save(function (err) {
-                        if (err)
-                            res.send(err);
-
-                        res.json("update group name success");
-                    });
-                } else {
-                    res.status(500).send({error: 'The name you entered is empty'});
-                }
-            })
-
-        } else if (option == "members") {
-            var newMembers = Object.keys(req.body)[0];
-
-            if (newMembers) {
-
-                Group.update({"_id": group_id}, {$set: {students: JSON.parse(newMembers)}}, function (err, g) {
-                    if (err) {
-                        res.status(500).json("fail");
-                    } else {
-                        res.json("update group name success");
-                    }
-                });
-
-            } else {
-                res.status(500).send({error: 'The members you submitted is empty'});
-            }
-
-
-        } else {
-            res.status(500).json("fail")
-        }
-    });
-
-router.route('/user/info') //get teacher's group info //teacher api
+router.route('/user/info')
     .get(function (req, res) {
 
         User.findById(req.user.id, {"local.password": 0}, function (err, user) {
             if (err) {
-                res.send(err);
+                res.status(500).send(err);
             } else {
                 res.json(user)
             }
@@ -432,7 +276,10 @@ function isLoggedIn(req, res, next) {
     if (req.user) {
         return next();
     } else {
-        res.json("hello");
+        res.status(401).send({
+            permission: false,
+            message: 'permission denied'
+        });
     }
 }
 
@@ -440,7 +287,10 @@ function isAdmin(req, res, next) {
     if (req.user.role == "admin") {
         return next();
     } else {
-        res.json("hello");
+        res.status(401).send({
+            permission: false,
+            message: 'permission denied'
+        });
     }
 }
 
@@ -448,7 +298,10 @@ function isTeacher(req, res, next) {
     if (req.user.role == "teacher") {
         return next();
     } else {
-        res.json("hello");
+        res.status(401).send({
+            permission: false,
+            message: 'permission denied'
+        });
     }
 }
 
@@ -456,6 +309,9 @@ function isStudent(req, res, next) {
     if (req.user.role == "student") {
         return next();
     } else {
-        res.json("hello");
+        res.status(401).send({
+            permission: false,
+            message: 'permission denied'
+        });
     }
 }

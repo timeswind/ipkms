@@ -3,3 +3,4 @@ dump.rdb
 node_modules/
 npm-debug.log
 .idea/
+server/DB_PASSWORD.js
