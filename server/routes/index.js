@@ -11,6 +11,10 @@ router.get('/', function (req, res) {
     res.render('index');
 });
 
+router.get('/.well-known', function (req, res) {
+    res.send('well-known');
+});
+
 router.get('/error', function (req, res) {
     res.send('errors');
 });
