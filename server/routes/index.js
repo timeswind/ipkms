@@ -11,10 +11,6 @@ router.get('/', function (req, res) {
     res.render('index');
 });
 
-router.get('/.well-known', function (req, res) {
-    res.send('well-known');
-});
-
 router.get('/error', function (req, res) {
     res.send('errors');
 });
@@ -105,7 +101,7 @@ router.post('/login/student', function (req, res, next) {
             return next(err);
         }
         if (!user) {
-            return res.status(401).json("student login fail");
+            return res.status(401).send("student login fail");
         }
         req.logIn(user, function (err) {
             if (err) {

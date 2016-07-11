@@ -84,7 +84,21 @@ router.route('/teacher/homeworks')
                 }
             })
         }
-    })
+    });
+
+router.route('/teacher/homework/:homework_id')
+    .get(isTeacher, function (req, res) {
+        if (_.has(req.params, 'homework_id')) {
+            var homework_id = req.params.homework_id;
+            Thomework.findOne({'_id': homework_id}, 'name delivery subject title requirement deadline tags').lean().exec(function (err, homework) {
+                if (err) {
+                    res.status(500).send(err.message)
+                } else {
+                    res.json(homework)
+                }
+            })
+        }
+    });
 
 module.exports = router;
 

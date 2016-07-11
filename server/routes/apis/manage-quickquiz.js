@@ -813,6 +813,18 @@ router.route('/quickquiz')
         }
     });
 
+router.route('/student/quickquizs')
+    .get(isStudent, function (req, res) {
+        var student_id = req.user.student;
+        Quickquiz.find({students: student_id}, 'title startTime finished').lean().exec(function (err, quickquizs) {
+            if (err) {
+                res.status(500).send(err.message)
+            } else {
+                res.json(quickquizs)
+            }
+        });
+    });
+
 
 module.exports = router;
 
