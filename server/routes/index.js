@@ -101,7 +101,7 @@ router.post('/login/student', function (req, res, next) {
             return next(err);
         }
         if (!user) {
-            return res.status(401).send("student login fail");
+            return res.status(401).json({success: 0});
         }
         req.logIn(user, function (err) {
             if (err) {

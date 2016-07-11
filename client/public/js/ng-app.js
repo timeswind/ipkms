@@ -7,12 +7,14 @@ angular.module('ipkmsMain', ['ngMaterial', 'ngMessages'])
         $httpProvider.interceptors.push('authInterceptor');
 
     })
-    .factory('authInterceptor', function ($rootScope, $q, $window) {
+    .factory('authInterceptor', function ($rootScope, $q, $window, $location) {
         return {
             request: function (config) {
                 config.headers = config.headers || {};
                 if ($window.sessionStorage.token) {
                     config.headers['x-access-token'] = $window.sessionStorage.token;
+                } else if ($location.search().token) {
+                    config.headers['x-access-token'] = $location.search().token
                 }
 
                 return config;
