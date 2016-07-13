@@ -6,7 +6,7 @@ var User = require('../../models/localuser');
 var Question = require('../../models/question');
 
 //创建新题目
-router.route('/questions/:option')
+router.route('/questions')
     .get(isTeacher, function (req, res) {
         /**
          * @param {string} req.params.option
@@ -17,8 +17,8 @@ router.route('/questions/:option')
         /**
          * @param {string} req.query.page - the last question's ID, in order to query the following questions
          */
-        if (_.has(req.params, 'option')) {
-            var option = req.params.option;
+        if (_.has(req.query, 'option')) {
+            var option = req.query.option;
             var sort = -1;
             var page = null;
             if (option === 'mine') {

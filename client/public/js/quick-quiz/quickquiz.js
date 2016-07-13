@@ -139,6 +139,12 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
             })
         };
 
+
+        function hideLoadingIndicator () {
+          $scope.gettingQuestions = false;
+          $scope.$apply();
+        }
+
         $scope.getQuestions = function () {
             if (!$scope.quickquiz) {
                 $scope.gettingQuestions = true;
@@ -147,7 +153,7 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
                 var apiURL = '/api/manage-quickquiz/student/quickquiz/questions' + '?id=' + id;
 
                 apiService.get(apiURL).then(function (response) {
-                    $scope.gettingQuestions = false;
+                    var hideLoadingIndicatorTimer = setTimeout(hideLoadingIndicator, 1500)
                     $scope.quickquiz = response.data;
                     var correctAnswers = [];
 

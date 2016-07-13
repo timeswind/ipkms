@@ -816,13 +816,30 @@ router.route('/quickquiz')
 router.route('/student/quickquizs')
     .get(isStudent, function (req, res) {
         var student_id = req.user.student;
-        Quickquiz.find({students: student_id}, 'title startTime finished').lean().exec(function (err, quickquizs) {
+        var populateQuery = [
+            {path: "quickquiz", select: "title startTime finishTime finished time"}
+        ];
+
+        Quizsample.find({students: student_id}, "quickquiz results").populate(populateQuery).sort({_id: -1}).limit(10).lean().exec(function (err, quizsamples) {
             if (err) {
                 res.status(500).send(err.message)
             } else {
-                res.json(quickquizs)
+                res.json(quizsamples)
             }
         });
+
+        // Quickquiz.find({students: student_id}, 'title startTime finishTime finished time questions').sort({_id: -1}).limit(10).lean().exec(function (err, quickquizs) {
+        //     if (err) {
+        //         res.status(500).send(err.message)
+        //     } else {
+        //         if (_.has(quickquizs, 'questions') && quickquizs.questions.length > 0)  {
+        //             quickquizs.questions = quickquizs.questions.length
+        //         } else {
+        //             quickquizs.questions = 0
+        //         }
+        //         res.json(quickquizs)
+        //     }
+        // });
     });
 
 
