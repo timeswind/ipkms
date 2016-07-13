@@ -820,7 +820,7 @@ router.route('/student/quickquizs')
             {path: "quickquiz", select: "title startTime finishTime finished time"}
         ];
 
-        Quizsample.find({students: student_id}, "quickquiz results").populate(populateQuery).sort({_id: -1}).limit(10).lean().exec(function (err, quizsamples) {
+        Quizsample.find({student: student_id}, "quickquiz results").populate(populateQuery).sort({_id: -1}).limit(10).lean().exec(function (err, quizsamples) {
             if (err) {
                 res.status(500).send(err.message)
             } else {
