@@ -7,14 +7,16 @@ angular.module('ipkmsMain', ['ngMaterial', 'ngMessages'])
   $httpProvider.interceptors.push('authInterceptor');
 
 })
-.factory('authInterceptor', function ($rootScope, $q, $window, $location) {
+.factory('authInterceptor', function ($rootScope, $q, $window) {
   return {
     request: function (config) {
       config.headers = config.headers || {};
       if ($window.sessionStorage.token) {
         config.headers['x-access-token'] = $window.sessionStorage.token;
       } else if (getParameterByName('token')) {
-        config.headers['x-access-token'] = getParameterByName('token')
+        var token = getParameterByName('token')
+        $window.sessionStorage.token = token
+        config.headers['x-access-token'] = token
       }
 
       return config;
@@ -30,8 +32,6 @@ angular.module('ipkmsMain', ['ngMaterial', 'ngMessages'])
         console.log("Response Error 401", rejection);
         window.location = '/'
       }
-      console.log($location.search('token'))
-
       return $q.reject(rejection);
     }
   };

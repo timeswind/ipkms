@@ -1,11 +1,10 @@
-angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService', 'katex'])
+angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
 
     .controller('MainController', function ($rootScope, $scope, apiService, socket) {
 
         $scope.errorMessage = null;
 
         $scope.resultCard = null;
-
         $scope.quickquizId = null;
         $scope.quickquiz = null;
         $scope.answers = [];
@@ -143,8 +142,10 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService', 'katex'])
         $scope.getQuestions = function () {
             if (!$scope.quickquiz) {
                 $scope.gettingQuestions = true;
+                var self = this
                 var id = $scope.quickquizId;
                 var apiURL = '/api/manage-quickquiz/student/quickquiz/questions' + '?id=' + id;
+
                 apiService.get(apiURL).then(function (response) {
                     $scope.gettingQuestions = false;
                     $scope.quickquiz = response.data;
@@ -293,4 +294,30 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService', 'katex'])
     })
     .filter('unsafe', function ($sce) {
         return $sce.trustAsHtml;
+    })
+    .factory('socket', function ($rootScope) {
+        var socket = null;
+        return {
+            connect: function () {
+                socket = io('/quickquiz').connect({reconnection: false});
+            },
+            on: function (eventName, callback) {
+                socket.on(eventName, function () {
+                    var args = arguments;
+                    $rootScope.$apply(function () {
+                        callback.apply(socket, args);
+                    });
+                });
+            },
+            emit: function (eventName, data, callback) {
+                socket.emit(eventName, data, function () {
+                    var args = arguments;
+                    $rootScope.$apply(function () {
+                        if (callback) {
+                            callback.apply(socket, args);
+                        }
+                    });
+                })
+            }
+        };
     });
