@@ -148,12 +148,11 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
         $scope.getQuestions = function () {
             if (!$scope.quickquiz) {
                 $scope.gettingQuestions = true;
-                var self = this
                 var id = $scope.quickquizId;
                 var apiURL = '/api/manage-quickquiz/student/quickquiz/questions' + '?id=' + id;
 
                 apiService.get(apiURL).then(function (response) {
-                    var hideLoadingIndicatorTimer = setTimeout(hideLoadingIndicator, 1500)
+                    setTimeout(hideLoadingIndicator, 1500);
                     $scope.quickquiz = response.data;
                     var correctAnswers = [];
 

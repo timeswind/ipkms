@@ -64,7 +64,7 @@
           <div layout="row">
             <span class="label-field" layout="column" flex="33"><span class="label">留空</span><span class="text">{[{resultCard.results.blank.length}]}</span></span>
             <span class="label-field" layout="column" flex="33"><span class="label">例外/其他</span><span class="text">{[{resultCard.results.exception.length}]}</span></span>
-            <span class="label-field" layout="column" flex="33"><span class="label">正確率</span><span class="text">{[{resultCard.results.right.length * 100 / (resultCard.answers.length - resultCard.results.exception.length)}]} %</span></span>
+            <span class="label-field" layout="column" flex="33"><span class="label">正確率</span><span class="text">{[{resultCard.results.right.length * 100 / (resultCard.answers.length - resultCard.results.exception.length) | number:2}]} %</span></span>
 
           </div>
           <span ng-click="getQuestions()" layout="column" class="check-my-paper-button">查閱我的試卷<md-progress-circular md-mode='indeterminate' ng-if="gettingQuestions" class="md-hue-2" md-diameter="20px"></md-progress-circular></span>
@@ -108,13 +108,13 @@
               ng-class="{'choose': checkChoose($index, 0), 'right': showRight($index, 0), 'wrong': showWrong($index, 0)}"
               flex="50" layout="row" ng-click="answerOnChoose($index, 0)">
               <span class="choice-label">A</span>
-              <div ng-bind-html="question.choices[0] | unsafe"></div>
+              <div class="choice-body" ng-bind-html="question.choices[0] | unsafe"></div>
             </div>
             <div class="choice choice-b"
             ng-class="{'choose': checkChoose($index, 1), 'right': showRight($index, 1), 'wrong': showWrong($index, 1)}"
             flex="50" layout="row" ng-click="answerOnChoose($index, 1)">
             <span class="choice-label">B</span>
-            <div ng-bind-html="question.choices[1] | unsafe"></div>
+            <div class="choice-body" ng-bind-html="question.choices[1] | unsafe"></div>
           </div>
         </div>
         <div layout="row">
@@ -122,13 +122,13 @@
           ng-class="{'choose': checkChoose($index, 2), 'right': showRight($index, 2), 'wrong': showWrong($index, 2)}"
           flex="50" layout="row" ng-click="answerOnChoose($index, 2)">
           <span class="choice-label">C</span>
-          <div ng-bind-html="question.choices[2] | unsafe"></div>
+          <div class="choice-body" ng-bind-html="question.choices[2] | unsafe"></div>
         </div>
         <div class="choice choice-d"
         ng-class="{'choose': checkChoose($index, 3), 'right': showRight($index, 3), 'wrong': showWrong($index, 3)}"
         flex="50" layout="row" ng-click="answerOnChoose($index, 3)">
         <span class="choice-label">D</span>
-        <div ng-bind-html="question.choices[3] | unsafe"></div>
+        <div class="choice-body" ng-bind-html="question.choices[3] | unsafe"></div>
       </div>
     </div>
   </div>
