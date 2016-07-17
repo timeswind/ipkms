@@ -6,13 +6,31 @@ var tokenManager = require('../config/token_manager');
 var _ = require('lodash');
 
 var Student = require('../models/student');
-
+var User = require('../models/localuser');
 router.get('/', function (req, res) {
     res.render('index');
 });
 
 router.get('/error', function (req, res) {
     res.send('errors');
+});
+
+router.get('/profile', isLoggedIn, function (req, res) {
+
+    if (_.has(req.query, "id")) {
+        var user_id = req.query.id;
+        User.findOne({"_id":user_id}, "local.name").lean().exec(function (err, user) {
+            if (err) {
+                res.status(500).send(err.message)
+            } else {
+                res.render('profile', {user: user});
+            }
+        })
+    } else {
+        var user = req.user;
+        res.render('profile', {user: user});
+    }
+
 });
 
 router.post('/login', function (req, res, next) {

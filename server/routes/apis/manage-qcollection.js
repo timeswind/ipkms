@@ -107,6 +107,53 @@ router.route('/qcollection')
         } else {
             res.status(400);
         }
+    })
+    .put(isTeacher, function (req, res) {
+        /**
+         * @param {string} req.body.qcollection_id
+         */
+        /**
+         * @param {string} req.body.name - New Qcollection Name
+         */
+        /**
+         * @param {boolean} req.body.public - PRIVATE or Public group
+         */
+        /**
+         * @param {string} req.body.subject - subject of the group
+         */
+        /**
+         * @param {string} req.body.description
+         */
+
+        var requiredParams = ['qcollection_id', 'name', 'public', 'subject', 'description'];
+        var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
+
+        if (paramsComplete) {
+            var qcollection_id = req.body.qcollection_id;
+            Qcollection.findById(qcollection_id, function (err, qc) {
+                if (err) {
+                    res.status(500).send(err.message);
+                } else {
+                    if (qc.createdBy == req.user.id) {
+                        qc.name = req.body.name;
+                        qc.subject = req.body.subject;
+                        qc.public = req.body.subject;
+                        qc.description = req.body.description;
+                        qc.save(function (err) {
+                            if (err) {
+                                res.status(500).send(err.message);
+                            } else {
+                                res.send('success')
+                            }
+                        })
+                    } else {
+                        res.status(500).send('permission denied')
+                    }
+                }
+            })
+        } else {
+            res.status(500).send('params missing')
+        }
     });
 
 
@@ -263,56 +310,33 @@ router.route('/qcollections/all')
 
     });
 
+router.route('/query')
+    .post(isTeacher, function (req, res) {
+        /**
+         * @param {array} req.body.name - qcollection name
+         */
+        /**
+         * @param {array} req.body.subject - qcollection subject
+         */
+        var checkParams = _.has(req.body, 'name') && _.isString(req.body.name) && _.has(req.body, 'subject') && _.isString(req.body.subject);
+        if (checkParams) {
 
-//更新题集基本信息
-router.route('/update-info')
-    .put(isLoggedIn, function (req, res) {
-        /**
-         * @param {string} req.body.qcollection_id
-         */
-        /**
-         * @param {string} req.body.name - New Qcollection Name
-         */
-        /**
-         * @param {boolean} req.body.public - PRIVATE or Public group
-         */
-        /**
-         * @param {string} req.body.subject - subject of the group
-         */
-        /**
-         * @param {string} req.body.description
-         */
+            var name = req.body.name;
+            var subject = req.body.subject;
 
-        var requiredParams = ['qcollection_id', 'name', 'public', 'subject', 'description'];
-        var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
-
-        if (paramsComplete) {
-            var qcollection_id = req.body.qcollection_id;
-            Qcollection.findById(qcollection_id, function (err, qc) {
+            Qcollection.find({$and: [{name: {$regex: name}}, {subject: subject}]}, 'name subject public createdBy aveDifficulty').lean().exec(function (err, qcollections) {
                 if (err) {
                     res.status(500).send(err.message);
                 } else {
-                    if (qc.createdBy == req.user.id) {
-                        qc.name = req.body.name;
-                        qc.subject = req.body.subject;
-                        qc.public = req.body.subject;
-                        qc.description = req.body.description;
-                        qc.save(function (err) {
-                            if (err) {
-                                res.status(500).send(err.message);
-                            } else {
-                                res.send('success')
-                            }
-                        })
-                    } else {
-                        res.status(500).send('permission denied')
-                    }
+                    res.json(qcollections);
                 }
-            })
+            });
+
         } else {
-            res.status(500).send('params missing')
+            res.status(400).send('bad params')
         }
     });
+
 
 //更新题集的平均难度
 router.route('/update-difficulty')

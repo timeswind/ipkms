@@ -3,7 +3,9 @@ var express = require('express');
 var router = express.Router();
 
 var Group = require('../../models/group');
-
+var validUserRole = require("../../auth/validUserRole");
+var isStudent  = validUserRole.isStudent;
+var isTeacher = validUserRole.isTeacher;
 router.route('/teacher/groups')
     .get(isTeacher, function (req, res) {
         var teacher_id = req.user.teacher;
@@ -187,13 +189,16 @@ router.route('/public/groups')
         })
     });
 
+router.route('/student/groups')
+    .get(isStudent, function (req, res) {
+        var student_id = req.user.student;
+        Group.find({'students': student_id}, 'name').lean().exec(function (err, groups) {
+            if (err) res.status(500).send(err.message);
+
+            res.json(groups);
+        })
+    });
+
+
+
 module.exports = router;
-
-function isTeacher(req, res, next) {
-
-    if (req.user.role == "teacher") {
-        return next();
-    } else {
-        res.status(401);
-    }
-}

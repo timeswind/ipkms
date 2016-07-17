@@ -3,7 +3,8 @@
         md-component-id="left"
         md-is-locked-open="$mdMedia('gt-md')"
         md-disable-backdrop
-        md-whiteframe="4">
+        md-whiteframe="4"
+        style="height: 100%;">
 
     <md-content>
         <md-list flex>
@@ -12,14 +13,16 @@
 
                 {% if user.local.role === 'teacher' %}
                 <span class="role">教師</span>
-                {% elseif user.local.role === 'student' %}
-                <span class="role">學生</span>
                 {% else %}
                 <span class="role">{{user.local.role}}</span>
                 {% endif %}
                 <div layout="row">
-                    <md-button layout="row" class="profile" onclick="window.location.href = '/home/profile' "><i class="material-icons">account_box</i> 個人資料</md-button>
-                    <md-button class="md-primary" layout="row" onclick="window.location.href = '/logout' "><i class="material-icons">exit_to_app</i> 登 出</md-button>
+                    <md-button layout="row" class="profile" onclick="window.location.href = '/home/profile' "><i
+                            class="material-icons">account_box</i> 個人資料
+                    </md-button>
+                    <md-button class="md-primary" layout="row" onclick="window.location.href = '/logout' "><i
+                            class="material-icons">exit_to_app</i> 登 出
+                    </md-button>
                 </div>
             </div>
 

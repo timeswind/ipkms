@@ -15,19 +15,34 @@ router.route('/students')
         /**
          * @param {string} req.query.schoolId - student schoolid
          */
-        var name = req.query.name;
-        var schoolId = req.query.schoolId;
+        /**
+         * @param {string} req.query.option
+         */
 
-        Student.find({
-            name: {$regex: name},
-            schoolId: {$regex: schoolId}
-        }, 'name class schoolId', function (err, students) {
-            if (err) {
-                res.send(err.message)
-            } else {
-                res.json(students);
-            }
-        })
+        if (_.get(req.query, 'option', false) === 'all') {
+            Student.find({}, "name schoolId").lean().exec(function (err, students) {
+                if (err) {
+                    res.status(500).send(err.message)
+                } else {
+                    res.json(students);
+                }
+            });
+        } else {
+            var name = req.query.name;
+            var schoolId = req.query.schoolId;
+
+            Student.find({
+                name: {$regex: name},
+                schoolId: {$regex: schoolId}
+            }, 'name class schoolId').lean().exec(function (err, students) {
+                if (err) {
+                    res.status(500).send(err.message)
+                } else {
+                    res.json(students);
+                }
+            })
+        }
+
     })
     .post(isAdmin, function (req, res) {
         /**

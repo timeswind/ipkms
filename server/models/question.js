@@ -10,8 +10,7 @@ var questionSchema = mongoose.Schema({
     context: String,
     choices: [String], //a b c d 选项
     answer: {
-        mc: Number,
-        sets: [Number]
+        mc: Number
     },
     tags: {type: [String], index: true},
     difficulty: {type: Number, index: true}, // 难度系数1-5
@@ -21,6 +20,7 @@ var questionSchema = mongoose.Schema({
         wrong: { type: Number, default: 0 },
         blank: { type: Number, default: 0 }
     },
+    rawData: {type:String},
     created_at: Date,
     updated_at: Date
 

@@ -1,8 +1,10 @@
+'use strict';
 var express = require('express');
 var router = express.Router();
 
 var Chatroom = require('../../models/chatroom');
-
+var validUserRole = require("../../auth/validUserRole");
+var isLoggedIn = validUserRole.isLoggedIn;
 
 //获取小组的最近的20条消息
 router.route('/catchup/:chatroom_id')
@@ -59,12 +61,3 @@ router.route('/sync/:chatroom_id/:version')
     });
 
 module.exports = router;
-
-function isLoggedIn(req, res, next) {
-
-    if (req.user) {
-        return next();
-    } else {
-        res.json("hello");
-    }
-}

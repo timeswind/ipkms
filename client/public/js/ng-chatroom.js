@@ -104,7 +104,7 @@ angular.module('ipkms.chatroom', ['ipkmsMain', 'ipkmsService'])
             apiService.get('/api/myinfo').then(function (response) {
                 $scope.myId = response.data.id;
                 if (response.data.role === "student") {
-                    apiService.get('/api/studentgroups').then(function (response) {
+                    apiService.get('/api/manage-group/student/groups').then(function (response) {
                         $scope.ifGetGroupList = true;
                         $scope.myGroups = response.data;
                         $scope.roomName = $scope.myGroups[0]["name"];

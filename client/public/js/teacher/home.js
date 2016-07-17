@@ -1,6 +1,6 @@
-angular.module('teacherHome', ['ipkmsMain', 'ipkmsService'])
+angular.module('ipkms.teacherHome', ['ipkmsMain', 'ipkmsService'])
 
-    .controller('homeController', function ($scope) {
+    .controller('TeacherHomeController', function ($scope) {
 
         console.log("hello home!")
 

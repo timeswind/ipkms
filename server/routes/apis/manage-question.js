@@ -126,10 +126,13 @@ router.route('/questions')
         /**
          * @param {number} req.body.difficulty - the difficulty of the question (0 to 5)
          */
+        /**
+         * @param {string} req.body.rawData
+         */
 
         var data = req.body;
         // REQUIRED @params
-        var requiredParams = ['type', 'subject', 'context', 'choices', 'answer', 'tags', 'difficulty'];
+        var requiredParams = ['type', 'subject', 'context', 'choices', 'answer', 'tags', 'difficulty', 'rawData'];
         var paramsComplete = _.every(requiredParams, _.partial(_.has, data));
 
         if (paramsComplete && _.isNumber(data.difficulty) && _.isString(data.type)) {
@@ -144,12 +147,13 @@ router.route('/questions')
                 newQuestion.answer.mc = data.answer.mc;
                 newQuestion.tags = data.tags;
                 newQuestion.difficulty = data.difficulty;
+                newQuestion.rawData = data.rawData;
 
-                newQuestion.save(function (err, q) {
+                newQuestion.save(function (err, question) {
                     if (err) {
                         res.status(500).send(err.message);
                     } else {
-                        res.json(q)
+                        res.json(question)
                     }
                 });
             } else {
@@ -167,9 +171,9 @@ router.route('/question/:question_id') //get question's detail without answer
          */
         if (_.has(req.params, 'question_id')) {
             var question_id = req.params.question_id;
-            var selectFields = 'context tags subject difficulty type choices';
+            var selectFields = 'type context tags subject difficulty choices';
             if (_.has(req.user, 'teacher')) {
-                selectFields = 'createdBy context tags subject difficulty type choices updated_at statistic answer'
+                selectFields = 'type createdBy context tags subject difficulty choices updated_at statistic answer rawData'
             }
             Question.findById(question_id, selectFields).lean().exec(function (err, question) {
                 if (err) {
@@ -381,7 +385,7 @@ router.route('/all')
 
 //根据标签进行搜索题目
 router.route('/query')
-    .post(isLoggedIn, function (req, res) {
+    .post(isTeacher, function (req, res) {
         /**
          * @param {array} req.body.tags - array of tags which used to query the questions that has the tags
          */
@@ -403,9 +407,6 @@ router.route('/query')
             for (var i = req.body.difficulty.min; i < (req.body.difficulty.max + 1); i++) {
                 difficulty.push(i)
             }
-            console.log(req.body)
-
-            console.log(difficulty)
 
             if (_.get(req.body, 'options.matchAny', false)) {
                 Question.find({$or:[{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {

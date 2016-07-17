@@ -140,9 +140,9 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
         };
 
 
-        function hideLoadingIndicator () {
-          $scope.gettingQuestions = false;
-          $scope.$apply();
+        function hideLoadingIndicator() {
+            $scope.gettingQuestions = false;
+            $scope.$apply();
         }
 
         $scope.getQuestions = function () {
@@ -212,11 +212,15 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
             if (!$scope.submitted) {
                 var quickquiz_id = $scope.quickquizId;
                 var question_type = 'mc';
-                if ($scope.answers[question_index] === mc_choice_index) {
+
+                if ($scope.answers[question_index] === null) {
+                    $scope.finishedQuestionsCount++;
+                    $scope.answers[question_index] = mc_choice_index;
+
+                } else if ($scope.answers[question_index] === mc_choice_index) {
                     $scope.answers[question_index] = null;
                     $scope.finishedQuestionsCount--;
                 } else {
-                    $scope.finishedQuestionsCount++;
                     $scope.answers[question_index] = mc_choice_index;
                 }
                 var data = {

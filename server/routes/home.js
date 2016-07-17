@@ -11,25 +11,25 @@ router.get('/', isLoggedIn, function (req, res) {
             res.redirect('/home/teacher');
         } else if (role === "admin") {
             res.redirect('/admin');
-        } else {
-            res.render('home', {user: user});
+        } else if (role === "student") {
+            res.redirect('/home/student');
         }
     } else {
         res.status(403)
     }
 });
 
-router.get('/profile', isLoggedIn, function (req, res) {
-
-    var user = req.user;
-    res.render('profile', {user: user});
-
-});
-
 router.get('/teacher', isTeacher, function (req, res) {
 
     var user = req.user;
     res.render('teacher/home', {user: user});
+
+});
+
+router.get('/student', isStudent, function (req, res) {
+
+    var user = req.user;
+    res.render('student/home', {user: user});
 
 });
 
