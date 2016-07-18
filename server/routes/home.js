@@ -10,7 +10,7 @@ router.get('/', isLoggedIn, function (req, res) {
         if (role === "teacher") {
             res.redirect('/home/teacher');
         } else if (role === "admin") {
-            res.redirect('/admin');
+            res.redirect('/home/admin');
         } else if (role === "student") {
             res.redirect('/home/student');
         }
@@ -53,6 +53,12 @@ router.get('/teacher/questions', isTeacher, function (req, res) {
 
 });
 
+router.get('/admin', isAdmin, function (req, res) {
+
+    res.sendFile(path.join(__dirname, '../../client/public/home/admin-panel/index.html'));
+
+});
+
 router.get('/student/mygroups', isStudent, function (req, res) {
 
     var user = req.user;
@@ -90,3 +96,13 @@ function isStudent(req, res, next) {
     // if they aren't redirect them to the home page
     res.redirect('/home');
 }
+
+function isAdmin(req, res, next) {
+    // if user is authenticated in the session, carry on
+    if (req.isAuthenticated())
+        if (req.user.local.role == "admin")
+            return next();
+    // if they aren't redirect them to the home page
+    res.redirect('/home');
+}
+

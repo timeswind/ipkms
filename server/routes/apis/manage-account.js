@@ -7,6 +7,8 @@ var Teacher = require('../../models/teacher');
 var Student = require('../../models/student');
 var User = require('../../models/localuser');
 
+var validUser = require('../../auth/validUserRole');
+var isAdmin = validUser.isAdmin;
 router.route('/students')
     .get(isAdmin, function (req, res) {
         /**
@@ -30,11 +32,8 @@ router.route('/students')
         } else {
             var name = req.query.name;
             var schoolId = req.query.schoolId;
-
-            Student.find({
-                name: {$regex: name},
-                schoolId: {$regex: schoolId}
-            }, 'name class schoolId').lean().exec(function (err, students) {
+            console.log(req.query)
+            Student.find({$or: [{name: {$regex: name}}, {schoolId: {$regex: schoolId}}]}, 'name class schoolId').lean().exec(function (err, students) {
                 if (err) {
                     res.status(500).send(err.message)
                 } else {
@@ -237,13 +236,36 @@ router.route('/teachers')
          */
         var name = req.query.name;
         var email = req.query.email;
-        Teacher.find({name: {$regex: name}, email: {$regex: email}}, 'name email', function (err, teachers) {
-            if (err) {
-                res.status(406).send(err.message);
+
+        if (_.get(req.query, 'name', '') !== '') {
+            if (_.get(req.query, 'email', '') !== '') {
+                Teacher.find({$or: [{name: {$regex: name}}, {email: {$regex: email}}]}, 'name email', function (err, teachers) {
+                    if (err) {
+                        res.status(500).send(err.message);
+                    } else {
+                        res.json(teachers);
+                    }
+                })
             } else {
-                res.json(teachers);
+                Teacher.find({$or: [{name: {$regex: name}}]}, 'name email', function (err, teachers) {
+                    if (err) {
+                        res.status(500).send(err.message);
+                    } else {
+                        res.json(teachers);
+                    }
+                })
             }
-        })
+        } else if (_.get(req.query, 'email', '') !== '') {
+            Teacher.find({$or: [{email: {$regex: email}}]}, 'name email', function (err, teachers) {
+                if (err) {
+                    res.status(500).send(err.message);
+                } else {
+                    res.json(teachers);
+                }
+            })
+        }
+
+
     })
     .post(isAdmin, function (req, res) {
         /**
@@ -372,14 +394,4 @@ router.route('/teachers/reset-password/:teacher_id')
     });
 
 module.exports = router;
-
-
-function isAdmin(req, res, next) {
-
-    if (req.user.role == "admin") {
-        return next();
-    } else {
-        res.status(401);
-    }
-}
 
