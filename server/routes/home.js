@@ -47,7 +47,7 @@ router.get('/teacher/managegroups', isTeacher, function (req, res) {
 
 });
 
-router.get('/teacher/questions', isTeacher, function (req, res) {
+router.get('/teacher/question_library', isTeacher, function (req, res) {
 
     res.sendFile(path.join(__dirname, '../../client/public/home/question-library/index.html'));
 

@@ -7,20 +7,21 @@ var questionSchema = mongoose.Schema({
     createdBy: {type: ObjectId, ref: 'User', index: true},
     type: {type: String, index: true}, // mc / reading /...
     subject: {type: String, index: true},
+    language: {type: String, index: true},
     context: String,
     choices: [String], //a b c d 选项
     answer: {
-        mc: Number
+        mc: Number,
+        fill: String
     },
     tags: {type: [String], index: true},
     difficulty: {type: Number, index: true}, // 难度系数1-5
     tips: String,
     statistic: {
-        right: { type: Number, default: 0 },
-        wrong: { type: Number, default: 0 },
-        blank: { type: Number, default: 0 }
+        mc: [], // [a,b,c,d] for mc
+        fill: [] // [count, right] for fill in the blank question
     },
-    rawData: {type:String},
+    rawData: {type: String},
     created_at: Date,
     updated_at: Date
 

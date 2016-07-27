@@ -5,6 +5,7 @@ var Student = require('../models/student');
 var Teacher = require('../models/teacher');
 var Quickquiz = require('../models/quickquiz');
 var Quizsample = require('../models/quizsample');
+var redisClient = require('../config/redis_database').redisClient;
 
 
 exports = module.exports = function (io) {
@@ -25,7 +26,6 @@ exports = module.exports = function (io) {
         handshake: false
     })).on('authenticated', function (socket) {
 
-        console.log('socket id for quickquiz is ' + socket.id);
         console.log('hello! ' + JSON.stringify(socket.decoded_token));
 
         if (socket.decoded_token.teacher) {
@@ -190,4 +190,8 @@ function getTeachersSocketIds(teachers, quickquiz_id) {
     return _.keys(_.pickBy(teachers, function (teacher) {
         return teacher.quickquiz === quickquiz_id
     }))
+}
+
+function addStudent(socketId, studentObject) {
+    client.hset(["socket:quickquiz:user:" + socketId, "", "some other value"], redis.print);
 }

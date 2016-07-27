@@ -132,7 +132,7 @@ router.route('/questions')
 
         var data = req.body;
         // REQUIRED @params
-        var requiredParams = ['type', 'subject', 'context', 'choices', 'answer', 'tags', 'difficulty', 'rawData'];
+        var requiredParams = ['language', 'type', 'subject', 'context', 'choices', 'answer', 'tags', 'difficulty', 'rawData'];
         var paramsComplete = _.every(requiredParams, _.partial(_.has, data));
 
         if (paramsComplete && _.isNumber(data.difficulty) && _.isString(data.type)) {
@@ -148,6 +148,11 @@ router.route('/questions')
                 newQuestion.tags = data.tags;
                 newQuestion.difficulty = data.difficulty;
                 newQuestion.rawData = data.rawData;
+                newQuestion.language = data.language;
+                newQuestion.statistic.mc = [0, 0, 0, 0];
+
+                newQuestion.answer.fill = undefined;
+                newQuestion.statistic.fill = undefined;
 
                 newQuestion.save(function (err, question) {
                     if (err) {
@@ -160,7 +165,7 @@ router.route('/questions')
                 res.status(400).send('question type not support !')
             }
         } else {
-            res.status(400);
+            res.status(500).send('params missing');
         }
     });
 
@@ -409,7 +414,7 @@ router.route('/query')
             }
 
             if (_.get(req.body, 'options.matchAny', false)) {
-                Question.find({$or:[{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
+                Question.find({$or: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
                     if (err) {
                         res.status(500).send(err.message);
                     } else {
@@ -417,14 +422,14 @@ router.route('/query')
                     }
                 });
             } else {
-                Question.find({$and:[{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
+                Question.find({$and: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
                     if (err) {
                         res.status(500).send(err.message);
                     } else {
                         res.json(questions);
                     }
                 });
-            }   
+            }
         } else {
             res.status(400).send('bad params')
         }

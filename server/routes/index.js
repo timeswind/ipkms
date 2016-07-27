@@ -4,189 +4,176 @@ var passport = require('passport');
 var jwt = require('jsonwebtoken');
 var tokenManager = require('../config/token_manager');
 var _ = require('lodash');
+var path = require('path');
 
 var Student = require('../models/student');
 var User = require('../models/localuser');
 router.get('/', function (req, res) {
-    res.render('index');
+  res.render('index');
 });
 
 router.get('/error', function (req, res) {
-    res.send('errors');
+  res.send('errors');
 });
 
 router.get('/profile', isLoggedIn, function (req, res) {
-
-    if (_.has(req.query, "id")) {
-        var user_id = req.query.id;
-        User.findOne({"_id":user_id}, "local.name").lean().exec(function (err, user) {
-            if (err) {
-                res.status(500).send(err.message)
-            } else {
-                res.render('profile', {user: user});
-            }
-        })
-    } else {
-        var user = req.user;
-        res.render('profile', {user: user});
-    }
-
+  res.sendFile(path.join(__dirname, '../../client/public/static/profile/profile.html'));
 });
 
 router.post('/login', function (req, res, next) {
-    passport.authenticate('local-login', function (err, user) {
-        if (err) {
-            return res.status(401).json({success: 0, error: 'username or password incorrect'});
-        }
-        if (!user) {
-            return res.status(401).json({success: 0, error: 'username or password incorrect'});
-        }
-        req.logIn(user, function (err) {
-            if (err) {
-                return res.status(401).json({success: 0, error: 'username or password incorrect'});
-            }
+  passport.authenticate('local-login', function (err, user) {
+    if (err) {
+      return res.status(401).json({success: 0, error: 'username or password incorrect'});
+    }
+    if (!user) {
+      return res.status(401).json({success: 0, error: 'username or password incorrect'});
+    }
+    req.logIn(user, function (err) {
+      if (err) {
+        return res.status(401).json({success: 0, error: 'username or password incorrect'});
+      }
 
-            var payload;
-            var token;
-            var userRole = req.user.local.role;
+      var payload;
+      var token;
+      var userRole = req.user.local.role;
 
-            if (userRole == "teacher") {
-                payload = {
-                    id: user._id,
-                    name: user.local.name,
-                    email: user.local.email,
-                    teacher: user.local.teacher,
-                    role: "teacher"
-                };
-                //user has authenticated correctly thus we create a JWT token
-                token = jwt.sign(payload, user.local.password, {
-                    expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
-                });
-
-                return res.json({token: token});
-            } else if (userRole == "student") {
-                var student_name = _.get(user.local, 'name', null);
-                payload = {
-                    id: user._id,
-                    name: student_name,
-                    schoolid: user.local.schoolId,
-                    student: user.local.student,
-                    role: "student"
-                };
-                if (!student_name) {
-                    Student.findById(user.local.student).lean().exec(function (err, student) {
-                        if (err) {
-                            return res.status(500).send(err.message)
-                        } else {
-                            payload.name = student.name;
-                            var token = jwt.sign(payload, user.local.password, {
-                                expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
-                            });
-
-                            return res.json({token: token});
-                        }
-                    })
-                } else {
-                    token = jwt.sign(payload, user.local.password, {
-                        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
-                    });
-
-                    return res.json({token: token});
-                }
-
-            } else {
-                payload = {
-                    id: user._id,
-                    name: user.local.name,
-                    email: user.local.email,
-                    role: user.local.role
-                };
-                //user has authenticated correctly thus we create a JWT token
-                token = jwt.sign(payload, user.local.password, {
-                    expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
-                });
-
-                return res.json({token: token});
-            }
-
+      if (userRole == "teacher") {
+        payload = {
+          id: user._id,
+          name: user.local.name,
+          email: user.local.email,
+          teacher: user.local.teacher,
+          role: "teacher"
+        };
+        //user has authenticated correctly thus we create a JWT token
+        token = jwt.sign(payload, user.local.password, {
+          expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
         });
-    })(req, res, next);
+
+        return res.json({token: token});
+      } else if (userRole == "student") {
+        var student_name = _.get(user.local, 'name', null);
+        payload = {
+          id: user._id,
+          name: student_name,
+          schoolid: user.local.schoolId,
+          student: user.local.student,
+          role: "student"
+        };
+        if (!student_name) {
+          Student.findById(user.local.student).lean().exec(function (err, student) {
+            if (err) {
+              return res.status(500).send(err.message)
+            } else {
+              payload.name = student.name;
+              var token = jwt.sign(payload, user.local.password, {
+                expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+              });
+
+              return res.json({token: token});
+            }
+          })
+        } else {
+          token = jwt.sign(payload, user.local.password, {
+            expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+          });
+
+          return res.json({token: token});
+        }
+
+      } else {
+        payload = {
+          id: user._id,
+          name: user.local.name,
+          email: user.local.email,
+          role: user.local.role
+        };
+        //user has authenticated correctly thus we create a JWT token
+        token = jwt.sign(payload, user.local.password, {
+          expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+        });
+
+        return res.json({token: token});
+      }
+
+    });
+  })(req, res, next);
 });
 
 router.post('/login/student', function (req, res, next) {
-    passport.authenticate('local-student-login', function (err, user) {
-        if (err) {
-            return next(err);
-        }
-        if (!user) {
-            return res.status(401).json({success: 0});
-        }
-        req.logIn(user, function (err) {
+  passport.authenticate('local-student-login', function (err, user) {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.status(401).json({success: 0});
+    }
+    req.logIn(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+
+      var payload;
+      var userRole = req.user.local.role;
+      var student_name = _.get(user.local, 'name', null);
+      payload = {
+        id: user._id,
+        name: student_name,
+        schoolid: user.local.schoolId,
+        student: user.local.student,
+        role: "student"
+      };
+      if (userRole == "student") {
+        if (!student_name) {
+          Student.findById(user.local.student).lean().exec(function (err, student) {
             if (err) {
-                return next(err);
-            }
-
-            var payload;
-            var userRole = req.user.local.role;
-            var student_name = _.get(user.local, 'name', null);
-            payload = {
-                id: user._id,
-                name: student_name,
-                schoolid: user.local.schoolId,
-                student: user.local.student,
-                role: "student"
-            };
-            if (userRole == "student") {
-                if (!student_name) {
-                    Student.findById(user.local.student).lean().exec(function (err, student) {
-                        if (err) {
-                            return res.status(500).send(err.message)
-                        } else {
-                            payload.name = student.name;
-                            var token = jwt.sign(payload, user.local.password, {
-                                expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
-                            });
-
-                            return res.json({token: token});
-                        }
-                    })
-                } else {
-                    token = jwt.sign(payload, user.local.password, {
-                        expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
-                    });
-
-                    return res.json({token: token});
-                }
+              return res.status(500).send(err.message)
             } else {
-                return res.status(401).json("this is not a student account");
+              payload.name = student.name;
+              var token = jwt.sign(payload, user.local.password, {
+                expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+              });
+
+              return res.json({token: token});
             }
-        });
-    })(req, res, next);
+          })
+        } else {
+          token = jwt.sign(payload, user.local.password, {
+            expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
+          });
+
+          return res.json({token: token});
+        }
+      } else {
+        return res.status(401).json("this is not a student account");
+      }
+    });
+  })(req, res, next);
 });
 
 router.get('/chatroom', isLoggedIn, function (req, res) {
-    res.render('chatroom/chatroom', {user: req.user});
+  res.render('chatroom/chatroom', {user: req.user});
 });
 
 router.get('/logout', function (req, res) {
-    tokenManager.expireToken(req);
-    req.logout();
-    res.redirect('/');
+  tokenManager.expireToken(req);
+  req.logout();
+  res.redirect('/');
 });
 
 router.get('/admin', isAdmin, function (req, res) {
 
-    res.render('admin/index');
+  res.render('admin/index');
 
 });
 
 router.get('/quickquiz', function (req, res) {
-    // @params req.query.id the quickquizId
-    if (req.query && req.query.id) {
-        res.render('quickquiz/index')
-    } else {
-        res.send('params missing')
-    }
+  // @params req.query.id the quickquizId
+  if (_.has(req.query, 'id')) {
+    res.sendFile(path.join(__dirname, '../../client/public/static/quickquiz/quickquiz.html'));
+  } else {
+    res.send('params missing')
+  }
 });
 
 module.exports = router;
@@ -194,22 +181,22 @@ module.exports = router;
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
 
-    // if user is authenticated in the session, carry on
-    if (req.isAuthenticated())
-        return next();
+  // if user is authenticated in the session, carry on
+  if (req.isAuthenticated())
+  return next();
 
-    // if they aren't redirect them to the home page
-    res.redirect('/');
+  // if they aren't redirect them to the home page
+  res.redirect('/');
 }
 
 function isAdmin(req, res, next) {
 
-    // if user is authenticated in the session, carry on
-    if (req.isAuthenticated())
-        if (req.user.local.role == "admin")
-            return next();
-    // if they aren't redirect them to the home page
-    res.redirect('/home');
+  // if user is authenticated in the session, carry on
+  if (req.isAuthenticated())
+  if (req.user.local.role == "admin")
+  return next();
+  // if they aren't redirect them to the home page
+  res.redirect('/home');
 }
 
 // function isStudent(req, res, next) {

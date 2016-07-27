@@ -4,7 +4,13 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
 
         $scope.errorMessage = null;
 
-        $scope.resultCard = null;
+        $scope.resultCard = {
+            show: false,
+            answers: [],
+            results: [],
+            finishTime: null,
+            quizFinish: false
+        };
         $scope.quickquizId = null;
         $scope.quickquiz = null;
         $scope.answers = [];
@@ -94,7 +100,11 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
                             }
                         }
                     } else if (response.data.finishTime) {
-                        $scope.resultCard = response.data;
+                        $scope.resultCard.show = true;
+                        $scope.resultCard.finishTime = response.data.finishTime;
+                        $scope.resultCard.answers = response.data.answers;
+                        $scope.resultCard.results = response.data.results;
+                        $scope.resultCard.quizFinish = response.data.quizFinish;
                         console.log(response.data);
                         $scope.answers = response.data.answers;
                         console.log('receive the result of the quickquiz')
@@ -154,26 +164,29 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
                 apiService.get(apiURL).then(function (response) {
                     setTimeout(hideLoadingIndicator, 1500);
                     $scope.quickquiz = response.data;
-                    var correctAnswers = [];
 
-                    for (var i = 0; i < $scope.quickquiz.questions.length; i++) {
-                        if (typeof $scope.quickquiz.questions[i] === 'object') {
-                            if ($scope.quickquiz.questions[i].type === 'mc') {
-                                correctAnswers.push($scope.quickquiz.questions[i].answer.mc);
+                    if (response.data.finished) {
+                        var correctAnswers = [];
+
+                        for (var i = 0; i < $scope.quickquiz.questions.length; i++) {
+                            if (typeof $scope.quickquiz.questions[i] === 'object') {
+                                if ($scope.quickquiz.questions[i].type === 'mc') {
+                                    correctAnswers.push($scope.quickquiz.questions[i].answer.mc);
+                                } else {
+                                    correctAnswers.push(null);
+                                }
                             } else {
                                 correctAnswers.push(null);
                             }
-                        } else {
-                            correctAnswers.push(null);
-                        }
 
+                        }
+                        $scope.correctAnswers = correctAnswers;
                     }
 
                     console.log(response.data);
                     $scope.rights = $scope.resultCard.results.right;
                     $scope.wrongs = $scope.resultCard.results.wrong;
                     $scope.blanks = $scope.resultCard.results.blank;
-                    $scope.correctAnswers = correctAnswers;
                 }, function (response) {
                     if (response.data === 'permission denied') {
                         $scope.errorMessage = '未參與過該小測'
@@ -234,9 +247,9 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
         };
 
         $scope.handIn = function () {
-            $scope.submitted = true;
-
             if ($scope.quickquizId) {
+                $scope.submitted = true;
+
                 var data = {
                     id: $scope.quickquizId,
                     answers: $scope.answers
@@ -244,17 +257,15 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
 
                 var apiURL = '/api/manage-quickquiz/quickquiz';
                 apiService.postJSON(apiURL, data).then(function (response) {
-                    console.log(response.data);
-                    if (response.data && response.data.checkAnswersRestults && response.data.correctAnswers) {
-                        socket.emit('finish doing', {quickquizId: $scope.quickquizId});
-                        $scope.rights = response.data.checkAnswersRestults.right;
-                        $scope.wrongs = response.data.checkAnswersRestults.wrong;
-                        $scope.blanks = response.data.checkAnswersRestults.blank;
-                        $scope.correctAnswers = response.data.correctAnswers;
-                    } else if (!response.data) {
-                        $scope.errorMessage = '未知错误: 没有收到批改结果'
+                    if (response.data === 'already handin') {
+                        $scope.errorMessage = '你已经提交过了!'
+                    } else if (response.data.status === 'success') {
+                        $scope.resultCard.show = true;
+                        $scope.resultCard.answers = $scope.answers;
+                        $scope.resultCard.results = response.data.results;
+                        scrollToTop()
                     } else {
-                        $scope.errorMessage = '未知错误: 批改結果不完整'
+                        $scope.errorMessage = response.data
                     }
                 }, function (response) {
                     $scope.submitted = false;
@@ -300,8 +311,19 @@ angular.module('ipkms.quickquiz', ['ipkmsMain', 'ipkmsService'])
             return typeof thing === 'object'
         };
 
+        var timeOut = null;
+        function scrollToTop() {
+            if (document.body.scrollTop!=0 || document.documentElement.scrollTop!=0){
+                window.scrollBy(0,-50);
+                timeOut = setTimeout(scrollToTop(),10);
+            } else {
+                clearTimeout(timeOut);
+            }
+        }
+
     })
     .filter('unsafe', function ($sce) {
+        /** @namespace $sce.trustAsHtml */
         return $sce.trustAsHtml;
     })
     .factory('socket', function ($rootScope) {

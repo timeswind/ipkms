@@ -21,11 +21,11 @@
     <script src="/socket.io/socket.io.js"></script>
     <script type="text/javascript" src="/js/ng-app.js"></script>
     <script type="text/javascript" src="/js/service/ipkms-service.js"></script>
-    <script type="text/javascript" src="/js/quick-quiz/quickquiz.js"></script>
+    <script type="text/javascript" src="/static/quickquiz/quickquiz.js"></script>
 
     <!-- Angular Material Library -->
     <script src="/bower_components/angular-material/angular-material.min.js"></script>
-    <link rel="stylesheet" href="/css/quickquiz.css">
+    <link rel="stylesheet" href="/static/quickquiz/quickquiz.css">
 </head>
 
 <body id="quickquiz-sheet">
@@ -41,19 +41,23 @@
                     <p class="error-message">{[{errorMessage}]}</p>
                 </div>
 
-                <div layout="column" class="results-card"
-                     ng-show="resultCard !== null && resultCard.trim() !== ''">
-
-                    <span class="md-title">小測結果</span>
-                    <span class="handin-time">上交時間<span>{[{resultCard.finishTime | date : 'MM月dd日 hh:mm a'}]}</span></span>
+                <div layout="column" class="results_card"
+                     ng-if="resultCard.show">
+                    <div layout="column" class="header">
+                        <div layout="row" style="align-items: baseline">
+                            <span class="md-title">小測結果</span>
+                            <span class="unFinish_subtitle" ng-if="!resultCard.quizFinish">測驗尚未結束</span>
+                        </div>
+                        <span class="handIn_time" ng-if="resultCard.finishTime">上交時間<span>{[{resultCard.finishTime | date : 'MM月dd日 hh:mm a'}]}</span></span>
+                    </div>
 
 
                     <div layout="column">
                         <div layout="row">
-            <span class="label-field" layout="column" flex="33">
-              <span class="label">總題數</span>
-              <span class="text">{[{resultCard.answers.length}]}</span>
-            </span>
+                            <span class="label-field" layout="column" flex="33">
+                              <span class="label">總題數</span>
+                              <span class="text">{[{resultCard.answers.length}]}</span>
+                            </span>
                             <span class="label-field" layout="column" flex="33"><span class="label">正確</span><span
                                     class="text">{[{resultCard.results.right.length}]}</span></span>
                             <span class="label-field" layout="column" flex="33"><span class="label">錯誤</span><span
@@ -68,20 +72,16 @@
                                     class="text">{[{resultCard.results.right.length * 100 / (resultCard.answers.length - resultCard.results.exception.length) | number:2}]} %</span></span>
 
                         </div>
-                        <div layout="column">
-                            <span ng-click="getQuestions()" layout="column" class="check-my-paper-button" ng-hide="gettingQuestions || quickquiz">查閱我的試卷</span>
-                            <div layout="column" style="align-items: center">
-                                <md-progress-circular
-                                        layout="column"
-                                        md-mode='indeterminate' ng-if="gettingQuestions"
-                                        class="md-hue-2"
-                                        md-diameter="40px"></md-progress-circular>
-                            </div>
-
-                        </div>
 
                     </div>
 
+                    <div class="footer" layout="column" ng-hide="quickquiz && !gettingQuestions">
+                        <span ng-click="getQuestions()" layout="row" class="check-my-paper-button">
+                            <span ng-if="!gettingQuestions">查閱我的試卷</span>
+                            <md-progress-circular layout="column" md-mode='indeterminate' ng-if="gettingQuestions" class="md-hue-2" md-diameter="30px"></md-progress-circular>
+                        </span>
+
+                    </div>
                 </div>
 
                 <div class="quiz-paper" ng-show="quickquiz">

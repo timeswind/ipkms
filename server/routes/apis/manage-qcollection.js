@@ -276,9 +276,9 @@ router.route('/qcollections/all')
 
             if (sort === 1) {
                 Qcollection.find({
-                    public: true,
+                    "public": true,
                     "_id": {$gt: page}
-                }, 'name subject public createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+                }, 'name subject createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
                     if (err) {
                         res.send(err);
                     } else {
@@ -287,9 +287,9 @@ router.route('/qcollections/all')
                 });
             } else {
                 Qcollection.find({
-                    public: true,
+                    "public": true,
                     "_id": {$lt: page}
-                }, 'name subject public createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+                }, 'name subject createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
                     if (err) {
                         res.send(err);
                     } else {
@@ -299,7 +299,7 @@ router.route('/qcollections/all')
             }
 
         } else {
-            Qcollection.find({public: true}, 'name subject public createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+            Qcollection.find({"public": true}, 'name subject createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
                 if (err) {
                     res.send(err);
                 } else {
