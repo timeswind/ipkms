@@ -16,6 +16,7 @@ var manageQcollectonApiRoutes = require('./apis/manage-qcollection.js');
 var manageGroupApiRoutes = require('./apis/manage-group.js');
 var manageQuickquizApiRoutes = require('./apis/manage-quickquiz.js');
 var manageHomeworkApiRoutes = require('./apis/manage-homework.js');
+var qiniuApiRoutes = require('./apis/qiniu.js');
 
 var validUserRole = require("../auth/validUserRole");
 var isLoggedIn = validUserRole.isLoggedIn;
@@ -72,6 +73,7 @@ router.use('/manage-qcollection', manageQcollectonApiRoutes);
 router.use('/manage-group', manageGroupApiRoutes);
 router.use('/manage-quickquiz', manageQuickquizApiRoutes);
 router.use('/manage-homework', manageHomeworkApiRoutes);
+router.use('/qiniu', qiniuApiRoutes);
 
 router.route('/isadmin')
     .get(function (req, res) {

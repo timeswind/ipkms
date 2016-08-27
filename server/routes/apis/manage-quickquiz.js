@@ -9,6 +9,11 @@ var Quickquiz = require('../../models/quickquiz');
 var Quizsample = require('../../models/quizsample');
 var Qcollection = require('../../models/qcollection');
 
+var validUser = require('../../auth/validUserRole');
+var isTeacher = validUser.isTeacher;
+var isStudent = validUser.isStudent;
+var isLoggedIn = validUser.isLoggedIn;
+
 router.route('/teacher/quickquizs')
     .get(isTeacher, function (req, res) {
         var teacher_id = req.user.teacher;
@@ -109,12 +114,7 @@ router.route('/teacher/quickquizs')
         } else {
             res.status(400)
         }
-
-
     })
-    .delete(isTeacher, function (req, res) {
-
-    });
 
 router.route('/teacher/quickquiz')
     .get(isTeacher, function (req, res) {
@@ -777,55 +777,24 @@ router.route('/student/quickquizs')
             {path: "quickquiz", select: "title startTime finishTime finished time"}
         ];
 
-        Quizsample.findOne({student: student_id}, "quickquiz results").populate(populateQuery).sort({_id: -1}).limit(10).lean().exec(function (err, quizsamples) {
-            if (err) {
-                res.status(500).send(err.message)
-            } else {
-                res.json(quizsamples)
-            }
-        });
-
-        // Quickquiz.find({students: student_id}, 'title startTime finishTime finished time questions').sort({_id: -1}).limit(10).lean().exec(function (err, quickquizs) {
-        //     if (err) {
-        //         res.status(500).send(err.message)
-        //     } else {
-        //         if (_.has(quickquizs, 'questions') && quickquizs.questions.length > 0)  {
-        //             quickquizs.questions = quickquizs.questions.length
-        //         } else {
-        //             quickquizs.questions = 0
-        //         }
-        //         res.json(quickquizs)
-        //     }
-        // });
+        if (_.has(req.query, 'page')) {
+            var page = req.query.page;
+            Quizsample.find({"student": student_id, "_id": {$gt: page}}, "quickquiz results").populate(populateQuery).sort({_id: -1}).limit(10).lean().exec(function (err, quizsamples) {
+                if (err) {
+                    res.status(500).send(err.message)
+                } else {
+                    res.json(quizsamples)
+                }
+            });
+        } else {
+          Quizsample.find({student: student_id}, "quickquiz results").populate(populateQuery).sort({_id: -1}).limit(10).lean().exec(function (err, quizsamples) {
+              if (err) {
+                  res.status(500).send(err.message)
+              } else {
+                  res.json(quizsamples)
+              }
+          });
+        }
     });
 
-
 module.exports = router;
-
-function isLoggedIn(req, res, next) {
-
-    if (req.user) {
-        return next();
-    } else {
-        res.status(401);
-    }
-}
-
-
-function isTeacher(req, res, next) {
-
-    if (req.user.role == "teacher" && _.has(req.user, 'teacher')) {
-        return next();
-    } else {
-        res.status(401);
-    }
-}
-
-function isStudent(req, res, next) {
-
-    if (req.user.role == "student" && _.has(req.user, 'student')) {
-        return next();
-    } else {
-        res.status(401);
-    }
-}

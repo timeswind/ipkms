@@ -8,7 +8,7 @@ var questionSchema = mongoose.Schema({
     type: {type: String, index: true}, // mc / reading /...
     subject: {type: String, index: true},
     language: {type: String, index: true},
-    context: String,
+    context: String, // content
     choices: [String], //a b c d 选项
     answer: {
         mc: Number,
@@ -21,7 +21,13 @@ var questionSchema = mongoose.Schema({
         mc: [], // [a,b,c,d] for mc
         fill: [] // [count, right] for fill in the blank question
     },
+    images: [{
+        type: {type: String},
+        label: {type: String},
+        data: {type: String}
+    }],
     rawData: {type: String},
+    draft: Boolean,
     created_at: Date,
     updated_at: Date
 

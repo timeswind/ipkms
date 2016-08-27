@@ -5,6 +5,9 @@ var router = express.Router();
 var User = require('../../models/localuser');
 var Question = require('../../models/question');
 
+var validUser = require('../../auth/validUserRole');
+var isTeacher = validUser.isTeacher;
+var isLoggedIn = validUser.isLoggedIn;
 //创建新题目
 router.route('/questions')
     .get(isTeacher, function (req, res) {
@@ -167,6 +170,63 @@ router.route('/questions')
         } else {
             res.status(500).send('params missing');
         }
+    });
+
+router.route('/draft')
+    .post(isTeacher, function (req, res) {
+      var data = req.body;
+      // REQUIRED @params
+      var requiredParams = ['language', 'type', 'subject', 'context', 'choices', 'answer', 'tags', 'difficulty', 'rawData'];
+      var paramsComplete = _.every(requiredParams, _.partial(_.has, data));
+
+      if (paramsComplete && _.isNumber(data.difficulty) && _.isString(data.type)) {
+          if (data.type === 'mc' && _.has(data, 'answer.mc')) {
+              var newQuestion = new Question();
+
+              newQuestion.createdBy = req.user.id;
+              newQuestion.type = data.type;
+              newQuestion.subject = data.subject;
+              newQuestion.context = data.context;
+              newQuestion.choices = data.choices;
+              newQuestion.answer.mc = data.answer.mc;
+              newQuestion.tags = data.tags;
+              newQuestion.difficulty = data.difficulty;
+              newQuestion.rawData = data.rawData;
+              newQuestion.language = data.language;
+              newQuestion.statistic.mc = [0, 0, 0, 0];
+              newQuestion.draft = true;
+
+              newQuestion.answer.fill = undefined;
+              newQuestion.statistic.fill = undefined;
+
+              if (_.has(data, 'images') && _.isArray(data.images) && data.images.length > 0) {
+                _.forEach(data.images, function (image) {
+                  var requiredImageParams = ['type', 'label', 'data'];
+                  var imageParamsComplete = _.every(requiredImageParams, _.partial(_.has, image));
+                  if (imageParamsComplete) {
+                    var formatImageData = {
+                      type: image.type,
+                      label: image.label,
+                      data: image.label
+                    }
+                    newQuestion.images.push(formatImageData)
+                  }
+                })
+              }
+              newQuestion.save(function (err, question) {
+                  if (err) {
+                      res.status(500).send(err.message);
+                  } else {
+                      res.send('draft saved')
+                  }
+              });
+          } else {
+              res.status(400).send('question type not support !')
+          }
+      } else {
+          res.status(500).send('params missing');
+      }
+
     });
 
 router.route('/question/:question_id') //get question's detail without answer
@@ -436,22 +496,3 @@ router.route('/query')
     });
 
 module.exports = router;
-
-function isLoggedIn(req, res, next) {
-
-    if (req.user) {
-        return next();
-    } else {
-        res.status(401);
-    }
-}
-
-function isTeacher(req, res, next) {
-
-    if (req.user.role == "teacher") {
-        return next();
-    } else {
-        res.status(401);
-    }
-}
-
