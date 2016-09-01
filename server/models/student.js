@@ -6,6 +6,7 @@ var studentSchema = mongoose.Schema({
 
     user: {type: ObjectId, ref: 'User', index: true},
     name: {type: String, index: true},
+    school: {type: String, index: true}, // School Code
     schoolId: {type: String, index: true},
     year: {
         join: Date, //进入学校年份

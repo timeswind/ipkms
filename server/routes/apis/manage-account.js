@@ -86,18 +86,22 @@ router.route('/students')
   /**
   * @param {string} req.body.class
   */
-
+  // var requiredParams = ['name', 'school', 'schoolId', 'grade', 'class'];
+  // for furture use
   var requiredParams = ['name', 'schoolId', 'grade', 'class'];
   var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
 
   if (paramsComplete) {
+    var school = 'pkms' // default school code
     var name = req.body.name;
     var schoolId = req.body.schoolId;
     var grade = req.body.grade;
     var theclass = req.body.class; //不能用class，与js中的class重名
 
     var newStudent = new Student();
+
     newStudent.name = name;
+    newStudent.school = school;
     newStudent.schoolId = schoolId;
     newStudent.grade = grade;
     newStudent.class = theclass;
@@ -109,6 +113,7 @@ router.route('/students')
         var newUser = new User();
         /** @namespace newUser.local */
         newUser.local.name = s.name;
+        newUser.local.school = s.school;
         newUser.local.schoolId = s.schoolId;
         newUser.local.role = 'student';
         newUser.local.student = s.id;
@@ -294,8 +299,6 @@ router.route('/teachers')
       }
     })
   }
-
-
 })
 .post(isAdmin, function (req, res) {
   /**
@@ -306,10 +309,12 @@ router.route('/teachers')
   */
 
   if (_.has(req.body, 'name') && _.has(req.body, 'email')) {
+    var school = 'pkms' // default school code
     var name = req.body.name;
     var email = req.body.email;
 
     var newTeacher = new Teacher();
+    newTeacher.school = school;
     newTeacher.name = name;
     newTeacher.email = email;
 
@@ -320,6 +325,7 @@ router.route('/teachers')
         var newUser = new User();
         newUser.local.name = t.name;
         newUser.local.email = t.email;
+        newUser.local.school = t.school;
         newUser.local.role = 'teacher';
         newUser.local.teacher = t.id;
         newUser.local.password = newUser.generateHash("123456"); //默认密码123456

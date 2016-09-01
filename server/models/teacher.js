@@ -5,6 +5,7 @@ var ObjectId = mongoose.Schema.ObjectId;
 var teacherSchema = mongoose.Schema({
 
     user: {type: ObjectId, ref: 'User', index: true},
+    school: {type: String, index: true}, // School Code
     name: {type: String, index: true},
     email: String,
     subjects: [String],

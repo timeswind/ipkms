@@ -8,6 +8,7 @@ var userSchema = mongoose.Schema({
 
     local: {
         email: String,
+        school: String, // enable School code for furture expention
         schoolId: String,
         password: String,
         name: String,
