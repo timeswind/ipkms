@@ -176,7 +176,7 @@ router.get('/quickquiz', function (req, res) {
   }
 });
 
-router.get('/ql', isTeacher, function (req, res) {
+router.get('/ql', isLoggedIn, function (req, res) {
 
     res.sendFile(path.join(__dirname, '../../client/public/home/question-library/index.html'));
 
