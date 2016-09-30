@@ -176,6 +176,13 @@ router.get('/quickquiz', function (req, res) {
   }
 });
 
+router.get('/ql', isTeacher, function (req, res) {
+
+    res.sendFile(path.join(__dirname, '../../client/public/home/question-library/index.html'));
+
+});
+
+
 module.exports = router;
 
 // route middleware to make sure a user is logged in
@@ -198,43 +205,3 @@ function isAdmin(req, res, next) {
   // if they aren't redirect them to the home page
   res.redirect('/home');
 }
-
-// function isStudent(req, res, next) {
-//     // if user is authenticated in the session, carry on
-//     if (req.isAuthenticated())
-//         if (req.user.local.role == "student")
-//             return next();
-//     // if they aren't redirect them to the home page
-//     res.redirect('/home');
-// }
-
-// function studentToken(req, res, next) {
-//     var token = req.body.token || req.query.token || req.headers['x-access-token'];
-//
-//     if (token) {
-//         var firstDecoded = jwt.decode(token, {complete: true});
-//         var userid = firstDecoded.payload.id;
-//
-//         User.findById(userid, function (err, user) {
-//             if (err) {
-//                 return res.json({success: false, message: '用户未找到'});
-//             } else {
-//                 jwt.verify(token, user.local.password, function (err, decoded) {
-//                     if (err) {
-//                         return res.json({success: false, message: '認證失敗'});
-//                     } else {
-//                         req.user = decoded;
-//                         next();
-//                     }
-//                 });
-//             }
-//
-//         });
-//
-//         return res.status(401).send({
-//             authorize: false,
-//             message: '认证失败'
-//         });
-//
-//     }
-// }
