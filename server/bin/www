@@ -9,6 +9,7 @@ var debug = require('debug')('_example:server');
 var http = require('http');
 var mongoose = require('mongoose');
 // *** mongoose *** //
+mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost/nodedb');
 
 /**

@@ -2,7 +2,7 @@
 var async = require("async");
 var express = require('express');
 var router = express.Router();
-var jwt = require('jsonwebtoken');
+var passport = require('passport');
 var tokenManager = require('../config/token_manager');
 
 var Teacher = require('../models/teacher');
@@ -22,50 +22,6 @@ var validUserRole = require("../auth/validUserRole");
 var isLoggedIn = validUserRole.isLoggedIn;
 var isAdmin = validUserRole.isAdmin;
 
-router.use(tokenManager.verifyToken, function (req, res, next) {
-
-    // check header or url parameters or post parameters for token
-    var token = req.body.token || req.query.token || req.headers['x-access-token'];
-
-    // decode token
-    if (token) {
-        // get the decoded payload and header
-        var firstdecoded = jwt.decode(token, {complete: true});
-        var userid = firstdecoded.payload.id;
-
-        User.findById(userid, function (err, user) {
-            if (err) {
-                return res.json({success: false, message: '用户未找到'});
-            } else {
-                // verifies secret and checks exp
-                jwt.verify(token, user.local.password, function (err, decoded) {
-                    if (err) {
-                        return res.status(401).send({
-                            authorize: false,
-                            message: '认证失败'
-                        });
-                    } else {
-                        // if everything is good, save to request for use in other routes
-                        req.user = decoded;
-                        // console.log(decoded);
-                        next();
-                    }
-                });
-            }
-
-        })
-    } else {
-        // if there is no token
-        // return an error
-        return res.status(401).send({
-            authorize: false,
-            message: '认证失败'
-        });
-
-    }
-
-});
-
 router.use('/message', messageApiRoutes);
 router.use('/manage-account', manageAccountApiRoutes);
 router.use('/manage-question', manageQuestionApiRoutes);
@@ -75,78 +31,196 @@ router.use('/manage-quickquiz', manageQuickquizApiRoutes);
 router.use('/manage-homework', manageHomeworkApiRoutes);
 router.use('/qiniu', qiniuApiRoutes);
 
-router.route('/isadmin')
-    .get(function (req, res) {
-        User.findById(req.user.id, function (err, user) {
-            if (err)
-                res.send(err);
+router.route('/login')
+.post(function (req, res, next) {
+  console.log('login')
+  passport.authenticate('local-login', function (err, user) {
+    if (err) {
+      return res.status(401).json({success: 0, error: 'error, username or password incorrect'});
+    }
+    if (!user) {
+      return res.status(401).json({success: 0, error: '1 username or password incorrect'});
+    }
+    req.logIn(user, function (err) {
+      console.log(err)
+      if (err) {
+        return res.status(401).json({success: 0, error: 'username or password incorrect'});
+      }
 
-            var responseData = {
-                role: user.local.role,
-                id: user.id
-            };
+      var payload;
+      var token;
+      var userRole = req.user.local.role;
 
-            res.json(responseData);
-        });
+      if (userRole == "teacher") {
+        payload = {
+          id: user._id,
+          name: user.local.name,
+          email: user.local.email,
+          teacher: user.local.teacher,
+          role: "teacher"
+        };
+        token = tokenManager.signToken(payload)
+
+        return res.json({token: token});
+      } else if (userRole == "student") {
+        var student_name = _.get(user.local, 'name', null);
+        payload = {
+          id: user._id,
+          name: student_name,
+          schoolid: user.local.schoolId,
+          student: user.local.student,
+          role: "student"
+        };
+        if (!student_name) {
+          Student.findById(user.local.student).lean().exec(function (err, student) {
+            if (err) {
+              return res.status(500).send(err.message)
+            } else {
+              payload.name = student.name;
+              token = tokenManager.signToken(payload)
+              return res.json({token: token});
+            }
+          })
+        } else {
+          token = tokenManager.signToken(payload)
+
+          return res.json({token: token});
+        }
+
+      } else {
+        payload = {
+          id: user._id,
+          name: user.local.name,
+          email: user.local.email,
+          role: user.local.role
+        };
+        token = tokenManager.signToken(payload)
+
+        return res.json({token: token});
+      }
+
     });
+  })(req, res, next);
+});
+
+router.route('/login/student')
+.post(function (req, res, next) {
+  passport.authenticate('local-student-login', function (err, user) {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return res.status(401).json({success: 0});
+    }
+    req.logIn(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+
+      var payload;
+      var userRole = req.user.local.role;
+      var student_name = _.get(user.local, 'name', null);
+      payload = {
+        id: user._id,
+        name: student_name,
+        schoolid: user.local.schoolId,
+        student: user.local.student,
+        role: "student"
+      };
+      if (userRole == "student") {
+        if (!student_name) {
+          Student.findById(user.local.student).lean().exec(function (err, student) {
+            if (err) {
+              return res.status(500).send(err.message)
+            } else {
+              payload.name = student.name;
+              var token = tokenManager.signToken(payload)
+              return res.json({token: token});
+            }
+          })
+        } else {
+          var token = tokenManager.signToken(payload)
+          return res.json({token: token});
+        }
+      } else {
+        return res.status(401).json("this is not a student account");
+      }
+    });
+  })(req, res, next);
+});
+
+router.route('/isadmin')
+.get(function (req, res) {
+  User.findById(req.user.id, function (err, user) {
+    if (err)
+    res.send(err);
+
+    var responseData = {
+      role: user.local.role,
+      id: user.id
+    };
+
+    res.json(responseData);
+  });
+});
 
 router.route('/myinfo')
-    .get(isLoggedIn, function (req, res) {
-        User.findById(req.user.id, function (err, user) {
-            if (err)
-                res.send(err);
+.get(isLoggedIn, function (req, res) {
+  User.findById(req.user.id, function (err, user) {
+    if (err)
+    res.send(err);
 
-            var responseData = {
-                role: user.local.role,
-                id: user.id
-            };
+    var responseData = {
+      role: user.local.role,
+      id: user.id
+    };
 
-            res.json(responseData);
-        });
-    });
+    res.json(responseData);
+  });
+});
 
 router.route('/teachers/includeuser')  //get all teacher with user populated //admin api
-    .get(isAdmin, function (req, res) {
-        Teacher.find({})
-            .populate('user')
-            .exec(function (err, teachers) {
-                if (err)
-                    res.send(err);
+.get(isAdmin, function (req, res) {
+  Teacher.find({})
+  .populate('user')
+  .exec(function (err, teachers) {
+    if (err)
+    res.send(err);
 
-                res.json(teachers);
-            })
-    });
+    res.json(teachers);
+  })
+});
 
 router.route('/students/query/:query')  //query students with their name //user api
-    .get(isLoggedIn, function (req, res) {
-        var query = req.params.query;
-        if (query == "all") {
-            Student.find(
-                {}, "_id name schoolId", //以後可以包括班級，便於辨別重名學生
-                function (err, students) {
-                    res.json(students);
-                }
-            );
-        } else {
-            Student.find(
-                {"name": {"$regex": req.params.query, "$options": "i"}},
-                function (err, students) {
-                    res.json(students);
-                }
-            );
-        }
-    });
+.get(isLoggedIn, function (req, res) {
+  var query = req.params.query;
+  if (query == "all") {
+    Student.find(
+      {}, "_id name schoolId", //以後可以包括班級，便於辨別重名學生
+      function (err, students) {
+        res.json(students);
+      }
+    );
+  } else {
+    Student.find(
+      {"name": {"$regex": req.params.query, "$options": "i"}},
+      function (err, students) {
+        res.json(students);
+      }
+    );
+  }
+});
 
 router.route('/user/info')
-    .get(function (req, res) {
+.get(function (req, res) {
 
-        User.findById(req.user.id, {"local.password": 0}, function (err, user) {
-            if (err) {
-                res.status(500).send(err);
-            } else {
-                res.json(user)
-            }
-        });
+  User.findById(req.user.id, {"local.password": 0}, function (err, user) {
+    if (err) {
+      res.status(500).send(err);
+    } else {
+      res.json(user)
+    }
+  });
 
-    });
+});
 module.exports = router;

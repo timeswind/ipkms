@@ -130,12 +130,12 @@ router.route('/questions')
   * @param {number} req.body.difficulty - the difficulty of the question (0 to 5)
   */
   /**
-  * @param {string} req.body.rawData
+  * @param {string} req.body.delta
   */
 
   var data = req.body;
   // REQUIRED @params
-  var requiredParams = ['language', 'type', 'subject', 'context', 'choices', 'answer', 'tags', 'difficulty', 'rawData'];
+  var requiredParams = ['language', 'type', 'subject', 'context', 'choices', 'answer', 'tags', 'difficulty', 'delta'];
   var paramsComplete = _.every(requiredParams, _.partial(_.has, data));
 
   if (paramsComplete && _.isNumber(data.difficulty) && _.isString(data.type)) {
@@ -150,7 +150,7 @@ router.route('/questions')
       newQuestion.answer.mc = data.answer.mc;
       newQuestion.tags = data.tags;
       newQuestion.difficulty = data.difficulty;
-      newQuestion.rawData = data.rawData;
+      newQuestion.delta = data.delta;
       newQuestion.language = data.language;
       newQuestion.statistic.mc = [0, 0, 0, 0];
 

@@ -4,70 +4,71 @@ var ObjectId = mongoose.Schema.ObjectId;
 // define the schema for our user model
 var questionSchema = mongoose.Schema({
 
-    createdBy: {type: ObjectId, ref: 'User', index: true},
-    type: {type: String, index: true}, // mc / reading /...
-    subject: {type: String, index: true},
-    language: {type: String, index: true},
-    context: String, // content
-    choices: [String], //a b c d 选项
-    answer: {
-        mc: Number,
-        fill: String
-    },
-    tags: {type: [String], index: true},
-    difficulty: {type: Number, index: true}, // 难度系数1-5
-    tips: String,
-    statistic: {
-        mc: [], // [a,b,c,d] for mc
-        fill: [] // [count, right] for fill in the blank question
-    },
-    images: [{
-        type: {type: String},
-        label: {type: String},
-        data: {type: String}
-    }],
-    rawData: {type: String},
-    draft: Boolean,
-    created_at: Date,
-    updated_at: Date
+  createdBy: {type: ObjectId, ref: 'User', index: true},
+  type: {type: String, index: true}, // mc / reading /...
+  subject: {type: String, index: true},
+  language: {type: String, index: true},
+  context: String, // content
+  delta: String, // Delta type question content, use for edit question
+  choices: [String], //a b c d 选项
+  answer: {
+    mc: Number,
+    fill: String
+  },
+  tags: {type: [String], index: true},
+  difficulty: {type: Number, index: true}, // 难度系数1-5
+  tips: String,
+  statistic: {
+    mc: [], // [a,b,c,d] for mc
+    fill: [] // [count, right] for fill in the blank question
+  },
+  images: [{
+    type: {type: String},
+    label: {type: String},
+    data: {type: String}
+  }],
+  rawData: {type: String},
+  draft: Boolean,
+  created_at: Date,
+  updated_at: Date
 
 });
 
 // on every save, add the date
 questionSchema.pre('save', function (next) {
-    // get the current date
-    var currentDate = new Date();
+  // get the current date
+  var currentDate = new Date();
 
-    // change the updated_at field to current date
-    this.updated_at = currentDate;
+  // change the updated_at field to current date
+  this.updated_at = currentDate;
 
-    // if created_at doesn't exist, add to that field
-    if (!this.created_at) {
-        this.created_at = currentDate;
-    }
+  // if created_at doesn't exist, add to that field
+  if (!this.created_at) {
+    this.created_at = currentDate;
+  }
 
-    next();
+  next();
 });
 
 questionSchema.pre('findOneAndUpdate', function (next) {
-    var question_id = this._conditions._id;
+  var question_id = this._conditions._id;
 
-    if (this.options && this.options.user_id) {
-        var user_id = this.options.user_id;
-        mongoose.model('Question', questionSchema).findById(question_id, function (err, question) {
-            if (question) {
-                if (question.createdBy == user_id) {
-                    next();
-                } else {
-                    next(new Error("Permission denied !"));
-                }
-            } else {
-                next(new Error("Something went wrong !"));
-            }
-        })
-    } else {
-        next();
-    }
+  if (this.options && this.options.user_id) {
+    var user_id = this.options.user_id;
+    mongoose.model('Question', questionSchema).findById(question_id, function (err, question) {
+      if (question) {
+        if (question.createdBy == user_id) {
+          next();
+        } else {
+          next(new Error("Permission denied !"));
+        }
+      } else {
+        next(new Error("Something went wrong !"));
+      }
+    })
+  } else {
+    next();
+  }
 
 });
 

@@ -3,4 +3,6 @@ dump.rdb
 node_modules/
 npm-debug.log
 .idea/
+ipkms.rsa
+ipkms.rsa.pub
 server/Private-settings.js
