@@ -794,7 +794,7 @@ router.route('/student/quickquizs')
         var filteredSamples = _.filter(quizsamples, function (quizsample) {
           return quizsample.quickquiz !== null
         })
-        res.json(quizsamples)
+        res.json(filteredSamples)
       }
     });
   }
