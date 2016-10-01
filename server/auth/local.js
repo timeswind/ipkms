@@ -243,20 +243,21 @@ module.exports = function (passport) {
     // find a user whose email is the same as the forms email
     // we are checking to see if the user trying to login already exists
     User.findOne({'local.schoolId': schoolid}, function (err, user) {
-      console.log(schoolid)
       // if there are any errors, return the error before anything else
-      if (err)
-      return done(err);
+      if (err) {
+        return done(err);
+      }
 
       // if no user is found, return the message
-      if (!user)
-      console.log('user not exist')
-      return done(null, false);
+      if (!user) {
+        return done(null, false);
+      }
+
 
       // if the user is found but the password is wrong
-      if (!user.validPassword(password))
-      console.log('wrong password')
-      return done(null, false);
+      if (!user.validPassword(password)) {
+        return done(null, false);
+      }
 
       // all is well, return successful user
       return done(null, user);

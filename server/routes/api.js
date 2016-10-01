@@ -4,6 +4,7 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 var tokenManager = require('../config/token_manager');
+var _ = require('lodash');
 
 var Teacher = require('../models/teacher');
 var Student = require('../models/student');
@@ -33,7 +34,6 @@ router.use('/qiniu', tokenManager.verifyToken, qiniuApiRoutes);
 
 router.route('/login')
 .post(function (req, res, next) {
-  console.log('login')
   passport.authenticate('local-login', function (err, user) {
     if (err) {
       return res.status(401).json({success: 0, error: 'error, username or password incorrect'});
@@ -42,7 +42,6 @@ router.route('/login')
       return res.status(401).json({success: 0, error: '1 username or password incorrect'});
     }
     req.logIn(user, function (err) {
-      console.log(err)
       if (err) {
         return res.status(401).json({success: 0, error: 'username or password incorrect'});
       }
@@ -106,8 +105,7 @@ router.route('/login')
 router.route('/login/student')
 .post(function (req, res, next) {
   passport.authenticate('local-student-login', function (err, user) {
-    console.log(err)
-    console.log(user)
+
     if (err) {
       return res.status(401).json('student login fail');
     }
@@ -115,7 +113,6 @@ router.route('/login/student')
       return res.status(401).json('student login fail');
     }
     req.logIn(user, function (err) {
-      console.log(err)
       if (err) {
         return res.status(401).json('student login fail');
       }
