@@ -107,14 +107,14 @@ router.route('/login/student')
 .post(function (req, res, next) {
   passport.authenticate('local-student-login', function (err, user) {
     if (err) {
-      return res.status(401).send('student login fail');
+      return res.status(401).json('student login fail');
     }
     if (!user) {
-      return res.status(401).send('student login fail');
+      return res.status(401).json('student login fail');
     }
     req.logIn(user, function (err) {
       if (err) {
-        return res.status(401).send('student login fail');
+        return res.status(401).json('student login fail');
       }
 
       var payload;
