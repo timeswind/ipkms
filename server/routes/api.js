@@ -113,6 +113,7 @@ router.route('/login/student')
       return res.status(401).json('student login fail');
     }
     req.logIn(user, function (err) {
+      console.log(err)
       if (err) {
         return res.status(401).json('student login fail');
       }
