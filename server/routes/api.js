@@ -22,14 +22,14 @@ var validUserRole = require("../auth/validUserRole");
 var isLoggedIn = validUserRole.isLoggedIn;
 var isAdmin = validUserRole.isAdmin;
 
-router.use('/message', messageApiRoutes);
-router.use('/manage-account', manageAccountApiRoutes);
-router.use('/manage-question', manageQuestionApiRoutes);
-router.use('/manage-qcollection', manageQcollectonApiRoutes);
-router.use('/manage-group', manageGroupApiRoutes);
-router.use('/manage-quickquiz', manageQuickquizApiRoutes);
-router.use('/manage-homework', manageHomeworkApiRoutes);
-router.use('/qiniu', qiniuApiRoutes);
+router.use('/message', tokenManager.verifyToken, messageApiRoutes);
+router.use('/manage-account', tokenManager.verifyToken, manageAccountApiRoutes);
+router.use('/manage-question', tokenManager.verifyToken, manageQuestionApiRoutes);
+router.use('/manage-qcollection', tokenManager.verifyToken, manageQcollectonApiRoutes);
+router.use('/manage-group', tokenManager.verifyToken, manageGroupApiRoutes);
+router.use('/manage-quickquiz', tokenManager.verifyToken, manageQuickquizApiRoutes);
+router.use('/manage-homework', tokenManager.verifyToken, manageHomeworkApiRoutes);
+router.use('/qiniu', tokenManager.verifyToken, qiniuApiRoutes);
 
 router.route('/login')
 .post(function (req, res, next) {

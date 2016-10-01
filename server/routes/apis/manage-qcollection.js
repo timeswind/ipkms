@@ -432,7 +432,6 @@ router.route('/teacher/query/name')
 module.exports = router;
 
 function isLoggedIn(req, res, next) {
-
     if (req.user) {
         return next();
     } else {
@@ -448,4 +447,3 @@ function isTeacher(req, res, next) {
         res.status(401);
     }
 }
-

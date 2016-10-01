@@ -21,15 +21,15 @@ var homeRoutes = require('./routes/home.js');
 
 // *** express instance *** //
 var app = express();
-app.use(session({
-  secret: 'super ipkms',
-  store: new MongoStore({ mongooseConnection: mongoose.connection }),
-  resave: true,
-  saveUninitialized: true
-}));
+// app.use(session({
+//   secret: 'super ipkms',
+//   store: new MongoStore({ mongooseConnection: mongoose.connection }),
+//   resave: true,
+//   saveUninitialized: true
+// }));
 
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 
 // *** view engine *** //
 var swig = new swig.Swig();
