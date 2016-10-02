@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node ./server/bin/www"
+    "dev": "node ./server/bin/www",
+    "start": "NODE_ENV=production node ./server/bin/www"
   },
   "dependencies": {
     "async": "^2.0.0-rc.2",
