@@ -10,6 +10,7 @@ var passport = require('passport');
 var session = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var mongoose = require('mongoose');
+var raven = require('raven');
 
 require('./auth/local')(passport);
 
@@ -21,6 +22,7 @@ var homeRoutes = require('./routes/home.js');
 
 // *** express instance *** //
 var app = express();
+app.use(raven.middleware.express.requestHandler('https://0f71c3e1e67d40908e4110a3392a0e51:e1216abeb8c5409cadae45624fc51b0e@sentry.io/103012'));
 // app.use(session({
 //   secret: 'super ipkms',
 //   store: new MongoStore({ mongooseConnection: mongoose.connection }),
@@ -57,6 +59,7 @@ app.use('/api', apiRoutes);
 app.use('/home', homeRoutes);
 
 
+app.use(raven.middleware.express.errorHandler('https://0f71c3e1e67d40908e4110a3392a0e51:e1216abeb8c5409cadae45624fc51b0e@sentry.io/103012'));
 
 
 // catch 404 and forward to error handler
@@ -65,7 +68,6 @@ app.use(function(req, res, next) {
   err.status = 404;
   next(err);
 });
-
 
 // *** error handlers *** //
 
@@ -86,7 +88,7 @@ if (app.get('env') === 'development') {
 app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error', {
-    message: err.message,
+    message: "Servise unavailable",
     error: {}
   });
 });
