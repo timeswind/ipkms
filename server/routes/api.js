@@ -151,17 +151,21 @@ router.route('/login/student')
 
 router.route('/isadmin')
 .get(function (req, res) {
-  User.findById(req.user.id, function (err, user) {
-    if (err)
-    res.send(err);
+  if (_.has(req, 'user.id')) {
+    User.findById(req.user.id, function (err, user) {
+      if (err)
+      res.send(err);
 
-    var responseData = {
-      role: user.local.role,
-      id: user.id
-    };
+      var responseData = {
+        role: user.local.role,
+        id: user.id
+      };
 
-    res.json(responseData);
-  });
+      res.json(responseData);
+    });
+  } else {
+    res.status(400)
+  }
 });
 
 router.route('/myinfo')

@@ -1,173 +1,174 @@
 <!DOCTYPE html>
 <html style="height: 100%; background-color: #fafafa">
 <head>
-    <meta charset="utf-8">
-    <title>Quizkquiz</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <title>Quizkquiz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- angular-material 1.0.5 -->
-    <link rel="stylesheet" href="/bower_components/angular-material/angular-material.min.css">
-    <script src="/bower_components/angular/angular.min.js"></script>
-    <script src="/bower_components/angular-animate/angular-animate.min.js"></script>
-    <script src="/bower_components/angular-aria/angular-aria.min.js"></script>
-    <script src="/bower_components/angular-messages/angular-messages.min.js"></script>
+  <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.css">
 
 
-    <script type="text/javascript" src="/bower_components/katex/dist/katex.min.js"></script>
-    <link rel="stylesheet" href="/bower_components/katex/dist/katex.min.css">
-    <script type="text/javascript" src="/bower_components/katex/dist/contrib/auto-render.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.css">
+  <script type="text/javascript" src"https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/contrib/auto-render.min.js"></script>
 
-    <!-- Main config file-->
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="/js/ng-app.js"></script>
-    <script type="text/javascript" src="/js/service/ipkms-service.js"></script>
-    <script type="text/javascript" src="/static/quickquiz/quickquiz.js"></script>
+  <!-- Main config file-->
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript" src="/js/ng-app.js"></script>
+  <script type="text/javascript" src="/js/service/ipkms-service.js"></script>
+  <script type="text/javascript" src="/js/quickquiz/quickquiz.js"></script>
 
-    <!-- Angular Material Library -->
-    <script src="/bower_components/angular-material/angular-material.min.js"></script>
-    <link rel="stylesheet" href="/static/quickquiz/quickquiz.css">
+  <link rel="stylesheet" href="/js/quickquiz/quickquiz.css">
 </head>
 
 <body id="quickquiz-sheet">
-<div ng-app="ipkms.quickquiz" ng-controller="MainController">
+  <div ng-app="ipkms.quickquiz" ng-controller="MainController">
 
     <div layout="column" layout-fill>
 
-        <div class="container" id="questions" style="background: #fafafa;">
+      <div class="container" id="questions" style="background: #fafafa;">
 
-            <div class="wrapper">
-                <div class="error-card"
-                     ng-show="errorMessage !== null && errorMessage.trim() !== ''">
-                    <p class="error-message">{[{errorMessage}]}</p>
-                </div>
+        <div class="wrapper">
+          <div class="error-card"
+          ng-show="errorMessage !== null && errorMessage.trim() !== ''">
+          <p class="error-message">{[{errorMessage}]}</p>
+        </div>
 
-                <div layout="column" class="results_card"
-                     ng-if="resultCard.show">
-                    <div layout="column" class="header">
-                        <div layout="row" style="align-items: baseline">
-                            <span class="md-title">小測結果</span>
-                            <span class="unFinish_subtitle" ng-if="!resultCard.quizFinish">測驗尚未結束</span>
-                        </div>
-                        <span class="handIn_time" ng-if="resultCard.finishTime">上交時間<span>{[{resultCard.finishTime | date : 'MM月dd日 hh:mm a'}]}</span></span>
-                    </div>
-
-
-                    <div layout="column">
-                        <div layout="row">
-                            <span class="label-field" layout="column" flex="33">
-                              <span class="label">總題數</span>
-                              <span class="text">{[{resultCard.answers.length}]}</span>
-                            </span>
-                            <span class="label-field" layout="column" flex="33"><span class="label">正確</span><span
-                                    class="text">{[{resultCard.results.right.length}]}</span></span>
-                            <span class="label-field" layout="column" flex="33"><span class="label">錯誤</span><span
-                                    class="text">{[{resultCard.results.wrong.length}]}</span></span>
-                        </div>
-                        <div layout="row">
-                            <span class="label-field" layout="column" flex="33"><span class="label">留空</span><span
-                                    class="text">{[{resultCard.results.blank.length}]}</span></span>
-                            <span class="label-field" layout="column" flex="33"><span class="label">例外/其他</span><span
-                                    class="text">{[{resultCard.results.exception.length}]}</span></span>
-                            <span class="label-field" layout="column" flex="33"><span class="label">正確率</span><span
-                                    class="text">{[{resultCard.results.right.length * 100 / (resultCard.answers.length - resultCard.results.exception.length) | number:2}]} %</span></span>
-
-                        </div>
-
-                    </div>
-
-                    <div class="footer" layout="column" ng-hide="quickquiz && !gettingQuestions">
-                        <span ng-click="getQuestions()" layout="row" class="check-my-paper-button">
-                            <span ng-if="!gettingQuestions">查閱我的試卷</span>
-                            <md-progress-circular layout="column" md-mode='indeterminate' ng-if="gettingQuestions" class="md-hue-2" md-diameter="30px"></md-progress-circular>
-                        </span>
-
-                    </div>
-                </div>
-
-                <div class="quiz-paper" ng-show="quickquiz">
-
-                    <div class="mask" ng-show="preDoQuiz">
-                        <div class="start-quiz-modal">
-                            <p>即將開始測驗</p>
-                            <p>測驗時間{[{quickquiz.time}]}分鐘</p>
-                            <md-button class="md-primary md-raised" ng-click="startQuickQuiz()">開始</md-button>
-                        </div>
-                    </div>
-
-                    <div class="quiz-title" layout="column">
-                        <div layout="row" style="align-items: baseline;">
-                            <h3>{[{quickquiz.title}]}</h3>
-                            <span class="time">{[{quickquiz.time}]}分鐘</span>
-                        </div>
-                        <span class="author">出卷人: {[{quickquiz.createdBy.name}]}</span>
-                    </div>
+        <div layout="column" class="results_card"
+        ng-if="resultCard.show">
+        <div layout="column" class="header">
+          <div layout="row" style="align-items: baseline">
+            <span class="md-title">小測結果</span>
+            <span class="unFinish_subtitle" ng-if="!resultCard.quizFinish">測驗尚未結束</span>
+          </div>
+          <span class="handIn_time" ng-if="resultCard.finishTime">上交時間<span>{[{resultCard.finishTime | date : 'MM月dd日 hh:mm a'}]}</span></span>
+        </div>
 
 
-                    <md-list style="padding: 0">
-                        <md-list-item class="question-card"
-                                      ng-repeat="question in quickquiz.questions track by question._id"
-                                      ng-init="$last ? renderQuestions() : angular.noop()"
-                                      style="padding: 0">
-                            <div layout="column" style="flex: 1 100%" ng-if="isObject(question)">
-                                <div layout="row" style="align-items: baseline">
-                                    <span class="index-label">{[{ $index + 1 }]}</span>
-                                    <div class="md-title" ng-bind-html="question.context | unsafe"></div>
-                                </div>
-                                <div class="choices" layout="column" style="width: 100%"
-                                     ng-class="{'chooseable': !submitted}">
-                                    <div layout="row">
-                                        <div class="choice choice-a"
-                                             ng-class="{'choose': checkChoose($index, 0), 'right': showRight($index, 0), 'wrong': showWrong($index, 0)}"
-                                             flex="50" layout="row" ng-click="answerOnChoose($index, 0)">
-                                            <span class="choice-label">A</span>
-                                            <div class="choice-body" ng-bind-html="question.choices[0] | unsafe"></div>
-                                        </div>
-                                        <div class="choice choice-b"
-                                             ng-class="{'choose': checkChoose($index, 1), 'right': showRight($index, 1), 'wrong': showWrong($index, 1)}"
-                                             flex="50" layout="row" ng-click="answerOnChoose($index, 1)">
-                                            <span class="choice-label">B</span>
-                                            <div class="choice-body" ng-bind-html="question.choices[1] | unsafe"></div>
-                                        </div>
-                                    </div>
-                                    <div layout="row">
-                                        <div class="choice choice-c"
-                                             ng-class="{'choose': checkChoose($index, 2), 'right': showRight($index, 2), 'wrong': showWrong($index, 2)}"
-                                             flex="50" layout="row" ng-click="answerOnChoose($index, 2)">
-                                            <span class="choice-label">C</span>
-                                            <div class="choice-body" ng-bind-html="question.choices[2] | unsafe"></div>
-                                        </div>
-                                        <div class="choice choice-d"
-                                             ng-class="{'choose': checkChoose($index, 3), 'right': showRight($index, 3), 'wrong': showWrong($index, 3)}"
-                                             flex="50" layout="row" ng-click="answerOnChoose($index, 3)">
-                                            <span class="choice-label">D</span>
-                                            <div class="choice-body" ng-bind-html="question.choices[3] | unsafe"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div ng-if="!isObject(question)" layout="column">
-                                <span style="padding: 16px;font-size: 20px;color: #9E9E9E;">{[{$index + 1}]}. 該題目已被刪除</span>
-                            </div>
+        <div layout="column">
+          <div layout="row">
+            <span class="label-field" layout="column" flex="33">
+              <span class="label">總題數</span>
+              <span class="text">{[{resultCard.answers.length}]}</span>
+            </span>
+            <span class="label-field" layout="column" flex="33"><span class="label">正確</span><span
+            class="text">{[{resultCard.results.right.length}]}</span></span>
+            <span class="label-field" layout="column" flex="33"><span class="label">錯誤</span><span
+            class="text">{[{resultCard.results.wrong.length}]}</span></span>
+          </div>
+          <div layout="row">
+            <span class="label-field" layout="column" flex="33"><span class="label">留空</span><span
+            class="text">{[{resultCard.results.blank.length}]}</span></span>
+            <span class="label-field" layout="column" flex="33"><span class="label">例外/其他</span><span
+            class="text">{[{resultCard.results.exception.length}]}</span></span>
+            <span class="label-field" layout="column" flex="33"><span class="label">正確率</span><span
+            class="text">{[{resultCard.results.right.length * 100 / (resultCard.answers.length - resultCard.results.exception.length) | number:2}]} %</span></span>
 
-                        </md-list-item>
-                    </md-list>
-
-                    <div class="end-check-card" layout="column" ng-hide="submitted">
-                        <div layout="row">
-                            <span style="margin-right: 16px">已做: <span ng-bind="finishedQuestionsCount"></span>題</span>
-                            <span>未做: <span ng-bind="answers.length - finishedQuestionsCount"></span> 題</span>
-                        </div>
-                        <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px 0 0 0"
-                                   ng-disabled="submitted">上交
-                        </md-button>
-                    </div>
-
-                </div>
-
-            </div>
-
+          </div>
 
         </div>
+
+        <div class="footer" layout="column" ng-hide="quickquiz && !gettingQuestions">
+          <span ng-click="getQuestions()" layout="row" class="check-my-paper-button">
+            <span ng-if="!gettingQuestions">查閱我的試卷</span>
+            <md-progress-circular layout="column" md-mode='indeterminate' ng-if="gettingQuestions" class="md-hue-2" md-diameter="30px"></md-progress-circular>
+          </span>
+
+        </div>
+      </div>
+
+      <div class="quiz-paper" ng-show="quickquiz">
+
+        <div class="mask" ng-show="preDoQuiz">
+          <div class="start-quiz-modal">
+            <p>即將開始測驗</p>
+            <p>測驗時間{[{quickquiz.time}]}分鐘</p>
+            <md-button class="md-primary md-raised" ng-click="startQuickQuiz()">開始</md-button>
+          </div>
+        </div>
+
+        <div class="quiz-title" layout="column">
+          <div layout="row" style="align-items: baseline;">
+            <h3>{[{quickquiz.title}]}</h3>
+            <span class="time">{[{quickquiz.time}]}分鐘</span>
+          </div>
+          <span class="author">出卷人: {[{quickquiz.createdBy.name}]}</span>
+        </div>
+
+
+        <md-list style="padding: 0">
+          <md-list-item class="question-card"
+          ng-repeat="question in quickquiz.questions track by question._id"
+          ng-init="$last ? renderQuestions() : angular.noop()"
+          style="padding: 0">
+          <div layout="column" style="flex: 1 100%" ng-if="isObject(question)">
+            <div layout="row" style="align-items: baseline">
+              <span class="index-label">{[{ $index + 1 }]}</span>
+              <div class="md-title" ng-bind-html="question.context | unsafe"></div>
+            </div>
+            <div class="choices" layout="column" style="width: 100%"
+            ng-class="{'chooseable': !submitted}">
+            <div layout="row">
+              <div class="choice choice-a"
+              ng-class="{'choose': checkChoose($index, 0), 'right': showRight($index, 0), 'wrong': showWrong($index, 0)}"
+              flex="50" layout="row" ng-click="answerOnChoose($index, 0)">
+              <span class="choice-label">A</span>
+              <div class="choice-body" ng-bind-html="question.choices[0] | unsafe"></div>
+            </div>
+            <div class="choice choice-b"
+            ng-class="{'choose': checkChoose($index, 1), 'right': showRight($index, 1), 'wrong': showWrong($index, 1)}"
+            flex="50" layout="row" ng-click="answerOnChoose($index, 1)">
+            <span class="choice-label">B</span>
+            <div class="choice-body" ng-bind-html="question.choices[1] | unsafe"></div>
+          </div>
+        </div>
+        <div layout="row">
+          <div class="choice choice-c"
+          ng-class="{'choose': checkChoose($index, 2), 'right': showRight($index, 2), 'wrong': showWrong($index, 2)}"
+          flex="50" layout="row" ng-click="answerOnChoose($index, 2)">
+          <span class="choice-label">C</span>
+          <div class="choice-body" ng-bind-html="question.choices[2] | unsafe"></div>
+        </div>
+        <div class="choice choice-d"
+        ng-class="{'choose': checkChoose($index, 3), 'right': showRight($index, 3), 'wrong': showWrong($index, 3)}"
+        flex="50" layout="row" ng-click="answerOnChoose($index, 3)">
+        <span class="choice-label">D</span>
+        <div class="choice-body" ng-bind-html="question.choices[3] | unsafe"></div>
+      </div>
     </div>
+  </div>
 </div>
+<div ng-if="!isObject(question)" layout="column">
+  <span style="padding: 16px;font-size: 20px;color: #9E9E9E;">{[{$index + 1}]}. 該題目已被刪除</span>
+</div>
+
+</md-list-item>
+</md-list>
+
+<div class="end-check-card" layout="column" ng-hide="submitted">
+  <div layout="row">
+    <span style="margin-right: 16px">已做: <span ng-bind="finishedQuestionsCount"></span>題</span>
+    <span>未做: <span ng-bind="answers.length - finishedQuestionsCount"></span> 題</span>
+  </div>
+  <md-button class="md-primary md-raised" ng-click="handIn()" style="margin:16px 0 0 0"
+  ng-disabled="submitted">上交
+</md-button>
+</div>
+
+</div>
+
+</div>
+
+
+</div>
+</div>
+</div>
+
+<!-- Angular Material requires Angular.js Libraries -->
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-animate.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-aria.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.5.5/angular-messages.min.js"></script>
+<!-- Angular Material Library -->
+<script src="http://ajax.googleapis.com/ajax/libs/angular_material/1.1.0/angular-material.min.js"></script>
 </body>
