@@ -15,7 +15,7 @@ router.route('/qcollection')
                 if (err) {
                     res.status(500).send(err.message);
                 } else {
-                    Question.find({"_id": {"$in": qcollection.questions}}, 'type context subject tags difficulty').lean().exec(function (err, questions) {
+                    Question.find({"_id": {"$in": qcollection.questions}}, 'type context delta subject tags difficulty').lean().exec(function (err, questions) {
                         if (questions) {
                             var qidIndexDic = {};
 

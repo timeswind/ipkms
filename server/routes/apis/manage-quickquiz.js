@@ -328,10 +328,10 @@ router.route('/student/quickquiz/questions')
         if (JSON.parse(JSON.stringify(quickquiz.students)).indexOf(student_id) > -1 && _.has(quickquiz, 'questions')) {
           delete quickquiz.students;
 
-          var selectFields = 'context type choices';
+          var selectFields = 'context delta type choices';
 
           if (_.get(quickquiz, 'finished', false)) {
-            selectFields = 'context type choices answer'
+            selectFields = 'context delta type choices answer'
           }
           Question.find({"_id": {"$in": quickquiz.questions}}, selectFields).lean().exec(function (err, questions) {
             if (questions) {
@@ -414,7 +414,7 @@ router.route('/quickquiz')
                     if (err) {
                       res.status(500).send(err.message)
                     } else {
-                      Question.find({"_id": {"$in": quickquiz.questions}}, 'context type choices').lean().exec(function (err, questions) {
+                      Question.find({"_id": {"$in": quickquiz.questions}}, 'context delta type choices').lean().exec(function (err, questions) {
                         if (questions) {
                           var qidIndexDic = {};
 
@@ -453,14 +453,14 @@ router.route('/quickquiz')
         {path: "createdBy", select: "name"}
       ];
 
-      // {path: "questions", select: "context type choices answer"},
+      // {path: "questions", select: "context delta type choices answer"},
 
       Quickquiz.findById(quickquiz_id, 'title finished time questions createdBy analysis').populate(populateQuery).lean().exec(function (err, quickquiz) {
         if (err) {
           res.status(500).send(err.message)
         } else if (quickquiz && _.has(quickquiz, 'questions')) {
 
-          Question.find({"_id": {"$in": quickquiz.questions}}, 'context type choices answer').lean().exec(function (err, questions) {
+          Question.find({"_id": {"$in": quickquiz.questions}}, 'context delta type choices answer').lean().exec(function (err, questions) {
             if (questions) {
               var qidIndexDic = {}
 

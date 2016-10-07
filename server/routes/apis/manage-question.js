@@ -37,7 +37,7 @@ router.route('/questions')
           Question.find({
             createdBy: req.user.id,
             "_id": {$gt: page}
-          }, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+          }, 'context tags subject difficulty type delta').sort({"_id": sort}).limit(9).exec(function (err, questions) {
             if (err) {
               res.status(500).send(err.message);
             } else {
@@ -48,7 +48,7 @@ router.route('/questions')
           Question.find({
             createdBy: req.user.id,
             "_id": {$lt: page}
-          }, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+          }, 'context tags subject difficulty type delta').sort({"_id": sort}).limit(9).exec(function (err, questions) {
             if (err) {
               res.status(500).send(err.message);
             } else {
@@ -57,7 +57,7 @@ router.route('/questions')
           });
         }
       } else {
-        Question.find({createdBy: req.user.id}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+        Question.find({createdBy: req.user.id}, 'context tags subject difficulty type delta').sort({"_id": sort}).limit(9).exec(function (err, questions) {
           if (err) {
             res.status(500).send(err.message);
           } else {
@@ -75,7 +75,7 @@ router.route('/questions')
         page = req.query.page;
 
         if (sort === 1) {
-          Question.find({"_id": {$gt: page}}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+          Question.find({"_id": {$gt: page}}, 'context tags subject difficulty type delta').sort({"_id": sort}).limit(9).exec(function (err, questions) {
             if (err) {
               res.status(500).send(err.message);
             } else {
@@ -83,7 +83,7 @@ router.route('/questions')
             }
           });
         } else {
-          Question.find({"_id": {$lt: page}}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+          Question.find({"_id": {$lt: page}}, 'context tags subject difficulty type delta').sort({"_id": sort}).limit(9).exec(function (err, questions) {
             if (err) {
               res.status(500).send(err.message);
             } else {
@@ -93,7 +93,7 @@ router.route('/questions')
         }
 
       } else {
-        Question.find({}, 'context tags subject difficulty type').sort({"_id": sort}).limit(9).exec(function (err, questions) {
+        Question.find({}, 'context tags subject difficulty type delta').sort({"_id": sort}).limit(9).exec(function (err, questions) {
           if (err) {
             res.status(500).send(err.message);
           } else {
@@ -238,7 +238,7 @@ router.route('/question/:question_id') //get question's detail without answer
     var question_id = req.params.question_id;
     var selectFields = 'type context tags subject difficulty choices';
     if (_.has(req.user, 'teacher')) {
-      selectFields = 'type createdBy context tags subject difficulty choices updated_at statistic answer rawData'
+      selectFields = 'type createdBy context tags subject difficulty choices updated_at statistic answer delta'
     }
     Question.findById(question_id, selectFields).lean().exec(function (err, question) {
       if (err) {
@@ -478,7 +478,7 @@ router.route('/query')
     }
 
     if (_.get(req.body, 'options.matchAny', false)) {
-      Question.find({$or: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
+      Question.find({$or: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context delta tags subject difficulty type').lean().exec(function (err, questions) {
         if (err) {
           res.status(500).send(err.message);
         } else {
@@ -486,7 +486,7 @@ router.route('/query')
         }
       });
     } else {
-      Question.find({$and: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context tags subject difficulty type').lean().exec(function (err, questions) {
+      Question.find({$and: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context delta tags subject difficulty type').lean().exec(function (err, questions) {
         if (err) {
           res.status(500).send(err.message);
         } else {
