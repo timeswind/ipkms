@@ -98,7 +98,7 @@
           ng-repeat="question in quickquiz.questions track by question._id"
           ng-init="$last ? renderQuestions() : angular.noop()"
           style="padding: 0">
-          <div layout="column" style="flex: 1 100%" ng-if="isObject(question)">
+          <div layout="column" style="flex: 1 100%" ng-if="isObject(question) && !question.delta">
             <div layout="row" style="align-items: baseline">
               <span class="index-label">{[{ $index + 1 }]}</span>
               <div class="md-title" ng-bind-html="question.context | unsafe"></div>
@@ -134,6 +134,43 @@
       </div>
     </div>
   </div>
+</div>
+<div layout="column" style="flex: 1 100%" ng-if="isObject(question) && question.delta">
+  <div layout="row" style="align-items: baseline">
+    <span class="index-label">{[{ $index + 1 }]}</span>
+    <div class="md-title" ng-bind-html="question.delta | delta"></div>
+  </div>
+  <div class="choices" layout="column" style="width: 100%"
+  ng-class="{'chooseable': !submitted}">
+  <div layout="row">
+    <div class="choice choice-a"
+    ng-class="{'choose': checkChoose($index, 0), 'right': showRight($index, 0), 'wrong': showWrong($index, 0)}"
+    flex="50" layout="row" ng-click="answerOnChoose($index, 0)">
+    <span class="choice-label">A</span>
+    <div class="choice-body" ng-bind-html="question.choices[0] | delta"></div>
+  </div>
+  <div class="choice choice-b"
+  ng-class="{'choose': checkChoose($index, 1), 'right': showRight($index, 1), 'wrong': showWrong($index, 1)}"
+  flex="50" layout="row" ng-click="answerOnChoose($index, 1)">
+  <span class="choice-label">B</span>
+  <div class="choice-body" ng-bind-html="question.choices[1] | delta"></div>
+</div>
+</div>
+<div layout="row">
+  <div class="choice choice-c"
+  ng-class="{'choose': checkChoose($index, 2), 'right': showRight($index, 2), 'wrong': showWrong($index, 2)}"
+  flex="50" layout="row" ng-click="answerOnChoose($index, 2)">
+  <span class="choice-label">C</span>
+  <div class="choice-body" ng-bind-html="question.choices[2] | delta"></div>
+</div>
+<div class="choice choice-d"
+ng-class="{'choose': checkChoose($index, 3), 'right': showRight($index, 3), 'wrong': showWrong($index, 3)}"
+flex="50" layout="row" ng-click="answerOnChoose($index, 3)">
+<span class="choice-label">D</span>
+<div class="choice-body" ng-bind-html="question.choices[3] | delta"></div>
+</div>
+</div>
+</div>
 </div>
 <div ng-if="!isObject(question)" layout="column">
   <span style="padding: 16px;font-size: 20px;color: #9E9E9E;">{[{$index + 1}]}. 該題目已被刪除</span>
