@@ -30,7 +30,7 @@ angular.module('ipkmsMain', ['ngMaterial', 'ngMessages'])
     responseError: function(rejection) {
       if (rejection.status === 401 && rejection.data.authorize === false) {
         console.log("Response Error 401", rejection);
-        window.location = '/'
+        // window.location = '/'
       }
       return $q.reject(rejection);
     }

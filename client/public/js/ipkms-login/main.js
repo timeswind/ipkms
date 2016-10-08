@@ -44,7 +44,7 @@ angular.module('login', ['ipkmsMain'])
             if ($scope.studentLogin) {
                 if ($scope.student.schoolid && $scope.student.password) {
                     $http
-                        .post('/login/student', $scope.student)
+                        .post('/api/login/student', $scope.student)
                         .success(function (data) {
                             $window.sessionStorage.token = data.token;
                             window.location = "/home"
@@ -59,7 +59,7 @@ angular.module('login', ['ipkmsMain'])
             } else {
                 if ($scope.teacher.email && $scope.teacher.password) {
                     $http
-                        .post('/login', $scope.teacher)
+                        .post('/api/login', $scope.teacher)
                         .success(function (data) {
 
                             $window.sessionStorage.token = data.token;
