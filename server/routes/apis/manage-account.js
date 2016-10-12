@@ -62,7 +62,6 @@ router.route('/students')
   } else {
     var name = req.query.name;
     var schoolId = req.query.schoolId;
-    console.log(req.query)
     Student.find({$or: [{name: {$regex: name}}, {schoolId: {$regex: schoolId}}]}, 'name class schoolId').lean().exec(function (err, students) {
       if (err) {
         res.status(500).send(err.message)
@@ -244,11 +243,18 @@ router.route('/students/reset-password/:student_id')
     var password = req.body.password;
     if (password.trim() !== '') {
 
-      User.findOneAndUpdate({'local': {'student': student_id}}, {$set: {'local.password': User().generateHash(password)}}, {new: true}, function (err) {
+      User.findOne({'local.student': student_id}, function (err, user) {
         if (err) {
           res.status(500).send(err.message)
         } else {
-          res.send('reset password success')
+          user.local.password = user.generateHash(password)
+          user.save(function(err){
+            if (err) {
+              res.status(500).send(err.message)
+            } else {
+              res.send('reset password success')
+            }
+          })
         }
       })
     } else {
@@ -413,11 +419,18 @@ router.route('/teachers/reset-password/:teacher_id')
     var teacher_id = req.params.teacher_id;
     var password = req.body.password;
     if (password.trim() !== '') {
-      User.findOneAndUpdate({'local': {'teacher': teacher_id}}, {$set: {'local.password': User().generateHash(password)}}, {new: true}, function (err, user) {
+      User.findOne({'local.teacher': teacher_id}, function (err, user) {
         if (err) {
           res.status(500).send(err.message)
         } else {
-          res.send('reset password success')
+          user.local.password = user.generateHash(password)
+          user.save(function(err){
+            if (err) {
+              res.status(500).send(err.message)
+            } else {
+              res.send('reset password success')
+            }
+          })
         }
       })
     } else {
