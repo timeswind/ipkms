@@ -20,6 +20,15 @@ router.get('/profile', isLoggedIn, function (req, res) {
   res.sendFile(path.join(__dirname, '../../client/public/static/profile/profile.html'));
 });
 
+router.get('/quickquiz', function (req, res) {
+  // @params req.query.id the quickquizId
+  if (_.has(req.query, 'id')) {
+    res.sendFile(path.join(__dirname, '../../client/public/static/quickquiz/quickquiz.html'));
+  } else {
+    res.send('params missing')
+  }
+});
+
 
 module.exports = router;
 
