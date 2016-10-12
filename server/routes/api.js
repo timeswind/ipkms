@@ -94,8 +94,14 @@ router.route('/login')
           role: user.local.role
         };
         token = tokenManager.signToken(payload)
+        console.log(payload.role)
+        if (payload.role === 'admin') {
+          return res.json({token: token, admin: true});
 
-        return res.json({token: token});
+        } else {
+          return res.json({token: token});
+
+        }
       }
 
     });
