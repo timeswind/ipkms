@@ -135,7 +135,7 @@ router.route('/students')
   /**
   * @param {string} req.body.student_id - Student ID
   */
-  var student_id = req.body.student_id;
+  var student_id = req.query.studentid;
   User.find({'local': {'student': student_id}}).remove(function (err) {
     if (err) {
       res.status(500).send(err.message)
@@ -352,7 +352,7 @@ router.route('/teachers')
   /**
   * @param {string} req.body.teacher_id - Teacher ID
   */
-  var teacher_id = req.body.teacher_id;
+  var teacher_id = req.query.teacherid;
   User.find({'local': {'teacher': teacher_id}}).remove(function (err) {
     if (err) {
       send.status(500).send(err.message)
