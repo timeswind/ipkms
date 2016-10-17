@@ -53,9 +53,10 @@ router.route('/login')
       if (userRole == "teacher") {
         payload = {
           id: user._id,
+          school: user.local.school || "",
+          teacher: user.local.teacher,
           name: user.local.name,
           email: user.local.email,
-          teacher: user.local.teacher,
           role: "teacher"
         };
         token = tokenManager.signToken(payload)

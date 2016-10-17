@@ -5,9 +5,12 @@ var ObjectId = mongoose.Schema.ObjectId;
 var questionSchema = mongoose.Schema({
 
   createdBy: {type: ObjectId, ref: 'User', index: true},
+  school: { type: String, index: true },
   type: {type: String, index: true}, // mc / reading /...
   subject: {type: String, index: true},
   language: {type: String, index: true},
+  tags: {type: [String], index: true},
+  difficulty: {type: Number, index: true}, // 难度系数1-5
   context: String, // content
   delta: String, // Delta type question content, use for edit question
   choices: [String], //a b c d 选项
@@ -15,8 +18,6 @@ var questionSchema = mongoose.Schema({
     mc: Number,
     fill: String
   },
-  tags: {type: [String], index: true},
-  difficulty: {type: Number, index: true}, // 难度系数1-5
   tips: String,
   statistic: {
     mc: [], // [a,b,c,d] for mc
@@ -27,7 +28,6 @@ var questionSchema = mongoose.Schema({
     label: {type: String},
     data: {type: String}
   }],
-  rawData: {type: String},
   draft: Boolean,
   created_at: Date,
   updated_at: Date
