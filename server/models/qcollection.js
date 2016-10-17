@@ -3,13 +3,14 @@ var ObjectId = mongoose.Schema.ObjectId;
 
 var qcollectionSchema = mongoose.Schema({
 
+    school: {type: String, index: true},
     name: {type: String, index: true},
     subject: {type: String, index: true},
-    description: String,
     public: {type: Boolean, index: true},
     aveDifficulty: {type: Number, index: true},
+    description: String,
     createdBy: {type: ObjectId, ref: 'User'},
-    questions: [{type: ObjectId, ref: 'Question', index: true}],
+    questions: [{type: ObjectId, ref: 'Question'}],
     created_at: Date,
     updated_at: Date
 
