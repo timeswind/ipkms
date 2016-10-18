@@ -154,6 +154,16 @@ router.route('/questions')
       newQuestion.answer.fill = undefined;
       newQuestion.statistic.fill = undefined;
 
+      if (data.images && data.images.length !== 0) {
+        data.images.forEach(function(imageData){
+          newQuestion.images.push({
+            type: imageData.type || "",
+            data: imageData.data || "",
+            label: imageData.label || ""
+          })
+        })
+      }
+
       newQuestion.save(function (err, question) {
         if (err) {
           res.status(500).send(err.message);
@@ -231,9 +241,9 @@ router.route('/question/:question_id') //get question's detail without answer
   */
   if (_.has(req.params, 'question_id')) {
     var question_id = req.params.question_id;
-    var selectFields = 'type context delta tags subject difficulty choices';
+    var selectFields = 'type context delta images tags subject difficulty choices';
     if (_.has(req.user, 'teacher')) {
-      selectFields = 'type createdBy context delta tags subject difficulty choices updated_at statistic answer'
+      selectFields = 'type createdBy context delta images tags subject difficulty choices updated_at statistic answer'
     }
     Question.findById(question_id, selectFields).lean().exec(function (err, question) {
       if (err) {
