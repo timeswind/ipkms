@@ -326,7 +326,7 @@ router.route('/query')
     var name = req.body.name;
     var subject = req.body.subject;
 
-    Qcollection.find({$and: [{name: {$regex: name}}, {subject: subject}], school: school}, 'name subject public createdBy aveDifficulty').lean().exec(function (err, qcollections) {
+    Qcollection.find({$and: [{name: {$regex: name, $options: 'i'}}, {subject: subject}], school: school}, 'name subject public createdBy aveDifficulty').lean().exec(function (err, qcollections) {
       if (err) {
         res.status(500).send(err.message);
       } else {
