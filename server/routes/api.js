@@ -67,7 +67,7 @@ router.route('/login')
         payload = {
           id: user._id,
           name: student_name,
-          schoolid: user.local.schoolId,
+          school: user.local.school || "",
           student: user.local.student,
           role: "student"
         };
@@ -123,13 +123,14 @@ router.route('/login/student')
       if (err) {
         return res.status(401).json('student login fail');
       }
-
+      console.log(user)
       var payload;
       var userRole = req.user.local.role;
       var student_name = _.get(user.local, 'name', null);
       payload = {
         id: user._id,
         name: student_name,
+        school: user.local.school,
         schoolid: user.local.schoolId,
         student: user.local.student,
         role: "student"

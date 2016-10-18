@@ -1,12 +1,13 @@
 // load the things we need
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Schema.ObjectId;
+var Mixed = mongoose.Schema.Types.Mixed
 // define the schema for our user model
 var quizsampleSchema = mongoose.Schema({
 
     quickquiz: {type: ObjectId, ref: 'Quickquiz', index: true},
     student: {type: ObjectId, ref: 'Student', index: true},
-    answers: [Number], //a,b,c,d,a,b,c,d
+    answers: [Mixed], //0 1 2 1 3 2 3 1 2 1
     results: {
         right: [Number], //question index in qcollection
         wrong: [Number], //question index in qcollection
