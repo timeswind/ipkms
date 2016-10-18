@@ -91,7 +91,7 @@ router.route('/students')
   var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
 
   if (paramsComplete) {
-    var school = 'pkms' // default school code
+    var school = req.user.school || 'pkms' // default school code
     var name = req.body.name;
     var schoolId = req.body.schoolId;
     var grade = req.body.grade;
@@ -315,7 +315,7 @@ router.route('/teachers')
   */
 
   if (_.has(req.body, 'name') && _.has(req.body, 'email')) {
-    var school = 'pkms' // default school code
+    var school = req.user.school || "pkms"; // default school code
     var name = req.body.name;
     var email = req.body.email;
 

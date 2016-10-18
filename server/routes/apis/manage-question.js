@@ -140,6 +140,7 @@ router.route('/questions')
       var newQuestion = new Question();
 
       newQuestion.createdBy = req.user.id;
+      newQuestion.school = req.user.school || "pkms";
       newQuestion.type = data.type;
       newQuestion.subject = data.subject;
       newQuestion.choices = data.choices;
@@ -449,6 +450,7 @@ router.route('/all')
 //根据标签进行搜索题目
 router.route('/query')
 .post(isTeacher, function (req, res) {
+  let school = req.user.school || "pkms"
   /**
   * @param {array} req.body.tags - array of tags which used to query the questions that has the tags
   */
@@ -472,7 +474,7 @@ router.route('/query')
     }
 
     if (_.get(req.body, 'options.matchAny', false)) {
-      Question.find({$or: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context delta tags subject difficulty type').lean().exec(function (err, questions) {
+      Question.find({$or: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}], school: school}, 'context delta tags subject difficulty type').lean().exec(function (err, questions) {
         if (err) {
           res.status(500).send(err.message);
         } else {
@@ -480,7 +482,7 @@ router.route('/query')
         }
       });
     } else {
-      Question.find({$and: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}]}, 'context delta tags subject difficulty type').lean().exec(function (err, questions) {
+      Question.find({$and: [{tags: {$in: tags}}, {difficulty: {$in: difficulty}}], school: school}, 'context delta tags subject difficulty type').lean().exec(function (err, questions) {
         if (err) {
           res.status(500).send(err.message);
         } else {
