@@ -7,8 +7,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var swig = require('swig');
 var passport = require('passport');
-var session = require('express-session');
-var MongoStore = require('connect-mongo')(session);
 var mongoose = require('mongoose');
 var raven = require('raven');
 
@@ -23,15 +21,8 @@ var homeRoutes = require('./routes/home.js');
 // *** express instance *** //
 var app = express();
 app.use(raven.middleware.express.requestHandler('https://0f71c3e1e67d40908e4110a3392a0e51:e1216abeb8c5409cadae45624fc51b0e@sentry.io/103012'));
-// app.use(session({
-//   secret: 'super ipkms',
-//   store: new MongoStore({ mongooseConnection: mongoose.connection }),
-//   resave: true,
-//   saveUninitialized: true
-// }));
 
 app.use(passport.initialize());
-// app.use(passport.session());
 
 // *** view engine *** //
 var swig = new swig.Swig();

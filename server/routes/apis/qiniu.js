@@ -11,7 +11,6 @@ qiniu.conf.SECRET_KEY =  privateSettings.QINIU_SECRET_KEY;
 var validUserRole = require("../../auth/validUserRole");
 var isLoggedIn = validUserRole.isLoggedIn;
 
-//获取小组的最近的20条消息
 router.route('/uptoken')
     .get(isLoggedIn, function (req, res) {
         var myUpToken = new qiniu.rs.PutPolicy(privateSettings.QINIU_PIC_POLICY);
