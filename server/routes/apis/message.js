@@ -10,7 +10,7 @@ var isLoggedIn = validUserRole.isLoggedIn;
 router.route('/catchup/:chatroom_id')
     .get(isLoggedIn, function (req, res) {
         var roomId = req.params.chatroom_id;
-        Chatroom.findOne({group: roomId}).populate("messages.sender", "local.name").lean().exec(function (err, chatroom) {
+        Chatroom.findOne({group: roomId}).populate("messages.sender", "name").lean().exec(function (err, chatroom) {
             if (chatroom) {
                 var messages;
                 if (chatroom.messages.length > 20) {
@@ -41,7 +41,7 @@ router.route('/sync/:chatroom_id/:version')
             var latestVersion = c.__v;
 
             if (difference > 0) {
-                Chatroom.findOne({group: roomId},"messages", {messages: {$slice: difference}}).populate("messages.sender", "local.name").lean().exec(function (err, chatroom) {
+                Chatroom.findOne({group: roomId},"messages", {messages: {$slice: difference}}).populate("messages.sender", "name").lean().exec(function (err, chatroom) {
                     if (chatroom) {
                         var results = {
                             version: latestVersion,

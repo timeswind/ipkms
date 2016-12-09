@@ -7,15 +7,67 @@ var Question = require('../../models/question');
 var Qcollection = require('../../models/qcollection');
 
 //创建新题集
-router.route('/qcollection')
-.get(isLoggedIn, function (req, res) {
-  if (_.has(req.query, 'id')) {
-    var qcollection_id = req.query.id;
-    Qcollection.findById(qcollection_id, 'name subject public aveDifficulty questions description').lean().exec(function (err, qcollection) {
+router.route('/qcollections')
+.post(isLoggedIn, function (req, res) {
+  /**
+  * @param {string} req.body.name - New Qcollection Name
+  */
+  /**
+  * @param {boolean} req.body.public - PRIVATE or Public group
+  */
+  /**
+  * @param {string} req.body.subject - subject of the group
+  */
+  /**
+  * @param {string} req.body.description
+  */
+
+  var requiredParams = ['name', 'subject', 'openForEdit', 'openInSchool', 'openOutSchool', 'openToStudent'];
+  var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
+
+  if (paramsComplete) {
+    req.body = _.pick(req.body, ['name', 'subject', 'description', 'openForEdit', 'openInSchool', 'openOutSchool', 'openToStudent'])
+    if (req.body.name.trim() !== '' && req.body.subject.trim() !== '' && _.isBoolean(req.body.openForEdit) && _.isBoolean(req.body.openInSchool) && _.isBoolean(req.body.openOutSchool) &&  _.isBoolean(req.body.openToStudent)) {
+      var newQcollection = new Qcollection();
+
+      newQcollection.createdBy = req.user.id;
+      newQcollection.school = req.user.school;
+      newQcollection.name = req.body.name;
+      newQcollection.openForEdit = req.body.openForEdit;
+      newQcollection.openInSchool = req.body.openInSchool;
+      newQcollection.openOutSchool = req.body.openOutSchool;
+      newQcollection.openToStudent = req.body.openToStudent;
+      newQcollection.subject = req.body.subject;
+      if (_.has(req.body, 'description')) {
+        newQcollection.description = req.body.description;
+      }
+
+      newQcollection.save(function (err, qc) {
+        if (err) {
+          res.send(err.message);
+        } else {
+          res.json(qc)
+        }
+      });
+
+    } else {
+      res.status(400).send('bad params')
+    }
+
+  } else {
+    res.status(400).send('missing params');
+  }
+});
+
+router.route('/qcollection/:id')
+.get(isTeacher, function (req, res) {
+  if (_.has(req.params, 'id')) {
+    var qcollection_id = req.params.id;
+    Qcollection.findById(qcollection_id, 'name subject openForEdit openInSchool openOutSchool openToStudent aveDifficulty questions description').lean().exec(function (err, qcollection) {
       if (err) {
         res.status(500).send(err.message);
       } else {
-        Question.find({"_id": {"$in": qcollection.questions}}, 'type context delta subject tags difficulty').lean().exec(function (err, questions) {
+        Question.find({"_id": {"$in": qcollection.questions}}, 'type content subject tags difficulty').lean().exec(function (err, questions) {
           if (questions) {
             var qidIndexDic = {};
 
@@ -42,54 +94,8 @@ router.route('/qcollection')
   }
 
 })
-.post(isLoggedIn, function (req, res) {
-  /**
-  * @param {string} req.body.name - New Qcollection Name
-  */
-  /**
-  * @param {boolean} req.body.public - PRIVATE or Public group
-  */
-  /**
-  * @param {string} req.body.subject - subject of the group
-  */
-  /**
-  * @param {string} req.body.description
-  */
-
-  var requiredParams = ['name', 'public', 'subject'];
-  var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
-
-  if (paramsComplete) {
-
-    if (req.body.name.trim() !== '' && req.body.subject.trim() !== '' && _.isBoolean(req.body.public)) {
-      var newQcollection = new Qcollection();
-
-      newQcollection.createdBy = req.user.id;
-      newQcollection.school = req.user.school || "pkms";
-      newQcollection.name = req.body.name;
-      newQcollection.public = req.body.public;
-      newQcollection.subject = req.body.subject;
-      if (_.has(req.body, 'description')) {
-        newQcollection.description = req.body.description;
-      }
-      newQcollection.save(function (err, qc) {
-        if (err) {
-          res.send(err.message);
-        } else {
-          res.json(qc)
-        }
-      });
-
-    } else {
-      res.status(400).send('bad params')
-    }
-
-  } else {
-    res.status(400).send('missing params');
-  }
-})
 .delete(isTeacher, function (req, res) {
-  var qcollection_id = req.body.qcollection_id;
+  var qcollection_id = req.params.id;
   if (qcollection_id) {
     Qcollection.findById(qcollection_id, function (err, qc) {
       if (qc.createdBy == req.user.id) {
@@ -110,13 +116,22 @@ router.route('/qcollection')
 })
 .put(isTeacher, function (req, res) {
   /**
-  * @param {string} req.body.qcollection_id
+  * @param {string} req.params.id
   */
   /**
   * @param {string} req.body.name - New Qcollection Name
   */
   /**
-  * @param {boolean} req.body.public - PRIVATE or Public group
+  * @param {boolean} req.body.openForEdit
+  */
+  /**
+  * @param {boolean} req.body.openInSchool
+  */
+  /**
+  * @param {boolean} req.body.openOutSchool
+  */
+  /**
+  * @param {boolean} req.body.openToStudent
   */
   /**
   * @param {string} req.body.subject - subject of the group
@@ -125,11 +140,11 @@ router.route('/qcollection')
   * @param {string} req.body.description
   */
 
-  var requiredParams = ['qcollection_id', 'name', 'public', 'subject', 'description'];
+  var requiredParams = ['name', 'openForEdit', 'openInSchool', 'openOutSchool', 'openToStudent', 'subject', 'description'];
   var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
 
-  if (paramsComplete) {
-    var qcollection_id = req.body.qcollection_id;
+  if (_.has(req.params, 'id'), paramsComplete && req.body.name.trim() !== '' && req.body.subject.trim() !== '' && _.isBoolean(req.body.openForEdit) && _.isBoolean(req.body.openInSchool) && _.isBoolean(req.body.openOutSchool) &&  _.isBoolean(req.body.openToStudent)) {
+    var qcollection_id = req.params.id;
     Qcollection.findById(qcollection_id, function (err, qc) {
       if (err) {
         res.status(500).send(err.message);
@@ -137,13 +152,17 @@ router.route('/qcollection')
         if (qc.createdBy == req.user.id) {
           qc.name = req.body.name;
           qc.subject = req.body.subject;
-          qc.public = req.body.subject;
           qc.description = req.body.description;
+          qc.openForEdit = req.body.openForEdit;
+          qc.openInSchool = req.body.openInSchool;
+          qc.openOutSchool = req.body.openOutSchool;
+          qc.openToStudent = req.body.openToStudent;
+          qc.updated_at = new Date();
           qc.save(function (err) {
             if (err) {
               res.status(500).send(err.message);
             } else {
-              res.send('success')
+              res.send({success: true})
             }
           })
         } else {
@@ -157,8 +176,8 @@ router.route('/qcollection')
 });
 
 
-router.route('/qcollection/question')
-.post(isLoggedIn, function (req, res) {
+router.route('/question')
+.post(isTeacher, function (req, res) {
   var checkParams = _.has(req.body, 'qcollection_id') && _.has(req.body, 'question_id');
   if (checkParams) {
 
@@ -181,11 +200,11 @@ router.route('/qcollection/question')
     res.status(400).send('bad params');
   }
 })
-.delete(isLoggedIn, function (req, res) {
-  if (req.body && req.body.qcollection_id && req.body.question_id) {
+.delete(isTeacher, function (req, res) {
+  if (req.query && req.query.qcollection_id && req.query.question_id) {
 
-    var qcollection_id = req.body.qcollection_id;
-    var question_id = req.body.question_id;
+    var qcollection_id = req.query.qcollection_id;
+    var question_id = req.query.question_id;
 
     Qcollection.findByIdAndUpdate(
       qcollection_id,
@@ -194,7 +213,7 @@ router.route('/qcollection/question')
         if (err) {
           res.status(500).send(err.message);
         } else {
-          res.send("success");
+          res.json({success: true})
         }
       }
     );
@@ -225,7 +244,7 @@ router.route('/qcollections/mine')
       Qcollection.find({
         createdBy: req.user.id,
         "_id": {$gt: page}
-      }, 'name subject public').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+      }, 'name subject openInSchool openOutSchool openToStudent aveDifficulty').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
         if (err) {
           res.send(err);
         } else {
@@ -236,7 +255,7 @@ router.route('/qcollections/mine')
       Qcollection.find({
         createdBy: req.user.id,
         "_id": {$lt: page}
-      }, 'name subject public').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+      }, 'name subject openInSchool openOutSchool openToStudent aveDifficulty').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
         if (err) {
           res.send(err);
         } else {
@@ -246,7 +265,7 @@ router.route('/qcollections/mine')
     }
 
   } else {
-    Qcollection.find({createdBy: req.user.id}, 'name subject public').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+    Qcollection.find({createdBy: req.user.id}, 'name subject openInSchool openOutSchool openToStudent aveDifficulty').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
       if (err) {
         res.send(err);
       } else {
@@ -258,7 +277,7 @@ router.route('/qcollections/mine')
 
 //获取所有公开题集
 router.route('/qcollections/all')
-.get(isLoggedIn, function (req, res) {
+.get(isTeacher, function (req, res) {
   /**
   * @param {string} req.query.sort - sorting by publish date
   */
@@ -266,7 +285,7 @@ router.route('/qcollections/all')
   * @param {string} req.query.page - the last question's ID, in order to query the following questions
   */
   var sort = -1;
-
+  let school = req.user.school
   if (_.get(req.query, 'sort', false) === '0') {
     sort = 1;
   }
@@ -276,9 +295,10 @@ router.route('/qcollections/all')
 
     if (sort === 1) {
       Qcollection.find({
-        "public": true,
+        "school": school,
+        "openInSchool": true,
         "_id": {$gt: page}
-      }, 'name subject createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+      }, 'name subject createdBy aveDifficulty openInSchool openOutSchool openToStudent').populate('createdBy', 'name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
         if (err) {
           res.send(err);
         } else {
@@ -287,9 +307,10 @@ router.route('/qcollections/all')
       });
     } else {
       Qcollection.find({
-        "public": true,
+        "school": school,
+        "openInSchool": true,
         "_id": {$lt: page}
-      }, 'name subject createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+      }, 'name subject createdBy aveDifficulty openInSchool openOutSchool openToStudent').populate('createdBy', 'name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
         if (err) {
           res.send(err);
         } else {
@@ -299,7 +320,10 @@ router.route('/qcollections/all')
     }
 
   } else {
-    Qcollection.find({"public": true}, 'name subject createdBy aveDifficulty').populate('createdBy', 'local.name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
+    Qcollection.find({
+      "school": school,
+      "openInSchool": true,
+    }, 'name subject createdBy aveDifficulty openInSchool openOutSchool openToStudent').populate('createdBy', 'name').sort({_id: sort}).limit(12).exec(function (err, qcollections) {
       if (err) {
         res.send(err);
       } else {
@@ -311,22 +335,19 @@ router.route('/qcollections/all')
 });
 
 router.route('/query')
-.post(isTeacher, function (req, res) {
+.get(isTeacher, function (req, res) {
   let school = req.user.school || "pkms"
-
   /**
-  * @param {array} req.body.name - qcollection name
+  * @param {array} req.query.name - qcollection name
   */
   /**
-  * @param {array} req.body.subject - qcollection subject
+  * @param {array} req.query.subject - qcollection subject
   */
-  var checkParams = _.has(req.body, 'name') && _.isString(req.body.name) && _.has(req.body, 'subject') && _.isString(req.body.subject);
+  var checkParams = _.has(req.query, 'name') && _.isString(req.query.name) && _.has(req.query, 'subject') && _.isString(req.query.subject);
   if (checkParams) {
-
-    var name = req.body.name;
-    var subject = req.body.subject;
-
-    Qcollection.find({$and: [{name: {$regex: name, $options: 'i'}}, {subject: subject}], school: school}, 'name subject public createdBy aveDifficulty').lean().exec(function (err, qcollections) {
+    var name = req.query.name;
+    var subject = req.query.subject;
+    Qcollection.find({school: school, openInSchool: true, subject: subject, name: {$regex: name, $options: 'i'}}, 'name subject openInSchool openToStudent createdBy aveDifficulty').lean().exec(function (err, qcollections) {
       if (err) {
         res.status(500).send(err.message);
       } else {
@@ -342,7 +363,7 @@ router.route('/query')
 
 //更新题集的平均难度
 router.route('/update-difficulty')
-.put(isLoggedIn, function (req, res) {
+.put(isTeacher, function (req, res) {
   var qcollection_id = req.body.qcollection_id;
   var updatedObject = {
     "aveDifficulty": req.body.aveDifficulty
@@ -358,7 +379,7 @@ router.route('/update-difficulty')
 
 //给题集增加题目
 router.route('/add-question')
-.post(isLoggedIn, function (req, res) {
+.post(isTeacher, function (req, res) {
   if (req.body && req.body.qcollection_id && req.body.question_id) {
 
     var qcollection_id = req.body.qcollection_id;
@@ -381,18 +402,43 @@ router.route('/add-question')
   }
 });
 
-//搜索题集的名字
+router.route('/remove-question/:qcollection_id')
+.post(isTeacher, function (req, res) {
+  if (req.body && req.body.qcollection_id && req.body.question_id) {
+
+    var qcollection_id = req.body.qcollection_id;
+    var question_id = req.body.question_id;
+
+    Qcollection.findByIdAndUpdate(
+      qcollection_id,
+      {$addToSet: {"questions": question_id}},
+      {safe: true, upsert: true, new: true},
+      function (err) {
+        if (err) {
+          res.status(500).send(err.message)
+        } else {
+          res.json("success");
+        }
+      }
+    );
+  } else {
+    res.status(400);
+  }
+});
+
+// //搜索题集的名字
 router.route('/teacher/query/name')
 .post(isTeacher, function (req, res) {
-
+  let school = req.user.school;
   var name = req.body.name;
+  var subject = req.body.subject;
   var type = req.body.type;
 
   if (type === 'mine') {
     Qcollection.find({
+      'createdBy': req.user.id,
       'name': new RegExp(name, 'i'),
-      'createdBy': req.user.id
-    }, 'name subject public createdBy aveDifficulty questions').lean().exec(function (err, qcollections) {
+    }, 'name subject openInSchool createdBy aveDifficulty questions').lean().exec(function (err, qcollections) {
       if (err) {
         res.send(err);
       } else {
@@ -404,15 +450,17 @@ router.route('/teacher/query/name')
           }
           res.json(qcollections);
         } else {
-          res.json({});
+          res.json([]);
         }
       }
     });
   } else {
     Qcollection.find({
+      'school': school,
+      'openInSchool': true,
+      'subject': subject,
       'name': new RegExp(name, 'i'),
-      'public': true
-    }, 'name subject public createdBy aveDifficulty questions').lean().exec(function (err, qcollections) {
+    }, 'name subject openInSchool createdBy aveDifficulty questions').lean().exec(function (err, qcollections) {
       if (err) {
         res.send(err);
       } else {
@@ -424,7 +472,7 @@ router.route('/teacher/query/name')
           }
           res.json(qcollections);
         } else {
-          res.json({});
+          res.json([]);
         }
       }
     });

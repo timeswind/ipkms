@@ -1,6 +1,7 @@
 var redisClient = require('./redis_database').redisClient;
 var jwt = require('jsonwebtoken');
 var fs = require('fs');
+var _ = require('lodash');
 var publicKey = fs.readFileSync('ipkms.rsa.pub');
 var privateKey = fs.readFileSync('ipkms.rsa');
 var TOKEN_EXPIRATION = 60*24;
@@ -33,10 +34,17 @@ exports.verifyToken = function (req, res, next) {
               message: '认证失败'
             });
           } else {
-            // if everything is good, save to request for use in other routes
-            req.user = decoded;
-            // console.log(decoded);
-            next();
+            var requiredParams = ['role', 'school', 'id'];
+            var paramsComplete = _.every(requiredParams, _.partial(_.has, decoded));
+            if (paramsComplete) {
+              req.user = decoded;
+              next();
+            } else {
+              return res.status(401).send({
+                authorize: false,
+                message: '认证失败 - missing key'
+              });
+            }
           }
         });
       }

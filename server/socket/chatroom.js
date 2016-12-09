@@ -1,6 +1,6 @@
 var socketioJwt = require('socketio-jwt');
 var Chatroom = require('../models/chatroom');
-var User = require('../models/localuser');
+var User = require('../models/user');
 var randomMC = require('random-material-color');
 
 
@@ -14,7 +14,7 @@ exports = module.exports = function (io) {
                     if (err) {
                         callback(null, SECRETS["fail"]);
                     } else {
-                        callback(null, user.local.password);
+                        callback(null, user.password);
                     }
                 })
             },

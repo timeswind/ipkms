@@ -1,6 +1,6 @@
 var socketioJwt = require('socketio-jwt');
 var _ = require('lodash');
-var User = require('../models/localuser');
+var User = require('../models/user');
 var Student = require('../models/student');
 var Teacher = require('../models/teacher');
 var Quickquiz = require('../models/quickquiz');

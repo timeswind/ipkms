@@ -7,7 +7,7 @@ var _ = require('lodash');
 var path = require('path');
 
 var Student = require('../models/student');
-var User = require('../models/localuser');
+var User = require('../models/user');
 router.get('/', function (req, res) {
   res.render('index');
 });
@@ -35,18 +35,18 @@ router.post('/login', function (req, res, next) {
 
       var payload;
       var token;
-      var userRole = req.user.local.role;
+      var userRole = req.user.role;
 
       if (userRole == "teacher") {
         payload = {
           id: user._id,
-          name: user.local.name,
-          email: user.local.email,
-          teacher: user.local.teacher,
+          name: user.name,
+          email: user.email,
+          teacher: user.teacher,
           role: "teacher"
         };
         //user has authenticated correctly thus we create a JWT token
-        token = jwt.sign(payload, user.local.password, {
+        token = jwt.sign(payload, user.password, {
           expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
         });
 
@@ -56,17 +56,17 @@ router.post('/login', function (req, res, next) {
         payload = {
           id: user._id,
           name: student_name,
-          schoolid: user.local.schoolId,
-          student: user.local.student,
+          schoolid: user.schoolId,
+          student: user.student,
           role: "student"
         };
         if (!student_name) {
-          Student.findById(user.local.student).lean().exec(function (err, student) {
+          Student.findById(user.student).lean().exec(function (err, student) {
             if (err) {
               return res.status(500).send(err.message)
             } else {
               payload.name = student.name;
-              var token = jwt.sign(payload, user.local.password, {
+              var token = jwt.sign(payload, user.password, {
                 expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
               });
 
@@ -74,7 +74,7 @@ router.post('/login', function (req, res, next) {
             }
           })
         } else {
-          token = jwt.sign(payload, user.local.password, {
+          token = jwt.sign(payload, user.password, {
             expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
           });
 
@@ -84,12 +84,12 @@ router.post('/login', function (req, res, next) {
       } else {
         payload = {
           id: user._id,
-          name: user.local.name,
-          email: user.local.email,
-          role: user.local.role
+          name: user.name,
+          email: user.email,
+          role: user.role
         };
         //user has authenticated correctly thus we create a JWT token
-        token = jwt.sign(payload, user.local.password, {
+        token = jwt.sign(payload, user.password, {
           expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
         });
 
@@ -114,23 +114,23 @@ router.post('/login/student', function (req, res, next) {
       }
 
       var payload;
-      var userRole = req.user.local.role;
+      var userRole = req.user.role;
       var student_name = _.get(user.local, 'name', null);
       payload = {
         id: user._id,
         name: student_name,
-        schoolid: user.local.schoolId,
-        student: user.local.student,
+        schoolid: user.schoolId,
+        student: user.student,
         role: "student"
       };
       if (userRole == "student") {
         if (!student_name) {
-          Student.findById(user.local.student).lean().exec(function (err, student) {
+          Student.findById(user.student).lean().exec(function (err, student) {
             if (err) {
               return res.status(500).send(err.message)
             } else {
               payload.name = student.name;
-              var token = jwt.sign(payload, user.local.password, {
+              var token = jwt.sign(payload, user.password, {
                 expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
               });
 
@@ -138,7 +138,7 @@ router.post('/login/student', function (req, res, next) {
             }
           })
         } else {
-          token = jwt.sign(payload, user.local.password, {
+          token = jwt.sign(payload, user.password, {
             expiresIn: tokenManager.TOKEN_EXPIRATION_SEC // expires duration
           });
 
@@ -200,7 +200,7 @@ function isAdmin(req, res, next) {
 
   // if user is authenticated in the session, carry on
   if (req.isAuthenticated())
-  if (req.user.local.role == "admin")
+  if (req.user.role == "admin")
   return next();
   // if they aren't redirect them to the home page
   res.redirect('/home');

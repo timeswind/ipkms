@@ -1,36 +1,35 @@
 var mongoose = require('mongoose');
 var ObjectId = mongoose.Schema.ObjectId;
 var questionSchema = mongoose.Schema({
-
-  createdBy: {type: ObjectId, ref: 'User', index: true},
-  school: { type: String, index: true },
-  type: {type: String, index: true}, // mc / reading /...
-  subject: {type: String, index: true},
-  language: {type: String, index: true},
-  tags: {type: [String], index: true},
-  difficulty: {type: Number, index: true}, // 难度系数1-5
-  context: String, // content
-  delta: String, // Delta type question content, use for edit question
-  choices: [String], //a b c d 选项
-  answer: {
-    mc: Number,
-    fill: String
-  },
-  tips: String,
-  statistic: {
-    mc: [], // [a,b,c,d] for mc
-    fill: [] // [count, right] for fill in the blank question
-  },
+  createdBy: {type: ObjectId, ref: 'User'},
+  school: {type: String},
+  type: {type: String}, // mc / reading /...
+  subject: {type: String},
+  language: {type: String},
+  tags: {type: [String]},
+  difficulty: {type: Number, min: 0, max: 5}, // 难度系数1-5
+  content: {type: String}, // Delta type question content, use for edit question
+  choices: [{
+    content: String,
+    clue: String,
+    correct: Boolean,
+    count: Number
+  }],
   images: [{
     type: {type: String},
     label: {type: String},
     data: {type: String}
   }],
-  draft: Boolean,
-  created_at: Date,
-  updated_at: Date
-
+  randomize: {type: Boolean, default: false},
+  created_at: {type: Date, default: new Date()},
+  updated_at: {type: Date, default: new Date()}
 });
+
+questionSchema.index({createdBy: 1, type: 1});
+questionSchema.index({school: 1, _id: 1});
+questionSchema.index({school: 1, tags: 1, difficulty: 1});
+questionSchema.index({school: 1, subject: 1, difficulty: 1, tags: 1});
+questionSchema.index({school: 1, subject: 1, tags: 1});
 
 questionSchema.pre('save', function (next) {
 

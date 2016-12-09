@@ -5,19 +5,31 @@ var Mixed = mongoose.Schema.Types.Mixed
 // define the schema for our user model
 var quizsampleSchema = mongoose.Schema({
 
-    quickquiz: {type: ObjectId, ref: 'Quickquiz', index: true},
-    student: {type: ObjectId, ref: 'Student', index: true},
-    answers: [Mixed], //0 1 2 1 3 2 3 1 2 1
-    results: {
-        right: [Number], //question index in qcollection
-        wrong: [Number], //question index in qcollection
-        blank: [Number], //question index in qcollection
-        exception: [Number] //handle bad question such as those doesn't have a answer or long question
-    },
-    startTime: Date,
-    finishTime: Date
+  title: String,
+  quickquiz: {type: ObjectId, ref: 'Quickquiz'},
+  student: {type: ObjectId, ref: 'User'},
+  answers: [{
+    _id: false,
+    key: String,
+    data: [Mixed]
+  }],
+  report: [{
+    _id: false,
+    key: String,
+    data: String
+  }],
+  right: [String], //questioin id in qcollection
+  wrong: [String], //questioin id in qcollection
+  blank: [String], //questioin id in qcollection
+  exception: [String], //handle bad question such as those doesn't have a answer or long question
+  score: Number,
+  startTime: Date,
+  finishTime: Date
 
 });
+
+quizsampleSchema.index({student: 1})
+quizsampleSchema.index({quickquiz: 1, student: 1})
 
 // create the model for users and expose it to our app
 module.exports = mongoose.model('Quizsample', quizsampleSchema);

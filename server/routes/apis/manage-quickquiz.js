@@ -16,7 +16,7 @@ var isLoggedIn = validUser.isLoggedIn;
 
 router.route('/teacher/quickquizs')
 .get(isTeacher, function (req, res) {
-  var teacher_id = req.user.teacher;
+  var user_id = req.user.id;
   var sort = -1;
 
   if (_.get(req.query, 'sort', false) === '0') {
@@ -28,7 +28,7 @@ router.route('/teacher/quickquizs')
 
     if (sort === 1) {
       Quickquiz.find({
-        createdBy: teacher_id,
+        createdBy: user_id,
         "_id": {$gt: page}
       }, 'title finished time startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
         if (err) {
@@ -39,7 +39,7 @@ router.route('/teacher/quickquizs')
       })
     } else {
       Quickquiz.find({
-        createdBy: teacher_id,
+        createdBy: user_id,
         "_id": {$lt: page}
       }, 'title finished time startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
         if (err) {
@@ -51,7 +51,7 @@ router.route('/teacher/quickquizs')
     }
 
   } else {
-    Quickquiz.find({createdBy: teacher_id}, 'title finished time startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
+    Quickquiz.find({createdBy: user_id}, 'title finished time startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
       if (err) {
         res.status(500).send(err.message)
       } else {
@@ -59,18 +59,21 @@ router.route('/teacher/quickquizs')
       }
     })
   }
-
-
 })
 .post(isTeacher, function (req, res) {
-  var teacher_id = req.user.teacher;
+  let user_id = req.user.id;
+  let school = req.user.school;
 
-  if (req.body.title && req.body.time && req.body.qcollection_id) {
+  var requiredParams = ['title', 'time', 'qcollection_id', 'subject'];
+  var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
+
+  if (paramsComplete) {
     if (req.body.title.trim() !== '' && req.body.time > 0) {
 
       let title = req.body.title;
       let time = req.body.time;
       let qcollection_id = req.body.qcollection_id;
+      let subject = req.body.subject;
 
       async.waterfall([
         function (callback) {
@@ -86,11 +89,12 @@ router.route('/teacher/quickquizs')
         function (questionIdArray, callback) {
           var newQuickquiz = new Quickquiz();
           newQuickquiz.title = title;
-          newQuickquiz.createdBy = teacher_id;
-          newQuickquiz.time = time;
+          newQuickquiz.createdBy = user_id;
+          newQuickquiz.school = school;
+          newQuickquiz.subject = subject;
+          newQuickquiz.duration = time;
           newQuickquiz.questions = questionIdArray;
-          newQuickquiz.finished = false;
-          newQuickquiz.startTime = new Date();
+          newQuickquiz.startAt = new Date();
 
           newQuickquiz.save(function (err, quickquiz) {
             if (err) {
@@ -104,7 +108,7 @@ router.route('/teacher/quickquizs')
         if (err) {
           res.status(500).send(err.message);
         } else if (result) {
-          res.json(result.id);
+          res.json({success: true, id: result.id});
         }
       });
 
@@ -166,7 +170,7 @@ router.route('/teacher/quickquiz/end')
   /**
   * @param {string} req.body.quickquiz_id
   */
-  var teacher_id = req.user.teacher;
+  var user_id = req.user.id;
 
   async.waterfall([
     function (callback) {
@@ -175,7 +179,7 @@ router.route('/teacher/quickquiz/end')
           if (err) {
             callback(err)
           } else {
-            if (!_.get(quickquiz, 'finished', true) && _.get(quickquiz, 'createdBy', null) == teacher_id) {
+            if (!_.get(quickquiz, 'finished', true) && _.get(quickquiz, 'createdBy', null) == user_id) {
               callback(null, quickquiz)
             } else {
               callback({message: 'quickquiz has not finish or permission denied'});
@@ -448,11 +452,9 @@ router.route('/quickquiz')
 
     } else if (_.has(req.user, 'teacher')) {
 
-      // var teacher_id = req.user.teacher;
       var populateQuery = [
         {path: "createdBy", select: "name"}
       ];
-
       // {path: "questions", select: "context delta type choices answer"},
 
       Quickquiz.findById(quickquiz_id, 'title finished time questions createdBy analysis').populate(populateQuery).lean().exec(function (err, quickquiz) {

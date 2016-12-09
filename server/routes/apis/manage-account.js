@@ -2,163 +2,152 @@ var _ = require('lodash');
 var async = require("async");
 var express = require('express');
 var router = express.Router();
-
-var Teacher = require('../../models/teacher');
-var Student = require('../../models/student');
-var User = require('../../models/localuser');
-
+var User = require('../../models/user');
 var validUser = require('../../auth/validUserRole');
 var isAdmin = validUser.isAdmin;
 var isLoggedIn = validUser.isLoggedIn;
 
-router.route('/profile')
-.get(isLoggedIn, function (req, res) {
-  /**
-  * @param {string} req.query.id - userId
-  */
-  var id;
-  if (_.has(req.query, 'id')) {
-    id = req.query.id
-  } else {
-    id = req.user.id
-  }
-
-  User.findOne({'_id': id}, 'local.name local.role local.schoolId local.teacher local.student').lean().exec(function (err, user) {
-    if (err) {
-      res.status(500).send(err.message)
-    } else {
-      if (user) {
-        res.json(user)
-        //  if (_.get(user.local, 'role', '') === 'student') {
-        //
-        //  } else if (_.get(user.local, 'role', '') === 'teacher'){
-        //
-        //  }
-      }
-    }
-  })
-});
-
-router.route('/students')
-.get(isAdmin, function (req, res) {
-  /**
-  * @param {string} req.query.name - student name
-  */
-  /**
-  * @param {string} req.query.schoolId - student schoolid
-  */
-  /**
-  * @param {string} req.query.option
-  */
-
-  if (_.get(req.query, 'option', false) === 'all') {
-    Student.find({}, "name schoolId").lean().exec(function (err, students) {
-      if (err) {
-        res.status(500).send(err.message)
-      } else {
-        res.json(students);
-      }
-    });
-  } else {
-    var name = req.query.name;
-    var schoolId = req.query.schoolId;
-    Student.find({$or: [{name: {$regex: name}}, {schoolId: {$regex: schoolId}}]}, 'name class schoolId').lean().exec(function (err, students) {
-      if (err) {
-        res.status(500).send(err.message)
-      } else {
-        res.json(students);
-      }
-    })
-  }
-
-})
-.post(isAdmin, function (req, res) {
-  /**
-  * @param {string} req.body.name - student name
-  */
-  /**
-  * @param {string} req.body.schoolId - student schoolid
-  */
-  /**
-  * @param {number} req.body.grade
-  */
-  /**
-  * @param {string} req.body.class
-  */
-  // var requiredParams = ['name', 'school', 'schoolId', 'grade', 'class'];
-  // for furture use
-  var requiredParams = ['name', 'schoolId', 'grade', 'class'];
+router.route('/users')
+.post(isAdmin, function(req, res) {
+  let school = req.user.school
+  var requiredParams = ['role', 'password', 'name'];
   var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
-
   if (paramsComplete) {
-    var school = req.user.school || 'pkms' // default school code
-    var name = req.body.name;
-    var schoolId = req.body.schoolId;
-    var grade = req.body.grade;
-    var theclass = req.body.class; //不能用class，与js中的class重名
-
-    var newStudent = new Student();
-
-    newStudent.name = name;
-    newStudent.school = school;
-    newStudent.schoolId = schoolId;
-    newStudent.grade = grade;
-    newStudent.class = theclass;
-
-    newStudent.save(function (err, s) {
-      if (err) {
-        res.status(400).send(err.message);
-      } else {
-        var newUser = new User();
-        /** @namespace newUser.local */
-        newUser.local.name = s.name;
-        newUser.local.school = s.school;
-        newUser.local.schoolId = s.schoolId;
-        newUser.local.role = 'student';
-        newUser.local.student = s.id;
-        newUser.local.password = newUser.generateHash("123456"); //默认密码123456
-        newUser.save(function (err) {
-          if (err) {
-            res.status(400).send(err.message);
-          } else {
-            res.send('success')
-          }
-        })
-      }
-    })
-  } else {
-    res.status(400).send('params missing')
-  }
-
-})
-.delete(isAdmin, function (req, res) {
-  /**
-  * @param {string} req.body.student_id - Student ID
-  */
-  var student_id = req.query.studentid;
-  User.findOneAndRemove({'local.student': student_id}, function (err) {
-    if (err) {
-      res.status(500).send(err.message)
-    } else {
-      Student.findByIdAndRemove(student_id, function (err) {
+    let role = req.body.role
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    if (role === 'teacher' && _.has(req.body, 'email') && re.test(req.body.email)) {
+      async.waterfall([
+        function(callback) {
+          User.findOne({school: school, email: req.body.email}, function(err, user) {
+            if (err) {
+              callback(err)
+            } else {
+              if (user) {
+                callback(new Error('User Already Exist'))
+              } else {
+                callback(null)
+              }
+            }
+          })
+        },
+        function(callback) {
+          var newUserTeacher = new User()
+          newUserTeacher.role = 'teacher'
+          newUserTeacher.school = school
+          newUserTeacher.email = req.body.email
+          newUserTeacher.name = req.body.name
+          newUserTeacher.password = newUserTeacher.generateHash(req.body.password)
+          newUserTeacher.save(function(err) {
+            if (err) {
+              callback(err)
+            } else {
+              callback(null, 'success')
+            }
+          })
+        }
+      ], function (err, result) {
         if (err) {
           res.status(500).send(err.message)
         } else {
-          res.send('success')
+          res.json({success: true})
         }
-      })
+      });
+    } else if (role === 'student' && _.has(req.body, 'schoolId') && !isNaN(req.body.schoolId) ) {
+      async.waterfall([
+        function(callback) {
+          User.findOne({school: school, schoolId: req.body.schoolId}, function(err, user) {
+            if (err) {
+              callback(err)
+            } else {
+              if (user) {
+                callback(new Error('User Already Exist'))
+              } else {
+                callback(null)
+              }
+            }
+          })
+        },
+        function(callback) {
+          var newUserStudent = new User()
+          newUserStudent.role = 'student'
+          newUserStudent.school = school
+          newUserStudent.schoolId = req.body.schoolId
+          newUserStudent.name = req.body.name
+          newUserStudent.password = newUserStudent.generateHash(req.body.password)
+          newUserStudent.save(function(err) {
+            if (err) {
+              callback(err)
+            } else {
+              callback(null, 'success')
+            }
+          })
+        }
+      ], function (err, result) {
+        if (err) {
+          res.status(400).send(err.message)
+        } else {
+          res.json({success: true})
+        }
+      });
+    } else {
+      res.status(400).send('bad params')
+    }
+  } else {
+    res.status(400).send('params missing')
+  }
+})
+
+router.route('/user/:id')
+.get(isAdmin, function(req, res) {
+  let user_id = req.params.id
+  let school = req.user.school
+  console.log(req.user)
+  User.findOne({"_id": user_id}, 'school name schoolId email role').lean().exec(function (err, user) {
+    if (err) {
+      res.status(500).send(err.message)
+    } else {
+      console.log(user.school)
+      if (user.school === school) {
+        res.json({success: true, user: user})
+      } else {
+        res.status(400).send('permission denied')
+      }
     }
   })
-});
+})
 
-router.route('/students/:student_id')
+router.route('/students')
+.get(isAdmin, function (req, res) {
+  var school = req.user.school
+  if (req.query.name) {
+    User.find({school: school, role: 'student', name: {$regex: req.query.name}}, 'name role schoolId').lean().exec(function (err, students) {
+      if (err) {
+        res.status(500).send(err.message)
+      } else {
+        res.json({success: true, users: students});
+      }
+    })
+  } else if (req.query.schoolId) {
+    User.find({school: school, schoolId: {$regex: req.query.schoolId}}, 'name role schoolId').lean().exec(function (err, students) {
+      if (err) {
+        res.status(500).send(err.message)
+      } else {
+        res.json({success: true, users: students});
+      }
+    })
+  } else {
+    res.status(400).send('missing params')
+  }
+})
+
+router.route('/students/:user_id')
 .get(isAdmin, function (req, res) {
   /**
-  * @param {string} req.params.student_id - Student ID
+  * @param {string} req.params.user_id - user ID
   */
-  if (_.has(req.params, 'student_id')) {
-    var student_id = req.params.student_id;
-    Student.findById(student_id, 'name schoolId class grade', function (err, student) {
+  if (_.has(req.params, 'user_id')) {
+    var user_id = req.params.user_id;
+    User.findById(user_id, 'name schoolId class', function (err, student) {
       if (err) {
         res.status(500).send(err.message)
       } else {
@@ -171,7 +160,7 @@ router.route('/students/:student_id')
 })
 .put(isAdmin, function (req, res) {
   /**
-  * @param {string} req.params.student_id - Student ID
+  * @param {string} req.params.user_id - user_id ID
   */
   /**
   * @param {string} req.body.name - student name
@@ -186,18 +175,17 @@ router.route('/students/:student_id')
   * @param {string} req.body.class
   */
 
-  var requiredParams = ['name', 'schoolId', 'grade', 'class'];
+  var requiredParams = ['name', 'schoolId', 'class'];
   var paramsComplete = _.every(requiredParams, _.partial(_.has, req.body));
 
-  if (_.has(req.params, 'student_id') && paramsComplete) {
-    var student_id = req.params.student_id;
+  if (_.has(req.params, 'user_id') && paramsComplete) {
+    var user_id = req.params.user_id;
     var updatedObject = {
       "name": req.body.name,
       "schoolId": req.body.schoolId, //pre save? check repeat
-      "grade": req.body.grade,
       "class": req.body.class
     };
-    Student.findOneAndUpdate({_id: student_id}, updatedObject, {new: true}, function (err, student) {
+    User.findOneAndUpdate({_id: user_id}, updatedObject, {new: true}, function (err, student) {
       if (err) {
         res.status(500).send(err.message)
       } else {
@@ -209,52 +197,36 @@ router.route('/students/:student_id')
   }
 });
 
-router.route('/students/reset-password/:student_id')
-.get(isAdmin, function (req, res) {
-
-  /**
-  * @param {string} req.params.student_id - Student ID
-  */
-
-  if (_.has(req.params, 'student_id')) {
-    var student_id = req.params.student_id;
-    User.findOne({'local.student': student_id}, 'local.name local.role', function (err, user) {
-      if (err) {
-        res.status(500).send(err.message)
-      } else {
-        res.json(user)
-      }
-    })
-  } else {
-    res.status(400).send('params missing')
-  }
-
-})
+router.route('/users/reset-password/:user_id')
 .post(isAdmin, function (req, res) {
   /**
-  * @param {string} req.params.student_id - Student ID
+  * @param {string} req.params.user_id - Student ID
   */
   /**
   * @param {string} req.body.password - new password
   */
 
-  if (_.has(req.params, 'student_id') && _.has(req.body, 'password')) {
-    var student_id = req.params.student_id;
-    var password = req.body.password;
-    if (password.trim() !== '') {
-
-      User.findOne({'local.student': student_id}, function (err, user) {
+  if (_.has(req.params, 'user_id') && _.has(req.body, 'password')) {
+    var school = req.user.school;
+    var user_id = req.params.user_id;
+    var newpassword = req.body.password;
+    if (newpassword.trim() !== '') {
+      User.findOne({'_id': user_id}, function (err, user) {
         if (err) {
           res.status(500).send(err.message)
         } else {
-          user.local.password = user.generateHash(password)
-          user.save(function(err){
-            if (err) {
-              res.status(500).send(err.message)
-            } else {
-              res.send('reset password success')
-            }
-          })
+          if (user.school === school) {
+            user.password = user.generateHash(newpassword)
+            user.save(function(err){
+              if (err) {
+                res.status(500).send(err.message)
+              } else {
+                res.send({success: true})
+              }
+            })
+          } else {
+            res.status(400).send('permission denied')
+          }
         }
       })
     } else {
@@ -275,108 +247,61 @@ router.route('/teachers')
   /**
   * @param {string} req.query.email - teacher email
   */
+  var school = req.user.school
   var name = req.query.name;
   var email = req.query.email;
 
   if (_.get(req.query, 'name', '') !== '') {
     if (_.get(req.query, 'email', '') !== '') {
-      Teacher.find({$or: [{name: {$regex: name}}, {email: {$regex: email}}]}, 'name email', function (err, teachers) {
+      User.find({school: school, role: 'teacher', $or: [{name: {$regex: name}}, {email: {$regex: email}}]}, 'name email role', function (err, teachers) {
         if (err) {
           res.status(500).send(err.message);
         } else {
-          res.json(teachers);
+          res.json({success: true, users: teachers});
         }
       })
     } else {
-      Teacher.find({$or: [{name: {$regex: name}}]}, 'name email', function (err, teachers) {
+      User.find({school: school, role: 'teacher', name: {$regex: name}}, 'name email role', function (err, teachers) {
         if (err) {
           res.status(500).send(err.message);
         } else {
-          res.json(teachers);
+          res.json({success: true, users: teachers});
         }
       })
     }
   } else if (_.get(req.query, 'email', '') !== '') {
-    Teacher.find({$or: [{email: {$regex: email}}]}, 'name email', function (err, teachers) {
+    User.find({school: school, role: 'teacher', email: {$regex: email}}, 'name email role', function (err, teachers) {
       if (err) {
         res.status(500).send(err.message);
       } else {
-        res.json(teachers);
+        res.json({success: true, users: teachers});
       }
     })
-  }
-})
-.post(isAdmin, function (req, res) {
-  /**
-  * @param {string} req.body.name - teacher name
-  */
-  /**
-  * @param {string} req.body.email - teacher email
-  */
-
-  if (_.has(req.body, 'name') && _.has(req.body, 'email')) {
-    var school = req.user.school || "pkms"; // default school code
-    var name = req.body.name;
-    var email = req.body.email;
-
-    var newTeacher = new Teacher();
-    newTeacher.school = school;
-    newTeacher.name = name;
-    newTeacher.email = email;
-
-    newTeacher.save(function (err, t) {
-      if (err) {
-        res.status(400).send(err.message);
-      } else {
-        var newUser = new User();
-        newUser.local.name = t.name;
-        newUser.local.email = t.email;
-        newUser.local.school = t.school;
-        newUser.local.role = 'teacher';
-        newUser.local.teacher = t.id;
-        newUser.local.password = newUser.generateHash("123456"); //默认密码123456
-        newUser.save(function (err) {
-          if (err) {
-            res.status(400).send(err.message);
-          } else {
-            res.send('success')
-          }
-        })
-      }
-    })
-  } else {
-    res.status(400).send('params missing')
   }
 })
 .delete(isAdmin, function (req, res) {
   /**
-  * @param {string} req.body.teacher_id - Teacher ID
+  * @param {string} req.body.user_id - user ID
   */
-  var teacher_id = req.query.teacherid;
-  User.findOneAndRemove({'local.teacher': teacher_id}, function (err) {
+  var user_id = req.query.user_id;
+  User.findOneAndRemove({'_id': user_id}, function (err) {
     if (err) {
       send.status(500).send(err.message)
     } else {
-      Teacher.findByIdAndRemove(teacher_id, function (err) {
-        if (err) {
-          res.status(500).send(err.message)
-        } else {
-          res.json('success')
-        }
-      })
+      res.json('success')
     }
   })
 })
 
-router.route('/teachers/:teacher_id')
+router.route('/teachers/:user_id')
 .get(isAdmin, function (req, res) {
   /**
-  * @param {string} req.params.teacher_id - Teacher ID
+  * @param {string} req.params.user_id - user ID
   */
-  if (_.has(req.params, 'teacher_id')) {
-    var teacher_id = req.params.teacher_id;
+  if (_.has(req.params, 'user_id')) {
+    var user_id = req.params.user_id;
 
-    Teacher.findById(teacher_id, 'name email', function (err, teacher) {
+    User.findById(user_id, 'name email', function (err, teacher) {
       if (err) {
         res.status(500).send(err.message)
       } else {
@@ -387,59 +312,5 @@ router.route('/teachers/:teacher_id')
     res.status(400).send("params missing")
   }
 })
-
-router.route('/teachers/reset-password/:teacher_id')
-.get(isAdmin, function (req, res) {
-  /**
-  * @param {string} req.params.teacher_id - Teacher ID
-  */
-  if (_.has(req.params, 'teacher_id')) {
-    var teacher_id = req.params.teacher_id;
-    User.findOne({'local': {'teacher': teacher_id}}, 'local.name local.role', function (err, user) {
-      if (err) {
-        res.status(500).send(err.message)
-      } else {
-        res.json(user)
-      }
-    })
-  } else {
-    res.status(400).send("params missing")
-  }
-
-})
-.post(isAdmin, function (req, res) {
-  /**
-  * @param {string} req.params.teacher_id - Teacher ID
-  */
-  /**
-  * @param {string} req.body.password - new password for teacher account
-  */
-
-  if (_.has(req.params, 'teacher_id') && _.has(req.body, 'password')) {
-    var teacher_id = req.params.teacher_id;
-    var password = req.body.password;
-    if (password.trim() !== '') {
-      User.findOne({'local.teacher': teacher_id}, function (err, user) {
-        if (err) {
-          res.status(500).send(err.message)
-        } else {
-          user.local.password = user.generateHash(password)
-          user.save(function(err){
-            if (err) {
-              res.status(500).send(err.message)
-            } else {
-              res.send('reset password success')
-            }
-          })
-        }
-      })
-    } else {
-      res.status(406).send('invaild password')
-    }
-  } else {
-    res.status(400).send('params missing')
-  }
-
-});
 
 module.exports = router;
