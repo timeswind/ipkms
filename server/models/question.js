@@ -20,6 +20,11 @@ var questionSchema = mongoose.Schema({
     label: {type: String},
     data: {type: String}
   }],
+  meta: [{
+    _id: false,
+    key: String, // 'multiple_answer'
+    data: String // 'true'
+  }],
   randomize: {type: Boolean, default: false},
   created_at: {type: Date, default: new Date()},
   updated_at: {type: Date, default: new Date()}

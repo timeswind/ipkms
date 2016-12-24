@@ -143,13 +143,23 @@ router.route('/questions')
       newQuestion.tags = data.tags;
       newQuestion.difficulty = data.difficulty;
       if (data.choices && data.choices.length !== 0) {
+        var correct_answer_count = 0
         data.choices.forEach(function(choice){
+          if (choice.correct) {
+            correct_answer_count++
+          }
           newQuestion.choices.push({
             content: choice.content || "",
             clue: choice.clue || "",
             correct: choice.correct || ""
           })
         })
+        if (correct_answer_count > 1) {
+          newQuestion.meta.push({
+            key: 'multiple_answer',
+            data: 'true'
+          })
+        }
       }
       if (data.images && data.images.length !== 0) {
         data.images.forEach(function(imageData){
@@ -265,6 +275,38 @@ router.route('/question/:question_id') //get question's detail without answer
           } else if (!choicesValid) {
             res.status(400).json({success: false, message: 'Choices objects invalid'});
           } else {
+            var hasMultpleAnswerMetaKey = false
+            if (correctAnswerCount > 1) {
+              if (question.meta && question.meta.length > 0) {
+                question.meta.forEach((metaData, index)=>{
+                  if (metaData.key === 'multiple_answer') {
+                    hasMultpleAnswerMetaKey = true
+                    question.meta[index]['data'] = 'true'
+                  }
+                })
+              }
+              if (!hasMultpleAnswerMetaKey) {
+                question.meta.push({
+                  key: 'multiple_answer',
+                  data: 'true'
+                })
+              }
+            } else if (correctAnswerCount === 1) {
+              if (question.meta && question.meta.length > 0) {
+                question.meta.forEach((metaData, index)=>{
+                  if (metaData.key === 'multiple_answer') {
+                    hasMultpleAnswerMetaKey = true
+                    question.meta[index]['data'] = 'false'
+                  }
+                })
+              }
+              if (!hasMultpleAnswerMetaKey) {
+                question.meta.push({
+                  key: 'multiple_answer',
+                  data: 'false'
+                })
+              }
+            }
             question.subject = req.body.subject,
             question.difficulty = req.body.difficulty,
             question.tags = req.body.tags,

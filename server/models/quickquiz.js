@@ -15,7 +15,6 @@ var quickquizSchema = mongoose.Schema({
     key: String,
     data: String
   }],
-  finished: Boolean,
   startAt: Date,
   endAt: Date
   // analysis: {

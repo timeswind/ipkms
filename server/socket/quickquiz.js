@@ -1,191 +1,210 @@
 var socketioJwt = require('socketio-jwt');
+var series = require('async/series');
 var _ = require('lodash');
 var User = require('../models/user');
-var Student = require('../models/student');
-var Teacher = require('../models/teacher');
 var Quickquiz = require('../models/quickquiz');
-var Quizsample = require('../models/quizsample');
+var Question = require('../models/question');
 var redisClient = require('../config/redis_database').redisClient;
 var fs = require('fs')
 var publicKey = fs.readFileSync('ipkms.rsa.pub');
+var QUICKQUIZ_EXPIRATION_SEC =  12 * 60 * 60; // store 12 hours in memory
 
 exports = module.exports = function (io) {
-
-  var users = {};
-  var teachers = {};
 
   io.of('/quickquiz')
   .on('connection', socketioJwt.authorize({
     secret: publicKey,
-    timeout: 15000 // 15 seconds to send the authentication message
+    timeout: 15000
   })).on('authenticated', function(socket) {
     //this socket is authenticated, we are good to handle more events from it.
-    console.log('hello! ' + JSON.stringify(socket.decoded_token));
-
-    if (socket.decoded_token.teacher) {
-      users[socket.id] = {
-        teacher: socket.decoded_token.teacher,
-        name: socket.decoded_token.name,
-        quickquiz: ''
-      };
-      teachers[socket.id] = {
-        id: socket.decoded_token.teacher,
-        name: socket.decoded_token.name,
-        quickquiz: ''
-      };
-    } else if (socket.decoded_token.student) {
-      users[socket.id] = {
-        student: socket.decoded_token.student,
-        name: socket.decoded_token.name,
-        quickquiz: '',
-        quizsample: '',
-        status: ''
-      };
-    }
-
-    console.log(users);
-
-    socket.on('user join', function (data) {
-
-      // @param data
-      // data = {
-      //     quickquizId: String,
-      //     status: String
-      // }
-
-      console.log('on user join');
-
-      if (data.quickquizId) {
-        Quickquiz.count({_id: data.quickquizId}, function (err, count) {
-
-          if (count === 1) {
-
-            var quickquizId = data.quickquizId;
-            socket.join(quickquizId);
-            users[socket.id].quickquiz = quickquizId;
-            if (data.status) {
-              users[socket.id].status = data.status;
-            }
-
-            console.log('user join success');
-
-            io.of('/quickquiz').to(socket.id).emit('joined');
-
-            if (users[socket.id].teacher) {
-              teachers[socket.id].quickquiz = quickquizId;
-              // 為教師發送當前在進行quizkquiz的學生列表
-              var students = []; // array of student ids
-              for (var key in users) {
-                if (users[key].student && users[key].quickquiz === quickquizId) {
-                  var student = {
-                    id: users[key].student,
-                    status: users[key].status
-                  };
-                  students.push(student)
+    var clietns = io.of('/quickquiz').clients();
+    let token = socket.decoded_token
+    socket.on('user join', function(data) {
+      if (_.has(data, 'quickquizId')) {
+        console.log('on join')
+        socket.join(data.quickquizId);
+        io.of('/quickquiz').to(socket.id).emit('joined');
+        if (token.role === 'teacher') {
+          let redisTeacherIdSocketIdKey = `${data.quickquizId}:tid:socketid` // ${quickquizId}-t
+          console.log(socket.id)
+          socket.quickquizId = data.quickquizId
+          console.log(`teacher id is ${token.id}`)
+          console.log(`socket id is ${socket.id}`)
+          redisClient.hset(redisTeacherIdSocketIdKey, token.id, socket.id)
+          redisClient.expire(redisTeacherIdSocketIdKey, QUICKQUIZ_EXPIRATION_SEC);
+          series({
+            studentList: function(callback) {
+              redisClient.hgetall(`${data.quickquizId}:studentList`, function (err, studentList) {
+                if (err) {
+                  callback(err)
+                } else {
+                  callback(null, studentList);
                 }
-              }
-              io.of('/quickquiz').to(socket.id).emit('student list', students);
-            } else if (users[socket.id].student) {
-              var response = {
-                name: users[socket.id].name,
-                id: users[socket.id].student
-              };
-              io.of('/quickquiz').in(quickquizId).emit('student joined', response);
+              })
+            },
+            studentAnswerReports: function(callback){
+              redisClient.hgetall(`${data.quickquizId}:sid:report`, function (err, studentAnswerReports) {
+                if (err) {
+                  callback(err)
+                } else {
+                  callback(null, studentAnswerReports);
+                }
+              })
             }
+          }, function(err, results) {
+            console.log(err)
+            if (results) {
+              console.log(results)
+              io.of('/quickquiz').to(socket.id).emit('studentList', results);
+            }
+          });
+        } else if (token.role === 'student') {
+          let redisStudentSocketIdKey = `${data.quickquizId}:sid:socketid` // ${quickquizId}-t
+          let redisQuickquizStudentsKey = `${data.quickquizId}:studentList`
+          console.log(socket.id)
+          socket.quickquizId = data.quickquizId
+          console.log(`student id is ${token.id}`)
+          console.log(`socket id is ${socket.id}`)
+          redisClient.get(`${data.quickquizId}:answer:seeds`, function (err, seeds) {
+            if (seeds) {
+              io.of('/quickquiz').to(socket.id).emit('seeds', seeds);
+            } else {
+              addQuickquizSeedsToRedis(data.quickquizId, function (err, seeds) {
+                if (err) {
 
-          } else {
-            console.log('quickquiz not found!')
+                } else if (seeds) {
+                  io.of('/quickquiz').to(socket.id).emit('seeds', seeds);
+                }
+              })
+            }
+          })
+          redisClient.hset(redisStudentSocketIdKey, token.id, socket.id)
+          redisClient.hset(redisQuickquizStudentsKey, token.id, JSON.stringify(token))
+          redisClient.expire(redisStudentSocketIdKey, QUICKQUIZ_EXPIRATION_SEC);
+          redisClient.expire(redisQuickquizStudentsKey, QUICKQUIZ_EXPIRATION_SEC);
+          redisClient.hgetall(`${data.quickquizId}:tid:socketid`, function (error, hashs) {
+            if (hashs) {
+              var student = {}
+              student[token.id] = token
+              let teacherSocketIds = _.values(hashs)
+              if (teacherSocketIds && teacherSocketIds.length > 0) {
+                console.log(teacherSocketIds)
+                console.log('emit student join')
+                io.of('/quickquiz').to(teacherSocketIds).emit('studentJoin', student);
+              }
+            }
+          })
+        }
+      } else {
+        console.log('missing params')
+      }
+    })
+
+    socket.on('student answer update', function(data) {
+      let student_id = token.id
+      let reportJSONString = JSON.stringify(data)
+      console.log(socket.quickquizId)
+      let redisKey = `${socket.quickquizId}:sid:report`
+      console.log(`redisKey is ${redisKey}`)
+      redisClient.hset(redisKey, token.id, reportJSONString)
+      redisClient.expire(redisKey, QUICKQUIZ_EXPIRATION_SEC)
+      getTeachersSocketIds(socket.quickquizId, function (err, ids) {
+        if (ids) {
+          io.of('/quickquiz').to(ids).emit('studentAnswerReport', {student: token.id, report: data});
+        }
+      })
+    })
+
+    socket.on('disconnect', function() {
+      console.log('disconnect')
+      console.log(token.id)
+      console.log(socket.id)
+      if (token.role === 'student') {
+        let redisUserIdSocketIdKey = `${socket.quickquizId}:sid:socketid` // ${quickquizId}-t
+        let redisQuickquizStudentsKey = `${socket.quickquizId}:studentList`
+        redisClient.hdel(redisUserIdSocketIdKey, token.id)
+        redisClient.hdel(redisQuickquizStudentsKey, token.id)
+        redisClient.hgetall(`${socket.quickquizId}:tid:socketid`, function (error, hashs) {
+          if (hashs) {
+            let teacherSocketIds = _.values(hashs)
+            if (teacherSocketIds && teacherSocketIds.length > 0) {
+              io.of('/quickquiz').to(teacherSocketIds).emit('studentLeave', token.id);
+            }
           }
         })
-      } else {
-        console.log('student joined without quickquizId')
+      } else if (token.role === 'teacher') {
+        let redisKey = `${socket.quickquizId}:tid:socketid` // ${quickquizId}-t
+        redisClient.hdel(redisKey, token.id)
       }
-    });
-
-    socket.on('start doing', function (data) {
-      users[socket.id].status = 'doing';
-      users[socket.id].quizsample = data.quizsampleId;
-      var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
-      io.of('/quickquiz').to(teachers_socket_ids).emit('start doing', users[socket.id]);
-    });
-
-    socket.on('finish doing', function (data) {
-      users[socket.id].status = 'finish';
-      var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
-      io.of('/quickquiz').to(teachers_socket_ids).emit('finish doing', users[socket.id].student);
-    });
-
-    socket.on('student leave', function (data) {
-      var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
-      io.of('/quickquiz').to(teachers_socket_ids).emit('student leaved', users[socket.id].student);
-      delete users[socket.id];
-    });
-
-    socket.on('question on fill', function (data) {
-      var modifiedData = {
-        student_id: users[socket.id].student,
-        type: data.type,
-        answer: data.answer,
-        answers: data.answers
-      };
-
-      var teachers_socket_ids = getTeachersSocketIds(teachers, data.quickquizId);
-      console.log(teachers_socket_ids);
-      io.of('/quickquiz').to(teachers_socket_ids).emit('question on fill', modifiedData);
-    });
-
-    socket.on('request observe', function (data) {
-      var student_id = data.student_id;
-      var student_socket_id = getSocketId(users, 'student', student_id);
-      var modifiedData = {
-        teacher_id: teachers[socket.id].id
-      };
-      io.of('/quickquiz').to(student_socket_id).emit('request observe', modifiedData);
-    });
-
-    socket.on('response observe', function (data) {
-      var request_teacher_socket_id = getSocketId(users, 'teacher', data.teacher_id);
-      var modifiedData = {
-        answers: data.answers
-      };
-      io.of('/quickquiz').to(request_teacher_socket_id).emit('response observe', modifiedData);
-    });
-
-    socket.on('disconnect', function () {
-
-      if (users[socket.id] && users[socket.id].quickquiz !== '' && users[socket.id].student) {
-        console.log("student leaved");
-        var teachers_socket_ids = getTeachersSocketIds(teachers, users[socket.id].quickquiz);
-        io.of('/quickquiz').to(teachers_socket_ids).emit('student leaved', users[socket.id].student);
-      } else if (_.has(users[socket.id], 'teacher')) {
-        console.log("teacher leaved");
-        delete teachers[socket.id]
-      }
-      socket.disconnect();
-      delete users[socket.id];
-    });
+    })
   });
-
 };
 
-function getSocketId(users, role, id) {
-  if (role === 'student') {
-    return _.findKey(users, function (user) {
-      return user.student === id
-    })
-  } else if (role === 'teacher') {
-    return _.findKey(users, function (user) {
-      return user.teacher === id
-    })
-  }
+function addQuickquizSeedsToRedis(quickquiz_id, callback) {
+  var populateQuery = [
+    {path: "students", select: "name"},
+    {path: "samples", select: "student results startTime finishTime"}
+  ];
+  Quickquiz.findById(quickquiz_id).populate(populateQuery).lean().exec(function (err, quickquiz) {
+    if (err) {
+      callback(err, null)
+    } else {
+      if (quickquiz) {
+        if (_.has(quickquiz, 'questions') && quickquiz.questions.length > 0) {
+          Question.find({'_id': {'$in': quickquiz.questions}}, 'type choices meta tags difficulty').lean().exec(function (err, questions) {
+            if (err) {
+              callback(err, null)
+            } else {
+              if (questions) {
+                var qidIndexDic = {};
+                _.forEach(quickquiz.questions, function (question_id, index) {
+                  qidIndexDic[question_id] = index
+                });
+                for (var i = 0; i < questions.length; i++) {
+                  var question_id = questions[i]._id;
+                  var index = qidIndexDic[question_id];
+                  quickquiz.questions[index] = questions[i]
+                }
+                var questionsAnswerSeeds = JSON.stringify(quickquiz.questions)
+                redisClient.set(`${quickquiz._id}:answer:seeds`, questionsAnswerSeeds);
+                redisClient.expire(`${quickquiz._id}:answer:seeds`, QUICKQUIZ_EXPIRATION_SEC);
+                callback(null, questionsAnswerSeeds)
+              }
+            }
+          })
+        }
+      }
+    }
+  })
 }
 
-function getTeachersSocketIds(teachers, quickquiz_id) {
-  return _.keys(_.pickBy(teachers, function (teacher) {
-    return teacher.quickquiz === quickquiz_id
-  }))
+function getTeachersSocketIds(quickquizId, callback) {
+  let teachersRedisKey = `${quickquizId}:tid:socketid`
+  redisClient.hgetall(teachersRedisKey, function (error, hashs) {
+    if (hashs) {
+      callback(null, _.values(hashs))
+    } else {
+      callback(null, null)
+    }
+  })
 }
 
-function addStudent(socketId, studentObject) {
-  client.hset(["socket:quickquiz:user:" + socketId, "", "some other value"], redis.print);
+function getStudentsSocketIds(studentsRedisKey, callback) {
+  redisClient.hgetall(studentsRedisKey, function (error, hashs) {
+    if (hashs) {
+      callback(null, _.values(hashs))
+    } else {
+      callback(null, null)
+    }
+  })
+}
+
+function getStudentsAnswers(quickquizAnswersRedisKey, callback) {
+  redisClient.hgetall(quickquizAnswersRedisKey, function (error, hashs) {
+    if (hashs) {
+      callback(null, _.values(hashs))
+    } else {
+      callback(null, null)
+    }
+  })
 }

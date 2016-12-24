@@ -3,14 +3,11 @@ var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
-var cookieParser = require('cookie-parser');
+// var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var swig = require('swig');
-var passport = require('passport');
 var mongoose = require('mongoose');
 var raven = require('raven');
-
-require('./auth/local')(passport);
 
 // *** routes *** //
 var routes = require('./routes/index.js');
@@ -21,8 +18,6 @@ var homeRoutes = require('./routes/home.js');
 // *** express instance *** //
 var app = express();
 app.use(raven.middleware.express.requestHandler('https://0f71c3e1e67d40908e4110a3392a0e51:e1216abeb8c5409cadae45624fc51b0e@sentry.io/103012'));
-
-app.use(passport.initialize());
 
 // *** view engine *** //
 var swig = new swig.Swig();
@@ -38,7 +33,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
+// app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../client/public')));
 
 // Initialize Passport and restore authentication state, if any, from the

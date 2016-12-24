@@ -11,20 +11,25 @@ var quizsampleSchema = mongoose.Schema({
   answers: [{
     _id: false,
     key: String,
-    data: [Mixed]
+    data: Mixed,
+    correct: Boolean,
+    blank: Boolean,
+    exception: Boolean
   }],
   report: [{
     _id: false,
     key: String,
-    data: String
+    data: Mixed
   }],
-  right: [String], //questioin id in qcollection
-  wrong: [String], //questioin id in qcollection
-  blank: [String], //questioin id in qcollection
-  exception: [String], //handle bad question such as those doesn't have a answer or long question
+  // weeknessTags: [String],
+  // difficultyLevel: Number,
+  // right: [String], //questioin id in qcollection
+  // wrong: [String], //questioin id in qcollection
+  // blank: [String], //questioin id in qcollection
+  // exception: [String], //handle bad question such as those doesn't have a answer or long question
   score: Number,
-  startTime: Date,
-  finishTime: Date
+  startAt: Date,
+  finishAt: Date
 
 });
 
