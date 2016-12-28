@@ -12,8 +12,8 @@ var manageQuestionApiRoutes = require('./apis/manage-question.js');
 var manageQcollectonApiRoutes = require('./apis/manage-qcollection.js');
 var manageGroupApiRoutes = require('./apis/manage-group.js');
 var manageQuickquizApiRoutes = require('./apis/manage-quickquiz.js');
-var manageHomeworkApiRoutes = require('./apis/manage-homework.js');
 var qiniuApiRoutes = require('./apis/qiniu.js');
+var quizsamplesRoutes = require('./apis/quizsamples.js');
 
 router.use('/message', tokenManager.verifyToken, messageApiRoutes);
 router.use('/manage-account', tokenManager.verifyToken, manageAccountApiRoutes);
@@ -21,8 +21,8 @@ router.use('/manage-question', tokenManager.verifyToken, manageQuestionApiRoutes
 router.use('/manage-qcollection', tokenManager.verifyToken, manageQcollectonApiRoutes);
 router.use('/manage-group', tokenManager.verifyToken, manageGroupApiRoutes);
 router.use('/manage-quickquiz', tokenManager.verifyToken, manageQuickquizApiRoutes);
-router.use('/manage-homework', tokenManager.verifyToken, manageHomeworkApiRoutes);
 router.use('/qiniu', tokenManager.verifyToken, qiniuApiRoutes);
+router.use('/quizsamples', tokenManager.verifyToken, quizsamplesRoutes);
 
 // router.route('/createAdmin')
 // .get(function(req, res){

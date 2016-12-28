@@ -1,22 +1,23 @@
 var socketioJwt = require('socketio-jwt');
 var series = require('async/series');
 var _ = require('lodash');
+
 var User = require('../models/user');
 var Quickquiz = require('../models/quickquiz');
 var Question = require('../models/question');
+
 var redisClient = require('../config/redis_database').redisClient;
 var fs = require('fs')
+
 var publicKey = fs.readFileSync('ipkms.rsa.pub');
 var QUICKQUIZ_EXPIRATION_SEC =  12 * 60 * 60; // store 12 hours in memory
 
 exports = module.exports = function (io) {
-
   io.of('/quickquiz')
   .on('connection', socketioJwt.authorize({
     secret: publicKey,
     timeout: 15000
   })).on('authenticated', function(socket) {
-    //this socket is authenticated, we are good to handle more events from it.
     var clietns = io.of('/quickquiz').clients();
     let token = socket.decoded_token
     socket.on('user join', function(data) {

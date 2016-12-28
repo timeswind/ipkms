@@ -5,7 +5,6 @@ var express = require('express');
 var router = express.Router();
 var QUICKQUIZ_EXPIRATION_SEC =  12 * 60 * 60; // store 12 hours in memory
 // var raven = require('raven');
-// var client = new raven.Client('https://0f71c3e1e67d40908e4110a3392a0e51:e1216abeb8c5409cadae45624fc51b0e@sentry.io/103012');
 
 var Question = require('../../models/question');
 var Quickquiz = require('../../models/quickquiz');
@@ -18,6 +17,7 @@ var isStudent = validUser.isStudent;
 var isLoggedIn = validUser.isLoggedIn;
 
 var redisClient = require('../../config/redis_database').redisClient;
+var scoreQuiz = require('../../modules/score-quiz');
 
 router.route('/teacher/quickquizs')
 .get(isTeacher, function (req, res) {
@@ -438,24 +438,33 @@ router.route('/quickquiz')
             if (err) {
               callback(err)
             } else {
-              if (quizsample) {
+              if (quizsample && quizsample.finishAt) {
                 callback(null, quizsample)
               } else {
+                if (!quizsample) {
+                  var newQuizsample = new Quizsample()
+                  newQuizsample.quickquiz = quickquiz_id;
+                  newQuizsample.student = user_id;
+                  newQuizsample.save();
+                }
                 callback(null, null)
               }
             }
           });
         },
         function(quizsample, callback) {
-          if (quizsample) {
-            callback(null, {success: true, quizsample: quizsample})
-          } else {
-            getQuickquizDataForStudentFromRedis(quickquiz_id, function(err, quickquiz) {
-              if (err) { callback(err) } else {
-                callback(null, {success: true, quickquiz: quickquiz})
+          getQuickquizDataForStudentFromRedis(quickquiz_id, function(err, quickquiz) {
+            if (err) { callback(err) } else {
+              var results = {
+                success: true,
+                quickquiz: quickquiz
               }
-            })
-          }
+              if (quizsample && quizsample.finished) {
+                results['quizsample'] = quizsample
+              }
+              callback(null, results)
+            }
+          })
         }
       ], function (err, results) {
         if (err) {
@@ -469,7 +478,7 @@ router.route('/quickquiz')
         if (err) {
           res.status(500).send(err.message)
         } else if (quickquiz && _.has(quickquiz, 'questions')) {
-          Question.find({"_id": {"$in": quickquiz.questions}}, 'content type choices').lean().exec(function (err, questions) {
+          Question.find({"_id": {"$in": quickquiz.questions}}, 'content type choices meta').lean().exec(function (err, questions) {
             if (questions) {
               var qidIndexDic = {}
               _.forEach(quickquiz.questions, function (question_id, index) {
@@ -494,7 +503,32 @@ router.route('/quickquiz')
     res.status(403).send('params wrong')
   }
 })
-.post(isStudent, function (req, res) { // hand in the quick quiz
+.delete(isTeacher, function (req, res) {
+  var checkParams = _.has(req.body, 'quickquiz_id');
+  if (checkParams) {
+    let quickquiz_id = req.body.quickquiz_id;
+    Quickquiz.findOne({'_id': quickquiz_id}, function (err, quickquiz) {
+      if (err) {
+        res.status(500).send(err.message)
+      } else {
+        if (quickquiz.createdBy == req.user.teacher) {
+          quickquiz.remove(function (err) {
+            if (err) {
+              res.status(500).send(err.message)
+            } else {
+              res.send('success')
+            }
+          })
+        } else {
+          res.status(400).send('permission denied')
+        }
+      }
+    })
+  }
+});
+
+router.route('/student/handin')
+.post(isStudent, function (req, res) {
   /**
   * @param {string} req.body.id - Quickquiz Unique ID
   */
@@ -561,125 +595,24 @@ router.route('/quickquiz')
         });
       },
       function (questions, callback) {
-        var questionIdsArray = []
-        var studentAnsweredQuestionArray = []
         var mapQuestions = {}
-        var mapStudentAnswers = {}
-        var totalRightCount = 0
-        var report = []
-        let totalQuestionCount = questions.length
-        // var totalExceptionCount = 0
-        var totalBlank = []
         questions.forEach((question) => {
           if (question && question._id) {
             mapQuestions[question._id] = question
-            questionIdsArray.push(question._id.toString())
           } else {
             mapQuestions[question] = null
           }
         })
-        studentAnswers.forEach((studentAnswer) => {
-          if (studentAnswer && studentAnswer.key && studentAnswer.data) {
-            mapStudentAnswers[studentAnswer.key] = {
-              key: studentAnswer.key,
-              data: studentAnswer.data
-            }
-            studentAnsweredQuestionArray.push(studentAnswer.key)
+        scoreQuiz(mapQuestions, studentAnswers, function (err, results) {
+          if (err) {
+            callback(err)
+          } else {
+            callback(null, results)
           }
         })
-        totalBlank = _.difference(questionIdsArray, studentAnsweredQuestionArray)
-        if (totalBlank.length > 0) {
-          totalBlank.forEach((question_id) => {
-            mapStudentAnswers[question_id] = {
-              key: question_id,
-              correct: false,
-              blank: true
-            }
-          })
-        }
-        console.log('total blank: ' + totalBlank)
-        _.forEach(mapStudentAnswers, function(answer, key) {
-          let currentQuestion = mapQuestions[key]
-          if (currentQuestion) {
-            let questionType = currentQuestion.type
-            if (questionType === 'mc') {
-              var correctAnswer = null
-              var hasMultpleAnswerMetaKey = false
-              currentQuestion.meta.forEach((metaData) => {
-                if (metaData.key === 'multiple_answer' && metaData.data === 'true') {
-                  hasMultpleAnswerMetaKey = true
-                }
-              })
-              if (hasMultpleAnswerMetaKey) {
-                correctAnswer = []
-                currentQuestion.choices.forEach((choice) => {
-                  if (choice.correct) {
-                    correctAnswer.push(choice._id.toString())
-                  }
-                })
-                console.log('currect answrer is')
-                console.log(correctAnswer)
-                console.log('student answer is')
-                console.log(answer)
-                let answerMissing = _.difference(correctAnswer, answer.data)
-                let wrongChoices = _.difference(answer.data, correctAnswer)
-                console.log('answerMissing is ' + answerMissing)
-                console.log('wrong choices is ' + wrongChoices)
-                if (answer.data) {
-                  if (answer.data.length === 0) {
-                    answer['blank'] = true
-                  } else {
-                    // console.log(answerMissing.length)
-                    // console.log(wrongChoices.length)
-                    if (answerMissing.length === 0 && wrongChoices.length === 0) {
-                      answer['correct'] = true
-                      totalRightCount++
-                    } else {
-                      answer['correct'] = false
-                    }
-                  }
-                } else {
-                  answer['blank'] = true
-                }
-              } else {
-                correctAnswer = ''
-                currentQuestion.choices.forEach((choice) => {
-                  if (choice.correct) {
-                    correctAnswer = choice._id
-                  }
-                })
-                console.log('correct answrer is')
-                console.log(correctAnswer)
-                console.log('student answer is')
-                console.log(answer.data)
-                if (answer.blank) {
-                  answer['correct'] = false
-                } else if (answer.data) {
-                  if (answer.data.toString() === correctAnswer.toString()) {
-                    answer['correct'] = true
-                    totalRightCount++
-                  } else {
-                    answer['correct'] = false
-                  }
-                } else {
-                  answer['exception'] = true
-                  // totalExceptionCount++
-                }
-                console.log(answer)
-              }
-            }
-          }
-        });
-        // console.log(mapQuestions)
-        // console.log(mapStudentAnswers)
-        console.log(totalRightCount)
-        console.log(totalQuestionCount)
-        let score = _.round(_.multiply(_.divide(totalRightCount, totalQuestionCount), 100), 2);
-        callback(null, score, mapStudentAnswers, report)
       },
-      function (score, checkedAnswers, callback) {
-        console.log(score)
-        console.log(checkedAnswers)
+      function (results, callback) {
+        console.log(results)
         callback({message: 'test'})
       }
     ], function (err, checkAnswersRestults) {
@@ -698,29 +631,6 @@ router.route('/quickquiz')
     res.status(403)
   }
 })
-.delete(isTeacher, function (req, res) {
-  var checkParams = _.has(req.body, 'quickquiz_id');
-  if (checkParams) {
-    let quickquiz_id = req.body.quickquiz_id;
-    Quickquiz.findOne({'_id': quickquiz_id}, function (err, quickquiz) {
-      if (err) {
-        res.status(500).send(err.message)
-      } else {
-        if (quickquiz.createdBy == req.user.teacher) {
-          quickquiz.remove(function (err) {
-            if (err) {
-              res.status(500).send(err.message)
-            } else {
-              res.send('success')
-            }
-          })
-        } else {
-          res.status(400).send('permission denied')
-        }
-      }
-    })
-  }
-});
 
 router.route('/student/quickquizs')
 .get(isStudent, function (req, res) {

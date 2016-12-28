@@ -25,7 +25,7 @@ app.set('port', port);
 
 var server = http.createServer(app);
 var io = require('socket.io')(server);
-var chatroom  = require('../socket/chatroom')(io);
+// var chatroom  = require('../socket/chatroom')(io);
 var quickquiz  = require('../socket/quickquiz')(io);
 
 /**
