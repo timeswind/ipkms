@@ -3,13 +3,12 @@ var ObjectId = mongoose.Schema.ObjectId;
 
 var quickquizSchema = mongoose.Schema({
 
-  createdBy: {type: ObjectId, ref: 'User'},
+  createdBy: {type: ObjectId, ref: 'User', require: true},
   school: {type: String},
   title: {type: String},
   subject: {type: String},
   duration: {type: Number}, // in minute
   questions: [{type: ObjectId, ref: 'Question'}],
-  students: [{type: ObjectId, ref: 'User'}],
   report: [{
     _id: false,
     key: String,

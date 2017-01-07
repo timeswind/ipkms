@@ -116,6 +116,15 @@ exports = module.exports = function (io) {
       })
     })
 
+    socket.on('student handin', function(quizsample) {
+      let student_id = token.id
+      getTeachersSocketIds(socket.quickquizId, function (err, ids) {
+        if (ids) {
+          io.of('/quickquiz').to(ids).emit('studentHandin', {student: student_id, quizsample: quizsample});
+        }
+      })
+    })
+
     socket.on('disconnect', function() {
       console.log('disconnect')
       console.log(token.id)

@@ -19,7 +19,7 @@ var quizsampleSchema = mongoose.Schema({
   report: [{
     _id: false,
     key: String,
-    data: Mixed
+    data: String
   }],
   // weeknessTags: [String],
   // difficultyLevel: Number,

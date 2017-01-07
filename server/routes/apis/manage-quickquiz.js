@@ -4,7 +4,6 @@ var async = require('async');
 var express = require('express');
 var router = express.Router();
 var QUICKQUIZ_EXPIRATION_SEC =  12 * 60 * 60; // store 12 hours in memory
-// var raven = require('raven');
 
 var Question = require('../../models/question');
 var Quickquiz = require('../../models/quickquiz');
@@ -35,7 +34,7 @@ router.route('/teacher/quickquizs')
       Quickquiz.find({
         createdBy: user_id,
         "_id": {$gt: page}
-      }, 'title finished duration startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
+      }, 'title finished duration startAt endAt').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
         if (err) {
           res.status(500).send(err.message)
         } else {
@@ -46,7 +45,7 @@ router.route('/teacher/quickquizs')
       Quickquiz.find({
         createdBy: user_id,
         "_id": {$lt: page}
-      }, 'title finished duration startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
+      }, 'title finished duration startAt endAt').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
         if (err) {
           res.status(500).send(err.message)
         } else {
@@ -56,7 +55,7 @@ router.route('/teacher/quickquizs')
     }
 
   } else {
-    Quickquiz.find({createdBy: user_id}, 'title finished duration startTime finishTime').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
+    Quickquiz.find({createdBy: user_id}, 'title finished duration startAt endAt').sort({_id: sort}).limit(10).exec(function (err, quickquizs) {
       if (err) {
         res.status(500).send(err.message)
       } else {
@@ -152,51 +151,33 @@ router.route('/teacher/quickquiz/:id')
 .get(isTeacher, function (req, res) {
   if (_.has(req.params, 'id')) {
     var quickquiz_id = req.params.id;
-    var populateQuery = [
-      {path: "students", select: "name"},
-      {path: "samples", select: "student results startTime finishTime"}
-    ];
-    Quickquiz.findById(quickquiz_id).populate(populateQuery).lean().exec(function (err, quickquiz) {
-      if (err) {
-        res.status(500).send(err.message)
-      } else {
-        if (quickquiz) {
-          if (quickquiz.questions && quickquiz.questions.length > 0) {
-            Question.find({'_id': {'$in': quickquiz.questions}}, 'type choices meta tags difficulty').lean().exec(function (err, questions) {
-              if (err) {
-                res.status(500).send(err.message)
-              } else if (questions) {
-                var qidIndexDic = {};
-                _.forEach(quickquiz.questions, function (question_id, index) {
-                  qidIndexDic[question_id] = index
-                });
-                for (var i = 0; i < questions.length; i++) {
-                  var question_id = questions[i]._id;
-                  var index = qidIndexDic[question_id];
-                  quickquiz.questions[index] = questions[i]
-                }
-                if (!_.has(quickquiz, 'endAt')) {
-                  var questionsAnswerSeeds = JSON.stringify(quickquiz.questions)
-                  redisClient.get(`${quickquiz._id}:answer:seeds`, function(err, seeds) {
-                    if (!seeds) {
-                      redisClient.set(`${quickquiz._id}:answer:seeds`, questionsAnswerSeeds);
-                      redisClient.expire(`${quickquiz._id}:answer:seeds`, QUICKQUIZ_EXPIRATION_SEC);
-                    } else {
-                      redisClient.expire(`${quickquiz._id}:answer:seeds`, QUICKQUIZ_EXPIRATION_SEC);
-                    }
-                  })
-                }
-                res.json({success: true, quickquiz: quickquiz})
-              }
-            })
+    async.series({
+      quickquiz: function(callback) {
+        getQuickquizFromCache(quickquiz_id, function(err, quickquiz) {
+          if (err) {
+            callback(err);
           } else {
-            res.status(404).json({success: false, message: 'quiz questions found'})
+            callback(null, quickquiz);
           }
-        } else {
-          res.status(404).json({success: false, message: 'quiz not found'})
-        }
+        })
+      },
+      quizsamples: function(callback) {
+        Quizsample.find({quickquiz: quickquiz_id}).populate('student', 'name').lean().exec(function(err, quizsamples) {
+          if (err) {
+            callback(err);
+          } else {
+            callback(null, quizsamples);
+          }
+        })
+      },
+    }, function(err, results) {
+      if (err) {
+        res.status(500).send(err.message);
+      } else {
+        results['success'] = true
+        res.json(results);
       }
-    })
+    });
   } else {
     res.status(403).send('params missing')
   }
@@ -221,101 +202,38 @@ router.route('/teacher/quizsample')
   }
 });
 
-router.route('/teacher/end-quickquiz')
+router.route('/teacher/end')
 .post(isTeacher, function (req, res) {
   /**
   * @param {string} req.body.quickquiz_id
   */
   var user_id = req.user.id;
-
+  var quickquiz_id = req.body.quickquiz_id
   async.waterfall([
     function (callback) {
       if (_.has(req.body, 'quickquiz_id')) {
-        Quickquiz.findById(req.body.quickquiz_id).lean().exec(function (err, quickquiz) {
+        Quickquiz.findById(quickquiz_id).exec(function (err, quickquiz) {
           if (err) {
             callback(err)
           } else {
-            if (!_.get(quickquiz, 'finished', true) && _.get(quickquiz, 'createdBy', null) == user_id) {
+            if (quickquiz && !_.has(quickquiz, 'endAt') && quickquiz.createdBy == user_id) {
               callback(null, quickquiz)
             } else {
               callback({message: 'quickquiz has not finish or permission denied'});
             }
           }
-
         })
       } else {
         callback({message: 'params missing'});
       }
     },
     function (quickquiz, callback) {
-      var analysis = {
-        quickquiz_id: quickquiz._id,
-        aveRight: 0,
-        aveTime: 0,
-        rank: [],
-        finishTime: new Date()
-      };
-      Quizsample.find({"_id": {'$in': _.get(quickquiz, 'samples', [])}}).lean().exec(function (err, quizSamples) {
-        if (quizSamples && quizSamples.length > 0) {
-          var totalCorrectCount = 0;
-          var totalTimeCost = 0; //in millisecond
-
-          analysis.rank = _(quizSamples).chain()
-          .map(function (sample) {
-            var id = sample._id;
-            var timeCost = null;
-            var rightCount = sample.results.right.length;
-            totalCorrectCount += rightCount;
-
-            if (_.has(sample, 'startTime') && _.has(sample, 'finishTime')) {
-              timeCost = Math.abs(sample.startTime - sample.finishTime);
-              totalTimeCost += timeCost
-            }
-
-            return {id: id, score: rightCount, timeCost: timeCost}
-          })
-          .sortBy('score')
-          .reverse();
-
-          var aveCorrectCount = 0, aveTimeCost = 0;
-
-          if (totalTimeCost > 0) {
-            aveTimeCost = totalTimeCost / quizSamples.length;
-          }
-
-          if (totalCorrectCount > 0) {
-            aveCorrectCount = totalCorrectCount / quizSamples.length;
-          }
-
-          console.log('aveCorrectCount --> ' + aveCorrectCount);
-          console.log('aveTimeCost --> ' + aveTimeCost);
-
-          analysis.aveRight = aveCorrectCount;
-          analysis.aveTime = aveTimeCost;
-          callback(null, analysis)
-        } else {
-          analysis.aveRight = 0;
-          analysis.aveTime = 0;
-          callback(null, analysis)
-        }
-
-      });
-    },
-    function (analysis, callback) {
-      Quickquiz.findOneAndUpdate({'_id': analysis.quickquiz_id},
-      {
-        $set: {
-          'finished': true,
-          'finishTime': analysis.finishTime,
-          'analysis.rank': analysis.rank,
-          'analysis.aveRight': analysis.aveRight,
-          'analysis.aveTime': analysis.aveTime
-        }
-      }, function (err) {
+      quickquiz.endAt = new Date()
+      quickquiz.save(function(err) {
         if (err) {
           callback(err)
         } else {
-          callback(null, 'success')
+          callback(null, {success: true})
         }
       })
     }
@@ -377,10 +295,6 @@ router.route('/student/quickquiz/questions')
     var quickquiz_id = req.query.id;
     var student_id = req.user.student;
 
-    var populateQuery = [
-      {path: "createdBy", select: "name"}
-    ];
-
     Quickquiz.findById(quickquiz_id, 'title duration questions students createdBy finished').populate(populateQuery).lean().exec(function (err, quickquiz) {
       if (err) {
         res.status(500).send(err.message)
@@ -439,6 +353,7 @@ router.route('/quickquiz')
               callback(err)
             } else {
               if (quizsample && quizsample.finishAt) {
+                console.log('quizsample find')
                 callback(null, quizsample)
               } else {
                 if (!quizsample) {
@@ -459,8 +374,10 @@ router.route('/quickquiz')
                 success: true,
                 quickquiz: quickquiz
               }
-              if (quizsample && quizsample.finished) {
+              console.log(quizsample)
+              if (quizsample && quizsample.finishAt) {
                 results['quizsample'] = quizsample
+                results['handin'] = true
               }
               callback(null, results)
             }
@@ -489,9 +406,9 @@ router.route('/quickquiz')
                 var index = qidIndexDic[question_id]
                 quickquiz.questions[index] = questions[i]
               }
-              res.json(quickquiz)
+              res.json({success: true, quickquiz: quickquiz})
             } else {
-              res.status(400).json(quickquiz)
+              res.json({success: true, quickquiz: quickquiz})
             }
           })
         } else {
@@ -541,69 +458,47 @@ router.route('/student/handin')
     var student_id = req.user.id;
     var studentQuizSample = null
     async.waterfall([
-      // function (callback) {
-      //   Quizsample.findOne({
-      //     quickquiz: quickquiz_id,
-      //     student: student_id
-      //   }).lean().exec(function (err, quizsample) {
-      //     if (err) {
-      //       callback(err)
-      //     } else {
-      //       if (quizsample) {
-      //         if (_.has(quizsample, 'finishAt')) {
-      //           callback({message: 'already handed in'})
-      //         } else {
-      //           callback(null)
-      //         }
-      //       } else {
-      //         callback({message: 'already handed in'})
-      //         res.status(500).send('can not find quizsample')
-      //       }
-      //     }
-      //   });
-      // },
       function (callback) {
-        Quickquiz.findById(quickquiz_id, 'questions').lean().exec(function (err, quickquiz) {
+        Quizsample.findOne({
+          quickquiz: quickquiz_id,
+          student: student_id
+        }).exec(function (err, quizsample) {
           if (err) {
             callback(err)
           } else {
-            if (quickquiz) {
-              if (_.has(quickquiz, 'questions') && quickquiz.questions.length > 0) {
-                Question.find({'_id': {'$in': quickquiz.questions}}, 'type choices meta tags difficulty').lean().exec(function (err, questions) {
-                  if (err) {
-                    callback(err)
-                  } else if (questions) {
-                    var qidIndexDic = {};
-                    _.forEach(quickquiz.questions, function (question_id, index) {
-                      qidIndexDic[question_id] = index
-                    });
-                    for (var i = 0; i < questions.length; i++) {
-                      var question_id = questions[i]._id;
-                      var index = qidIndexDic[question_id];
-                      quickquiz.questions[index] = questions[i]
-                    }
-                    callback(null, quickquiz.questions)
-                  }
-                })
+            if (quizsample) {
+              if (_.has(quizsample, 'finishAt')) {
+                callback({message: 'already handed in'})
               } else {
-                callback({message: 'missing questions key on quickquiz object'})
+                studentQuizSample = quizsample
+                callback(null)
               }
             } else {
-              callback({message: 'Quickquiz not found'})
+              callback({message: 'can not find quizsample'})
             }
           }
         });
       },
-      function (questions, callback) {
-        var mapQuestions = {}
-        questions.forEach((question) => {
-          if (question && question._id) {
-            mapQuestions[question._id] = question
+      function (callback) {
+        getQuickquizFromCache(quickquiz_id, function(err, quickquiz) {
+          if (err) {
+            callback(err)
           } else {
-            mapQuestions[question] = null
+            var questions = quickquiz.questions
+            var mapQuestions = {}
+            questions.forEach((question) => {
+              if (question && question._id) {
+                mapQuestions[question._id] = question
+              } else {
+                mapQuestions[question] = null
+              }
+            })
+            callback(null, mapQuestions, quickquiz)
           }
         })
-        scoreQuiz(mapQuestions, studentAnswers, function (err, results) {
+      },
+      function (mapQuestions, quickquiz, callback) {
+        scoreQuiz(mapQuestions, studentAnswers, quickquiz, function (err, results) {
           if (err) {
             callback(err)
           } else {
@@ -613,15 +508,42 @@ router.route('/student/handin')
       },
       function (results, callback) {
         console.log(results)
-        callback({message: 'test'})
+        studentQuizSample.finishAt = new Date()
+        if (results.score) {
+          studentQuizSample.score = results.score
+        }
+        if (results.checkAnswersReports && results.checkAnswersReports.length > 0) {
+          results.checkAnswersReports.forEach((answer) => {
+            studentQuizSample.answers.push({
+              key: answer.key,
+              data: answer.data,
+              correct: answer.correct,
+              blank: answer.blank,
+              exception: answer.exception
+            })
+          })
+        }
+        if (results.report && results.report.length > 0) {
+          results.report.forEach((data) => {
+            studentQuizSample.report.push({
+              key: data.key,
+              data: data.data
+            })
+          })
+        }
+        studentQuizSample.save(function(err, sample) {
+          if (err) { callback(err) } else {
+            callback(null, sample)
+          }
+        })
       }
-    ], function (err, checkAnswersRestults) {
+    ], function (err, quizsample) {
       if (err) {
         res.status(500).send(err.message);
       } else {
         res.json({
-          status: 'success',
-          results: checkAnswersRestults
+          success: true,
+          quizsample: quizsample
         });
       }
     });
@@ -685,15 +607,15 @@ function getQuickquizDataForStudentFromRedis(quickquiz_id, callback) {
                     qidIndexDic[question_id] = index
                   });
                   for (var i = 0; i < questions.length; i++) {
-                    if (questions[i].type === 'mc' && questions[i].choices) {
-                      questions[i].choices = questions[i].choices.map((choice) => {
-                        var modifiedChoiceObj = {}
-                        modifiedChoiceObj['_id'] = choice['_id']
-                        modifiedChoiceObj['content'] = choice['content']
-                        return modifiedChoiceObj
-                      })
-                      console.log(questions[i].choices)
-                    }
+                    // if (questions[i].type === 'mc' && questions[i].choices) {
+                    //   questions[i].choices = questions[i].choices.map((choice) => {
+                    //     var modifiedChoiceObj = {}
+                    //     modifiedChoiceObj['_id'] = choice['_id']
+                    //     modifiedChoiceObj['content'] = choice['content']
+                    //     return modifiedChoiceObj
+                    //   })
+                    //   console.log(questions[i].choices)
+                    // }
                     var question_id = questions[i]._id;
                     var index = qidIndexDic[question_id];
                     quickquiz.questions[index] = questions[i]
@@ -713,6 +635,95 @@ function getQuickquizDataForStudentFromRedis(quickquiz_id, callback) {
           }
         })
       }
+    }
+  })
+}
+
+function getQuickquizQuestionsSeeds (quickquiz_id, callback) {
+  redisClient.get(`${quickquiz_id}:answer:seeds`, function(err, seeds) {
+    if (!seeds) {
+      Quickquiz.findById(quickquiz_id).lean().exec(function (err, quickquiz) {
+        if (err) {
+          callback(err)
+        } else {
+          if (quickquiz) {
+            if (quickquiz.questions && quickquiz.questions.length > 0) {
+              Question.find({'_id': {'$in': quickquiz.questions}}, 'type choices meta tags difficulty').lean().exec(function (err, questions) {
+                if (err) {
+                  callback(err)
+                } else if (questions) {
+                  var qidIndexDic = {};
+                  _.forEach(quickquiz.questions, function (question_id, index) {
+                    qidIndexDic[question_id] = index
+                  });
+                  for (var i = 0; i < questions.length; i++) {
+                    var question_id = questions[i]._id;
+                    var index = qidIndexDic[question_id];
+                    quickquiz.questions[index] = questions[i]
+                  }
+                  var questionsAnswerSeeds = JSON.stringify(quickquiz.questions)
+                  redisClient.set(`${quickquiz_id}:answer:seeds`, questionsAnswerSeeds);
+                  redisClient.expire(`${quickquiz_id}:answer:seeds`, QUICKQUIZ_EXPIRATION_SEC);
+                  callback(null, quickquiz.questions)
+                }
+              })
+            } else {
+              callback({message: 'quiz questions found'})
+            }
+          } else {
+            callback({message: 'quiz not found'})
+          }
+        }
+      })
+    } else {
+      let questions = JSON.parse(seeds)
+      callback(null, questions)
+    }
+  })
+}
+
+function getQuickquizFromCache (quickquiz_id, callback) {
+  redisClient.get(`${quickquiz_id}:cache`, function(err, quickquiz) {
+    if (!quickquiz) {
+      Quickquiz.findById(quickquiz_id).lean().exec(function (err, quickquiz) {
+        if (err) {
+          callback(err)
+        } else {
+          if (quickquiz) {
+            if (quickquiz.questions && quickquiz.questions.length > 0) {
+              Question.find({'_id': {'$in': quickquiz.questions}}, 'type choices meta tags difficulty').lean().exec(function (err, questions) {
+                if (err) {
+                  callback(err)
+                } else if (questions) {
+                  var qidIndexDic = {};
+                  _.forEach(quickquiz.questions, function (question_id, index) {
+                    qidIndexDic[question_id] = index
+                  });
+                  for (var i = 0; i < questions.length; i++) {
+                    var question_id = questions[i]._id;
+                    var index = qidIndexDic[question_id];
+                    quickquiz.questions[index] = questions[i]
+                  }
+                  var quickquizCache = JSON.stringify(quickquiz)
+                  redisClient.set(`${quickquiz_id}:cache`, quickquizCache);
+                  redisClient.expire(`${quickquiz_id}:cache`, QUICKQUIZ_EXPIRATION_SEC);
+                  callback(null, quickquiz)
+                }
+              })
+            } else {
+              var quickquizCache = JSON.stringify(quickquiz)
+              redisClient.set(`${quickquiz_id}:cache`, quickquizCache);
+              redisClient.expire(`${quickquiz_id}:cache`, QUICKQUIZ_EXPIRATION_SEC);
+              callback(null, quickquiz)
+            }
+          } else {
+            callback({message: 'quiz not found'})
+          }
+        }
+      })
+    } else {
+      let parsedQuickquiz = JSON.parse(quickquiz)
+      callback(null, parsedQuickquiz)
     }
   })
 }
